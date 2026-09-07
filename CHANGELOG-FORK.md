@@ -37,6 +37,30 @@ listed below as they are ported.
 
 ### Added
 
+- **Performance pass and bug sweep.** Three things that ran every tick regardless of whether
+  anything had changed no longer do, and the bugs that hid behind them are fixed.
+  - **A lit generic light no longer re-traces its beam four times a second forever.** Upstream
+    asked only "is it powered", so a fixture that had been sitting still for an hour was still
+    ray-tracing the room and pushing a block update to every player in range on every trace. It
+    now traces when its aim can actually have moved, which for a generic light means when the
+    positioner has moved it.
+  - **The "has the aim changed" test now tests that.** Upstream compared against the two fields
+    the renderer uses to interpolate between ticks, which are overwritten at the top of every
+    tick -- so for a moving light, whose aim is derived from DMX, it was true on every tick, and
+    for a generic light, whose aim is a stored value, it could never be true at all. The aim
+    each trace was taken at is now recorded and compared against.
+  - **A block update is only sent when the beam actually moved**, rather than on every trace.
+  - **A fixture that dims without moving now dims its light.** The brightness of the invisible
+    light block was only revised inside the "should I re-trace" branch, so fading a moving light
+    to nothing left the room exactly as bright as it had been at full. Brightness now follows
+    intensity whether or not the beam has moved.
+  - **An Art-Net socket is closed when no interface listens on its address any more.** Upstream
+    only ever opened them, so changing an interface's address left the old socket holding the
+    Art-Net port for the rest of the session -- and because a socket bound to one address takes
+    delivery ahead of one bound to all addresses, that abandoned socket went on quietly
+    swallowing the traffic the new address was waiting for. This was found while testing: two
+    interfaces on different addresses, and the one that had been changed simply never received
+    anything.
 - **The in-game guide, The One Probe overlay and three translations, ported.** The Patchouli
   guide is back, with both categories, all seven entries and their crafting pages; the in-world
   overlay shows a block's power, DMX address and channels, and its socapex channels; and the mod

@@ -21,6 +21,11 @@
  *     receive packets sent to the broadcast address on most systems -- which is how a real
  *     lighting console emits Art-Net. Listening on all interfaces is what makes a physical desk
  *     on the same network work at all, and it is the new default for a freshly placed interface.
+ *   - A client whose address no longer belongs to any interface is closed. Upstream only ever
+ *     added clients, so changing an interface's address left the old socket bound to the Art-Net
+ *     port for the rest of the session -- and because a socket bound to one address takes
+ *     delivery ahead of one bound to all of them, that abandoned socket could go on quietly
+ *     swallowing the traffic the new address was waiting for.
  *
  * Upstream's ArtNetThread is not carried over: nothing referenced it, its running flag was a
  * constant false, and ArtNetClient.start already runs its own receive thread.
@@ -35,6 +40,7 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.Iterator;
 import java.util.Map;
 import java.util.Set;
 
@@ -91,6 +97,27 @@ public class ArtNetManager {
     /** Lets an address be retried after it failed, for a player who has fixed their setup. */
     public synchronized void clearFailures() {
         failed.clear();
+    }
+
+    /**
+     * Closes every client whose address is not in {@code inUse}. Called as interfaces change
+     * address, so an abandoned socket does not keep the Art-Net port.
+     */
+    public synchronized void releaseUnused(Set<String> inUse) {
+        failed.retainAll(inUse);
+        Iterator<Map.Entry<String, ArtNetClient>> it = clients.entrySet().iterator();
+        while (it.hasNext()) {
+            Map.Entry<String, ArtNetClient> entry = it.next();
+            if (inUse.contains(entry.getKey())) {
+                continue;
+            }
+            it.remove();
+            try {
+                entry.getValue().stop();
+            } catch (Exception e) {
+                TheatricalMod.LOGGER.warn("An Art-Net client did not shut down cleanly: {}", e.toString());
+            }
+        }
     }
 
     public synchronized void shutdownAll() {

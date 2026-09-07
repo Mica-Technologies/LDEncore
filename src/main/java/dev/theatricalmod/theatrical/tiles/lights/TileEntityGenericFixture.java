@@ -13,6 +13,8 @@
  *     the difference between the block's facing angle and the yaw of the direction to the
  *     player, using the same yaw convention doRayTrace uses to turn pan back into a
  *     direction, and it measures from the block's centre.
+ *   - The beam is only re-traced when it can have moved, rather than four times a second for
+ *     as long as the light is on; see shouldTrace.
  */
 package dev.theatricalmod.theatrical.tiles.lights;
 
@@ -86,9 +88,22 @@ public class TileEntityGenericFixture extends TileEntityFixture implements IThea
         return BlockGenericFixture.class;
     }
 
+    /**
+     * Whether the beam needs tracing again.
+     *
+     * CHANGED FROM UPSTREAM: upstream returned "is it powered", so a lit generic light
+     * ray-traced the whole room four times a second for as long as it stayed on, whether or
+     * not anything had moved -- and each trace pushed a block update to every player in range.
+     * A generic light only ever changes aim when the positioner moves it, so it now traces on
+     * the same terms as a moving light does: when it has no light block yet, or when its pan or
+     * tilt has actually changed.
+     */
     @Override
     public boolean shouldTrace() {
-        return power > 0;
+        if (power <= 0) {
+            return false;
+        }
+        return aimChanged();
     }
 
     @Override

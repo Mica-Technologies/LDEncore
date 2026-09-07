@@ -70,10 +70,7 @@ public class TileEntityIntelligentFixture extends TileEntityFixtureDMXAcceptor i
 
     @Override
     public boolean shouldTrace() {
-        if (isPowered()) {
-            return this.getLightBlock() == null || prevPan != getPan() || prevTilt != getTilt();
-        }
-        return false;
+        return isPowered() && aimChanged();
     }
 
     private boolean isHangingState() {

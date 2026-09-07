@@ -55,7 +55,30 @@ public abstract class TileEntityFixture extends TileEntityTheatricalBase impleme
 
     private long timer = 0;
 
+    /** Ticks between beam traces. Upstream's cadence, named. */
+    private static final int TRACE_INTERVAL = 5;
+    /** A pan or tilt no real aim can take, so the first tick always counts as a change. */
+    private static final int NEVER_TRACED = Integer.MIN_VALUE;
+
     public int prevTilt, prevPan, prevFocus = 0;
+
+    /**
+     * The aim the beam was last traced at.
+     *
+     * CHANGED FROM UPSTREAM: upstream asked whether prevPan and prevTilt differed from the
+     * current aim, but those two are the renderer's interpolation state and are overwritten at
+     * the top of every tick, so the comparison did not mean what it reads as: for a fixture
+     * whose aim is derived (a moving light reading DMX) it was true on every tick, and for one
+     * whose aim is a plain field it could never be true at all. These record what was actually
+     * traced, which is the question being asked.
+     */
+    private int tracedPan = NEVER_TRACED;
+    private int tracedTilt = NEVER_TRACED;
+
+    /** Whether the beam can have moved since it was last traced. */
+    protected final boolean aimChanged() {
+        return getLightBlock() == null || tracedPan != getPan() || tracedTilt != getTilt();
+    }
 
     private BlockPos lightBlock;
 
@@ -321,25 +344,49 @@ public abstract class TileEntityFixture extends TileEntityTheatricalBase impleme
         prevFocus = focus;
         prevPan = pan;
         prevTilt = tilt;
-        if (!world.isRemote) {
-            timer++;
-            if (timer >= 5) {
-                if (shouldTrace()) {
-                    this.distance = doRayTrace();
-                    world.notifyBlockUpdate(pos, getBlockState(), getBlockState(), 3);
-                    if (lightBlock != null && this.emitsLight()) {
-                        float newVal = getIntensity() / 255F;
-                        int lightval = MathHelper.clamp((int) (newVal * 15F), 0, 15);
-                        IBlockState existing = world.getBlockState(lightBlock);
-                        if (world.isAirBlock(lightBlock) || !(existing.getBlock() instanceof BlockIlluminator)) {
-                            world.setBlockState(lightBlock, TheatricalBlocks.ILLUMINATOR.getDefaultState().withProperty(BlockIlluminator.LIGHT_VALUE, lightval), 3);
-                        } else if (existing.getValue(BlockIlluminator.LIGHT_VALUE) != lightval) {
-                            world.setBlockState(lightBlock, existing.withProperty(BlockIlluminator.LIGHT_VALUE, lightval), 3);
-                        }
-                    }
-                }
-                timer = 0;
+        if (world.isRemote) {
+            return;
+        }
+        timer++;
+        if (timer < TRACE_INTERVAL) {
+            return;
+        }
+        timer = 0;
+
+        if (shouldTrace()) {
+            tracedPan = getPan();
+            tracedTilt = getTilt();
+            double traced = doRayTrace();
+            // Only tell the clients when the beam actually moved. Upstream sent a block update
+            // on every trace, which for a lit generic fixture was four a second forever, each
+            // one a re-render and a tile sync for every player in range.
+            if (traced != this.distance) {
+                this.distance = traced;
+                world.notifyBlockUpdate(pos, getBlockState(), getBlockState(), 3);
             }
+        }
+        updateIlluminator();
+    }
+
+    /**
+     * Keeps the invisible light block in step with the fixture's brightness.
+     *
+     * CHANGED FROM UPSTREAM: this ran inside the shouldTrace() gate, so a fixture that dimmed
+     * without moving never revised its light level -- a moving light faded to nothing left the
+     * room as bright as it had been at full. It now runs whenever the fixture ticks, and still
+     * writes a block only when the light value it wants differs from the one already there.
+     */
+    private void updateIlluminator() {
+        if (lightBlock == null || !emitsLight()) {
+            return;
+        }
+        int lightval = MathHelper.clamp((int) ((getIntensity() / 255F) * 15F), 0, 15);
+        IBlockState existing = world.getBlockState(lightBlock);
+        if (world.isAirBlock(lightBlock) || !(existing.getBlock() instanceof BlockIlluminator)) {
+            world.setBlockState(lightBlock, TheatricalBlocks.ILLUMINATOR.getDefaultState()
+                    .withProperty(BlockIlluminator.LIGHT_VALUE, lightval), 3);
+        } else if (existing.getValue(BlockIlluminator.LIGHT_VALUE) != lightval) {
+            world.setBlockState(lightBlock, existing.withProperty(BlockIlluminator.LIGHT_VALUE, lightval), 3);
         }
     }
 }

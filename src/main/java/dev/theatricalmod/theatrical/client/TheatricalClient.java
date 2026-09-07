@@ -94,6 +94,8 @@ public class TheatricalClient extends TheatricalCommon {
     private final java.util.Map<BlockPos, byte[]> lastArtNetSent = new java.util.HashMap<>();
     private final java.util.Map<BlockPos, Long> lastArtNetSendTime = new java.util.HashMap<>();
     private final java.util.Map<BlockPos, Integer> artNetTicks = new java.util.HashMap<>();
+    /** The address each interface is currently listening on, so an abandoned one can be closed. */
+    private final java.util.Map<BlockPos, String> artNetAddress = new java.util.HashMap<>();
     /** When a universe with anything in it last arrived, per interface. Drives the status line. */
     private static final java.util.Map<BlockPos, Long> LAST_ARTNET_DATA = new java.util.HashMap<>();
 
@@ -130,7 +132,13 @@ public class TheatricalClient extends TheatricalCommon {
         }
         artNetTicks.put(pos, 0);
 
-        ArtNetClient client = TheatricalMod.getArtNetManager().getClient(tile.getIp());
+        String ip = tile.getIp();
+        if (!ip.equals(artNetAddress.put(pos, ip))) {
+            // The address changed (or this interface was just seen): drop any client nothing
+            // listens on any more, so its socket stops holding the Art-Net port.
+            TheatricalMod.getArtNetManager().releaseUnused(new java.util.HashSet<>(artNetAddress.values()));
+        }
+        ArtNetClient client = TheatricalMod.getArtNetManager().getClient(ip);
         if (client == null) {
             return;
         }

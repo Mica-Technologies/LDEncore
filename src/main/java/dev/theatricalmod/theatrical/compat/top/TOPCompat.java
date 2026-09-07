@@ -26,6 +26,11 @@ public final class TOPCompat {
         return Loader.isModLoaded(TOP_MOD_ID);
     }
 
+    /**
+     * The isLoaded check must come first and must stay first. TOPInfoProvider implements an
+     * interface from The One Probe, so naming the class at all loads it, and loading it without
+     * that mod installed throws. Everything past this guard is only reached when it is present.
+     */
     public static void register() {
         if (!isLoaded()) {
             return;
