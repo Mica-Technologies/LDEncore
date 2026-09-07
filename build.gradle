@@ -1,143 +1,298 @@
-buildscript {
-    repositories {
-        maven { url = 'https://files.minecraftforge.net/maven' }
-        maven { url = 'https://repo.spongepowered.org/maven' }
-        maven { url "https://plugins.gradle.org/m2/" }
-        jcenter()
-        mavenCentral()
-    }
-    dependencies {
-        classpath group: 'net.minecraftforge.gradle', name: 'ForgeGradle', version: '3.+', changing: true
-        classpath 'com.wynprice.cursemaven:CurseMaven:1.2.+'
+// ---------------------------------------------------------------------------
+// LDEncore build script -- Mica Technologies fork of Theatrical (theatricalmod/theatrical-forge).
+//
+// CHANGED FROM UPSTREAM (Apache-2.0 §4(b) notice): this file was rewritten by Mica Technologies.
+// Upstream's build.gradle used ForgeGradle 3 on Gradle 4.9 and pulled from jcenter and a
+// The One Probe maven that no longer exist, so the 1.16.4 branch could not be built at all in
+// 2026. The fork moves it to ForgeGradle 6 on Gradle 8 (the same toolchain as the sibling
+// LDMovingElevators fork), replaces the dead repositories, drops the CurseMaven plugin in
+// favour of the plain curse.maven repository, removes the Powah/Lollipop dev-only runtime
+// mods that no longer resolve, and adds tag-based versioning plus the print* tasks the
+// Mica release workflows depend on. What the jar contains is unchanged: the mod plus a
+// shaded artnet4j.
+// ---------------------------------------------------------------------------
+plugins {
+    id 'eclipse'
+    id 'idea'
+    id 'java-library'
+    id 'maven-publish'
+    id 'net.minecraftforge.gradle' version '6.0.25'
+}
+
+// ---------------------------------------------------------------------------
+// Mod version resolution (Mica Technologies fork)
+//
+// The GitHub Actions workflows create a git tag immediately before building, so the version
+// that ends up in the jar name, the manifest (and therefore mods.toml via ${file.jarVersion})
+// and the release entry all come from that tag. Resolution order:
+//
+//   1. -PmodVersionOverride=... or the MOD_VERSION environment variable -- escape hatch for
+//      one-off builds; nothing in CI sets it today.
+//   2. The newest release-shaped git tag on HEAD: 'YYYY.MM.DD' for a release,
+//      'YYYY.MM.DD-pre.HHMM.<tz>+<sha>' for a pre-release. Matching is restricted to that
+//      shape so no inherited upstream tag can ever be picked up.
+//   3. mod_version from gradle.properties -- the upstream Theatrical release this fork sits
+//      on. This is what a fresh clone with no Mica tags (and every local dev build) gets.
+// ---------------------------------------------------------------------------
+
+/** Release/pre-release tags created by .github/workflows/. Deliberately narrow. */
+ext.micaReleaseTagGlob = "20[0-9][0-9].[0-9][0-9].[0-9][0-9]*"
+
+/** Runs a git command in the project root, returning trimmed stdout or null on any failure. */
+ext.runGit = { List<String> args ->
+    try {
+        def stdout = new ByteArrayOutputStream()
+        def stderr = new ByteArrayOutputStream()
+        def process = (["git"] + args).execute(null, project.rootDir)
+        process.waitForProcessOutput(stdout, stderr)
+        return process.exitValue() == 0 ? stdout.toString().trim() : null
+    } catch (Exception ignored) {
+        // git missing, or this is a source archive rather than a checkout
+        return null
     }
 }
-configurations {
-    shade
-    compile.extendsFrom shade
+
+ext.resolveModVersion = {
+    String override = (project.findProperty("modVersionOverride") ?: System.getenv("MOD_VERSION")) as String
+    if (override?.trim())
+        return override.trim()
+
+    // Tags on HEAD first: that is the case in CI, where the tag was just pushed.
+    List<String> candidates = []
+    String pointsAt = runGit(["tag", "--points-at", "HEAD", "--list", micaReleaseTagGlob])
+    if (pointsAt)
+        candidates = pointsAt.readLines()*.trim().findAll { !it.isEmpty() }
+
+    // Otherwise the most recent reachable tag, so local builds off a tagged history still
+    // identify themselves sensibly.
+    if (candidates.isEmpty()) {
+        String described = runGit(["describe", "--tags", "--abbrev=0", "--match", micaReleaseTagGlob])
+        if (described)
+            candidates = [described]
+    }
+
+    if (!candidates.isEmpty()) {
+        // A full release tag outranks a pre-release tag sitting on the same commit;
+        // otherwise take the highest-sorting tag.
+        return candidates.toSorted { a, b ->
+            (a.contains("-pre.") <=> b.contains("-pre.")) ?: (b <=> a)
+        }.first()
+    }
+
+    return mod_version
 }
-apply plugin: 'net.minecraftforge.gradle'
-// Only edit below this line, the above code adds and enables the necessary things for Forge to be setup.
-apply plugin: 'eclipse'
-apply plugin: 'maven-publish'
-apply plugin: 'com.wynprice.cursemaven'
-apply plugin: 'java'
-apply plugin: 'idea'
 
-version = "${mod_version}"
-group = 'dev.imabad.theatrical'
-archivesBaseName = "Theatrical-${minecraft_version}"
+project.setProperty("mod_version", resolveModVersion())
 
-sourceCompatibility = targetCompatibility = compileJava.sourceCompatibility = compileJava.targetCompatibility = '1.8' // Need this here so eclipse task generates correctly.
+version = mod_version + "-forge-" + minecraft_suffix
+group = mod_group
+base.archivesName = archives_base_name
+
+// Gradle itself runs on JDK 17+ (ForgeGradle 6); the mod compiles against Java 8 for 1.16.
+java.toolchain.languageVersion = JavaLanguageVersion.of(java_target)
+
+println("Java: " + System.getProperty("java.version") + " JVM: " + System.getProperty("java.vm.version") + "(" + System.getProperty("java.vendor") + ") Arch: " + System.getProperty("os.arch"))
+
 repositories {
-    maven { url 'https://squiddev.cc/maven/' }
-    maven { url 'https://repo.spongepowered.org/maven' }
-    maven { // TOP
-        name 'tterrag maven'
-        url "http://maven.tterrag.com/"
-    }
+    // The One Probe. Upstream pulled it from maven.tterrag.com, which is gone; McJty's own
+    // maven is where the 1.16 builds live now (upstream's 1.18.2 branch already used it).
     maven {
-        name 'BGC Maven'
-        url 'https://maven.blamejared.com'
+        name = 'McJty'
+        url = 'https://maven.k-4u.nl/'
+        content { includeGroup 'mcjty.theoneprobe' }
     }
+    // Patchouli and the PatchouliProvider datagen helper.
+    maven {
+        name = 'BlameJared'
+        url = 'https://maven.blamejared.com'
+        content {
+            includeGroup 'vazkii.patchouli'
+            includeGroup 'xyz.brassgoggledcoders'
+        }
+    }
+    // Kept available for runtime-only dev mods. Nothing is pulled from it at the moment; see
+    // the note in dependencies.
+    maven {
+        name = 'CurseMaven'
+        url = 'https://cursemaven.com'
+        content { includeGroup 'curse.maven' }
+    }
+}
+
+configurations {
+    // Jars merged into the mod jar. artnet4j has no maven artifact, so it ships shaded.
+    shade
+    // Non-mod libraries the dev runs must see. ModLauncher only exposes libraries that are
+    // named on the minecraft_classpath token, hence the lazyToken below (the same pattern
+    // upstream adopted on its 1.18.2 branch).
+    library
+    library.extendsFrom shade
+    implementation.extendsFrom library
 }
 
 sourceSets {
     main {
-        java {
-            srcDir 'src/main/java'
-        }
         resources {
-            include '**/**'
-            //Add the generated resources
-            srcDirs += "$rootDir/src/generated/resources"
-            //But exclude the cache of the generated data from what gets built
+            // Include the data-generator output, but not the generator's cache
+            srcDir 'src/generated/resources'
             exclude '.cache'
         }
     }
 }
 
 minecraft {
-    mappings channel: 'snapshot', version: "${mappings_version}"
+    mappings channel: mappings_channel, version: mappings_version
+
     accessTransformer = file('src/main/resources/META-INF/accesstransformer.cfg')
-    // makeObfSourceJar = false // an Srg named sources jar is made by default. uncomment this to disable.
 
     runs {
-        client {
+        configureEach {
             workingDirectory project.file('run')
-            source sourceSets.main
-            properties 'mixin.env.disableRefMap': 'true'
             property 'forge.logging.console.level', 'debug'
+
+            mods {
+                theatrical {
+                    source sourceSets.main
+                }
+            }
+        }
+
+        client {
         }
 
         server {
-            workingDirectory project.file('run')
-            source sourceSets.main
-            properties 'mixin.env.disableRefMap': 'true'
-            property 'forge.logging.console.level', 'debug'
+            // Headless, so a dev server can be smoke-tested from a terminal or CI.
+            args '--nogui'
         }
 
         data {
-            workingDirectory project.file('run')
-            source sourceSets.main
-            properties 'mixin.env.disableRefMap': 'true'
             property 'forge.logging.markers', 'SCAN,REGISTRIES,REGISTRYDUMP'
-            property 'forge.logging.console.level', 'debug'
 
-            args '--mod', 'theatrical', '--all', '--output', file('src/generated/resources/'),
-                    '--existing', sourceSets.main.resources.srcDirs[0]
+            args '--mod', mod_id, '--all',
+                 '--output', file('src/generated/resources/'),
+                 '--existing', file('src/main/resources/')
         }
+    }
+}
+
+minecraft.runs.all {
+    lazyToken('minecraft_classpath') {
+        configurations.library.copyRecursive().resolve().collect { it.absolutePath }.join(File.pathSeparator)
     }
 }
 
 dependencies {
+    // The One Probe's published POM declares its own Forge and JEI dependencies using
+    // already-deobfuscated ("_mapped_official_1.16.5") coordinates. ForgeGradle 6's
+    // deobfuscating repository sees the "_mapped_" marker, tries to remap them again, and
+    // recurses until the Gradle daemon overflows its stack during configuration -- and it does
+    // that while resolving the origin artifact, before `transitive = false` on our own
+    // declaration can take effect. Strip the declared dependencies from the module metadata
+    // instead; none of them is needed to compile against TOP's API.
+    components {
+        withModule('mcjty.theoneprobe:theoneprobe') {
+            allVariants {
+                withDependencies { removeAll { true } }
+            }
+        }
+        withModule('xyz.brassgoggledcoders:PatchouliProvider') {
+            allVariants {
+                withDependencies { removeAll { true } }
+            }
+        }
+    }
+
     minecraft "net.minecraftforge:forge:${minecraft_version}-${forge_version}"
 
-    shade files("libs/artnet4j-0.6.1.jar")
-    runtimeOnly fg.deobf(curse.resolve('powah', '3187611'))
-    runtimeOnly fg.deobf(curse.resolve('lollipop', '3187610'))
-    implementation fg.deobf("mcjty.theoneprobe:TheOneProbe-1.16:${top_version}")
-    compile fg.deobf("vazkii.patchouli:Patchouli:${minecraft_version}-${patchouli_version}")
-    compile fg.deobf("xyz.brassgoggledcoders:PatchouliProvider:1.16.4-1.0.2-Snapshot.3")
+    // Dev runs only. Forge 1.16.4's ModLauncher 8.0.9 calls a ManifestEntryVerifier constructor
+    // that Java 8u321+ removed, so runClient/runServer die on launch with
+    // "NoSuchMethodError: sun.security.util.ManifestEntryVerifier.<init>(Manifest)" on any
+    // current JDK 8. ModLauncher 8.1.3 (what Forge 1.16.5-36.2.34+ ships) has the fix, and
+    // Gradle's conflict resolution puts it on the runtime classpath in place of 8.0.9. The
+    // built jar is unaffected -- players get whatever their Forge install ships.
+    runtimeOnly "cpw.mods:modlauncher:${modlauncher_devrun_version}"
+
+    // Art-Net DMX over IP. Shaded into the jar, exactly as upstream did.
+    shade files('libs/artnet4j-0.6.1.jar')
+
+    // All three are transitive = false on purpose: their POMs declare already-deobfuscated
+    // (`_mapped_official_1.16.5`) JEI/Patchouli dependencies, which ForgeGradle 6's
+    // deobfuscating repository tries to remap again and recurses on until it overflows the
+    // stack during project configuration.
+    implementation(fg.deobf("mcjty.theoneprobe:theoneprobe:${top_version}")) {
+        transitive = false
+    }
+    implementation(fg.deobf("vazkii.patchouli:Patchouli:${minecraft_version}-${patchouli_version}")) {
+        transitive = false
+    }
+    implementation(fg.deobf("xyz.brassgoggledcoders:PatchouliProvider:${patchouli_provider_version}")) {
+        transitive = false
+    }
+
+    // NOTE (Mica fork): upstream also put Powah and Lollipop on the dev runtime classpath
+    // (runtimeOnly, via the old CurseMaven plugin) to test power compatibility by hand. The
+    // mod never references either, and the pinned file IDs no longer resolve, so they were
+    // dropped. Re-add with `runtimeOnly fg.deobf("curse.maven:<slug>-<projectId>:<fileId>")`
+    // if a dev run needs them.
 }
 
-// Example for how to get properties into the manifest for reading by the runtime..
 jar {
     manifest {
         attributes([
-            "Specification-Title": "theatrical",
-            "Specification-Vendor": "theatrical",
-            "Specification-Version": "1", // We are version 1 of ourselves
-            "Implementation-Title": project.name,
-            "Implementation-Version": "${version}",
-            "Implementation-Vendor" :"theatrical",
+            "Specification-Title"     : mod_id,
+            "Specification-Vendor"    : "theatrical",
+            "Specification-Version"   : "1", // We are version 1 of ourselves
+            "Implementation-Title"    : mod_name,
+            "Implementation-Version"  : project.version,
+            "Implementation-Vendor"   : "Mica Technologies (fork of Theatrical by Rushmead)",
             "Implementation-Timestamp": new Date().format("yyyy-MM-dd'T'HH:mm:ssZ")
         ])
     }
-    configurations.shade.each { dep ->
-        from(project.zipTree(dep)){
-            exclude 'META-INF', 'META-INF/**'
-        }
+    // Merge the shaded jars in, minus their manifests/signatures
+    from {
+        configurations.shade.collect { it.isDirectory() ? it : zipTree(it) }
+    } {
+        exclude 'META-INF', 'META-INF/**'
     }
 }
 
-// Example configuration to allow publishing using the maven-publish task
-// we define a custom artifact that is sourced from the reobfJar output task
-// and then declare that to be published
-// Note you'll need to add a repository here
-def reobfFile = file("$buildDir/reobfJar/output.jar")
-def reobfArtifact = artifacts.add('default', reobfFile) {
-    type 'jar'
-    builtBy 'reobfJar'
+jar.finalizedBy('reobfJar')
+
+// ---------------------------------------------------------------------------
+// Tools for GitHub Actions (Mica Technologies fork)
+//
+// The release workflows shell out to these to name the jar and fill in the release body.
+// Their names are a contract with .github/workflows/build-mod-release-pre-release-main.yml
+// -- renaming one breaks the release build. This build script prints a JVM banner during
+// configuration which `-q` does not suppress, so the workflow reads the last line only
+// (`| tail -n 1 | xargs`).
+// ---------------------------------------------------------------------------
+tasks.register("printModVersion") {
+    group = "other"
+    description = "Prints the full project version, e.g. 2026.09.07-forge-mc1.16"
+    doLast { println project.version }
 }
-publishing {
-    publications {
-        mavenJava(MavenPublication) {
-            artifact reobfArtifact
-        }
-    }
-    repositories {
-        maven {
-            url "file:///${project.projectDir}/mcmodsrepo"
-        }
-    }
+
+tasks.register("printArchivesBaseName") {
+    group = "other"
+    description = "Prints the jar's base name, e.g. LDEncore"
+    doLast { println project.base.archivesName.get() }
+}
+
+tasks.register("printModName") {
+    group = "other"
+    description = "Prints the human-readable mod name, e.g. LDEncore"
+    doLast { println mod_name }
+}
+
+tasks.register("printMinecraftVersion") {
+    group = "other"
+    description = "Prints the targeted Minecraft version, e.g. 1.16.4"
+    doLast { println minecraft_version }
+}
+
+tasks.register("printUpstreamVersion") {
+    group = "other"
+    description = "Prints the upstream Theatrical release this fork is based on, e.g. 0.7.2"
+    doLast { println upstream_version }
 }
