@@ -37,7 +37,11 @@ import dev.theatricalmod.theatrical.client.tile.TileEntityRendererBasicLightingD
 import dev.theatricalmod.theatrical.entity.FallingLightEntity;
 import dev.theatricalmod.theatrical.tiles.control.TileEntityBasicLightingControl;
 import dev.theatricalmod.theatrical.tiles.lights.TileEntityGenericFixture;
+import dev.theatricalmod.theatrical.tiles.interfaces.TileEntityArtNetInterface;
 import dev.theatricalmod.theatrical.tiles.lights.TileEntityIntelligentFixture;
+import dev.theatricalmod.theatrical.network.SendArtNetToServerPacket;
+import dev.theatricalmod.theatrical.network.TheatricalNetworkHandler;
+import ch.bildspur.artnet.ArtNetClient;
 import dev.theatricalmod.theatrical.items.TheatricalItems;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.renderer.block.model.ModelResourceLocation;
@@ -56,7 +60,9 @@ import net.minecraftforge.fml.common.eventhandler.SubscribeEvent;
 import net.minecraftforge.fml.relauncher.Side;
 
 import javax.annotation.Nullable;
+import java.util.Arrays;
 import java.util.Collections;
+import java.util.UUID;
 
 @Mod.EventBusSubscriber(modid = TheatricalMod.MOD_ID, value = Side.CLIENT)
 public class TheatricalClient extends TheatricalCommon {
@@ -68,6 +74,91 @@ public class TheatricalClient extends TheatricalCommon {
         ClientRegistry.bindTileEntitySpecialRenderer(TileEntityIntelligentFixture.class, new TileEntityFixtureRenderer());
         ClientRegistry.bindTileEntitySpecialRenderer(TileEntityBasicLightingControl.class, new TileEntityRendererBasicLightingDesk());
         RenderingRegistry.registerEntityRenderingHandler(FallingLightEntity.class, FallingLightRenderer::new);
+    }
+
+    /**
+     * How often the owner's client reads its Art-Net input, in ticks.
+     *
+     * CHANGED FROM UPSTREAM: upstream read and sent every other tick, ten packets a second per
+     * interface, whether or not anything had changed. The read still happens at that rate --
+     * Art-Net is a live feed and a lighting cue should not visibly lag -- but an unchanged
+     * universe is only sent once a second rather than ten times, which is the common case
+     * between cues. It is still sent on that slow beat rather than not at all, because the
+     * server pushes a universe down the cables only when one arrives, and a fixture wired up
+     * while the feed is holding still would otherwise never be given its values.
+     */
+    private static final int ARTNET_POLL_TICKS = 2;
+    /** How long an unchanged universe may go unsent, in milliseconds. */
+    private static final long ARTNET_RESEND_INTERVAL_MS = 1000L;
+
+    private final java.util.Map<BlockPos, byte[]> lastArtNetSent = new java.util.HashMap<>();
+    private final java.util.Map<BlockPos, Long> lastArtNetSendTime = new java.util.HashMap<>();
+    private final java.util.Map<BlockPos, Integer> artNetTicks = new java.util.HashMap<>();
+    /** When a universe with anything in it last arrived, per interface. Drives the status line. */
+    private static final java.util.Map<BlockPos, Long> LAST_ARTNET_DATA = new java.util.HashMap<>();
+
+    /**
+     * How long ago this interface last saw a non-empty Art-Net universe, in milliseconds, or -1
+     * if it never has. Fork-authored: upstream showed nothing at all, and "is it even arriving"
+     * is the first thing anyone setting up Art-Net needs to know.
+     */
+    public static long millisSinceArtNetData(BlockPos pos) {
+        Long last = LAST_ARTNET_DATA.get(pos);
+        return last == null ? -1L : System.currentTimeMillis() - last;
+    }
+
+    /**
+     * Reads Art-Net on the owner's client and forwards it to the server.
+     *
+     * CHANGED FROM UPSTREAM: upstream compared the interface's owner against
+     * Minecraft.getSession().getPlayerID() through a UUID adapter that throws on a malformed
+     * id; this compares against the player entity's own UUID. Upstream also ran this from the
+     * tile's tick in common code, which named a client-only class on the server.
+     */
+    @Override
+    public void pollArtNet(TileEntityArtNetInterface tile) {
+        UUID owner = tile.getPlayer();
+        EntityPlayer player = Minecraft.getMinecraft().player;
+        if (owner == null || player == null || !owner.equals(player.getUniqueID())) {
+            return;
+        }
+        BlockPos pos = tile.getPos();
+        int ticks = artNetTicks.getOrDefault(pos, 0) + 1;
+        if (ticks < ARTNET_POLL_TICKS) {
+            artNetTicks.put(pos, ticks);
+            return;
+        }
+        artNetTicks.put(pos, 0);
+
+        ArtNetClient client = TheatricalMod.getArtNetManager().getClient(tile.getIp());
+        if (client == null) {
+            return;
+        }
+        byte[] data;
+        try {
+            data = client.readDmxData(tile.getSubnet(), tile.getUniverse());
+        } catch (Exception e) {
+            // A read can fail on a socket that has just gone away; the next tick tries again.
+            return;
+        }
+        if (data == null) {
+            return;
+        }
+        long now = System.currentTimeMillis();
+        for (byte b : data) {
+            if (b != 0) {
+                LAST_ARTNET_DATA.put(pos, now);
+                break;
+            }
+        }
+        Long lastSent = lastArtNetSendTime.get(pos);
+        boolean unchanged = Arrays.equals(data, lastArtNetSent.get(pos));
+        if (unchanged && lastSent != null && now - lastSent < ARTNET_RESEND_INTERVAL_MS) {
+            return;
+        }
+        lastArtNetSent.put(pos, data.clone());
+        lastArtNetSendTime.put(pos, now);
+        TheatricalNetworkHandler.MAIN.sendToServer(new SendArtNetToServerPacket(pos, data));
     }
 
     @Override

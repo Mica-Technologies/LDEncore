@@ -12,6 +12,7 @@
  */
 package dev.theatricalmod.theatrical.tiles.interfaces;
 
+import dev.theatricalmod.theatrical.TheatricalConfigHandler;
 import dev.theatricalmod.theatrical.TheatricalMod;
 import dev.theatricalmod.theatrical.api.CableType;
 import dev.theatricalmod.theatrical.api.IAcceptsCable;
@@ -38,7 +39,7 @@ public class TileEntityArtNetInterface extends TileEntityTheatricalBase implemen
     private final IDMXProvider idmxProvider = new DMXProvider(new DMXUniverse());
 
     private int subnet, universe = 0;
-    private String ip = "127.0.0.1";
+    private String ip = TheatricalConfigHandler.ARTNET.defaultListenAddress;
     private UUID player;
 
     public void setPlayer(UUID player) {

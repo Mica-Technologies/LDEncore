@@ -64,7 +64,7 @@ built on it. The other inherited branches are left untouched.
 3. **In progress:** port the mod, bottom-up -- API and capabilities, then blocks/items/tiles and
    assets, networking and GUIs, rendering, Art-Net and control, the in-game guide and compat --
    keeping the 1.16 behaviour as the reference and fixing the known upstream bugs on the way.
-   Everything up to and including rendering is done; Art-Net and control are next.
+   Everything up to and including Art-Net is done; the in-game guide and compat are next.
 4. **Then:** release the 1.12.2 line. The 1.16.4 line is frozen at its resurrected state: it
    stays buildable, but 1.12.2 is the only version that receives work.
 
@@ -96,16 +96,18 @@ header saying so. Nothing of upstream's 1.16 source is compiled on this branch; 
 copy lives on `1.16.3`. The build is the GregTechCEu buildscripts (RetroFuturaGradle) rather than
 upstream's ForgeGradle, and artnet4j is shaded under a relocated package instead of being merged
 in as-is. Ported so far: the API and capabilities, every block, item and tile entity, the falling
-light entity, the config and all assets, the networking and every screen, and the rendering (see
-the changelog for what each step fixed on the way). Still to come: Art-Net polling, The One Probe
+light entity, the config and all assets, the networking and every screen, the rendering and
+Art-Net (see the changelog for what each step fixed on the way). Still to come: The One Probe
 overlays and the Patchouli guide. Deliberate fork differences beyond the
 port itself: the creative tab is labelled LDEncore; the placeholder wrench texture is ours
 (upstream shipped none); every server-bound packet is now validated for reach, block type and
 payload range before it is allowed to change the world, and DMX updates go only to the players
-near the block rather than to everyone in the dimension; and several upstream bugs are fixed (a
-dimmer rack that ignored every DMX address other than 0, a dimmer rack that refused to be patched
-until it was powered, a positioner that aimed lights the wrong way on two facings, cables that
-forgot their state on reload).
+near the block rather than to everyone in the dimension; an Art-Net interface listens on every
+network interface by default, so a real lighting console's broadcast actually reaches the game,
+and its screen says whether anything is arriving; and several upstream bugs are fixed (a dimmer
+rack that ignored every DMX address other than 0, a dimmer rack that refused to be patched until
+it was powered, a positioner that aimed lights the wrong way on two facings, cables that forgot
+their state on reload, a lighting desk whose physical faders never moved).
 
 **The 1.16.4 baseline (`1.16.3` branch) -- no gameplay changes:**
 

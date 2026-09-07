@@ -7,12 +7,16 @@
  *
  * CHANGED FROM UPSTREAM: 1.12 GuiContainer, GuiTextField and GlStateManager; the universe
  * field only accepts digits so Save cannot throw on unparsable text; the screen also states
- * who owns the interface and that the address is the one on this player's own machine,
- * which is the single thing every support question upstream received turned out to be.
+ * who owns the interface, that the address is the one on this player's own machine, whether a
+ * socket is actually listening on it and how long ago Art-Net last arrived. Upstream showed
+ * none of that, and "is anything reaching the game at all" is the first thing anyone wiring a
+ * console up needs to know.
  */
 package dev.theatricalmod.theatrical.client.gui.screen;
 
 import dev.theatricalmod.theatrical.TheatricalMod;
+import dev.theatricalmod.theatrical.artnet.ArtNetManager;
+import dev.theatricalmod.theatrical.client.TheatricalClient;
 import dev.theatricalmod.theatrical.client.gui.container.ContainerArtNetInterface;
 import dev.theatricalmod.theatrical.network.TheatricalNetworkHandler;
 import dev.theatricalmod.theatrical.network.UpdateArtNetInterfacePacket;
@@ -132,10 +136,38 @@ public class ScreenArtNetInterface extends GuiContainer {
         String note = owned ? "Your machine's address" : TextFormatting.RED + "Owned by another player";
         GlStateManager.pushMatrix();
         GlStateManager.scale(0.7F, 0.7F, 1F);
-        String plain = TextFormatting.getTextWithoutFormattingCodes(note);
-        int width = plain == null ? 0 : fontRenderer.getStringWidth(plain);
-        fontRenderer.drawString(note, (int) ((xSize / 2F - width / 2F) / 0.7F), (int) (74 / 0.7F), 0x404040);
+        drawSmallCentred(note, 74);
+        if (owned) {
+            drawSmallCentred(statusLine(), 84);
+        }
         GlStateManager.popMatrix();
+    }
+
+    /** Whether a socket is listening, and when a universe last arrived. */
+    private String statusLine() {
+        String ip = ipField.getText();
+        if (ArtNetManager.isAllInterfaces(ip)) {
+            ip = "0.0.0.0";
+        }
+        if (!TheatricalMod.getArtNetManager().isListening(ip)) {
+            return TextFormatting.RED + "Not listening yet";
+        }
+        long age = TheatricalClient.millisSinceArtNetData(container.blockEntity == null
+                ? null : container.blockEntity.getPos());
+        if (age < 0) {
+            return TextFormatting.GOLD + "Listening, no data yet";
+        }
+        if (age < 3000) {
+            return TextFormatting.DARK_GREEN + "Receiving Art-Net";
+        }
+        return TextFormatting.GOLD + ("Last data " + (age / 1000L) + "s ago");
+    }
+
+    /** Draws inside the 0.7 scale the caller has already applied. */
+    private void drawSmallCentred(String text, int y) {
+        String plain = TextFormatting.getTextWithoutFormattingCodes(text);
+        int width = plain == null ? 0 : fontRenderer.getStringWidth(plain);
+        fontRenderer.drawString(text, (int) ((xSize / 2F - width / 2F) / 0.7F), (int) (y / 0.7F), 0x404040);
     }
 
     private void drawCentred(String text, int y, int colour) {

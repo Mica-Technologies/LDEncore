@@ -36,8 +36,23 @@ public class DMXProvider implements IDMXProvider, INBTSerializable<NBTTagCompoun
     @CapabilityInject(IDMXProvider.class)
     public static Capability<IDMXProvider> CAP = null;
 
+    /**
+     * How long an empty scan result is trusted before the run is walked again, in ticks.
+     *
+     * CHANGED FROM UPSTREAM: upstream cached the device list on the first scan and only ever
+     * rebuilt it when something set the world network's refresh flag. A provider that happened
+     * to scan before its neighbours' tile entities had loaded -- which is what happens when a
+     * provider starts pushing on the same tick the chunk comes in -- cached "nothing attached"
+     * and stayed dead until the player broke and replaced a block nearby. An empty result is
+     * now treated as "nothing found yet" rather than as an answer, and re-checked once a
+     * second. A non-empty list is still cached exactly as before, so the common case costs
+     * nothing.
+     */
+    private static final long EMPTY_RESCAN_TICKS = 20L;
+
     private DMXUniverse dmxUniverse;
     private HashSet<BlockPos> devices = null;
+    private long lastEmptyScan = Long.MIN_VALUE;
 
     public DMXProvider() {
     }
@@ -97,7 +112,9 @@ public class DMXProvider implements IDMXProvider, INBTSerializable<NBTTagCompoun
 
     @Override
     public void updateDevices(World world, BlockPos controllerPos) {
-        if (devices == null) {
+        long now = world.getTotalWorldTime();
+        boolean staleEmpty = devices != null && devices.isEmpty() && now - lastEmptyScan >= EMPTY_RESCAN_TICKS;
+        if (devices == null || staleEmpty) {
             HashSet<BlockPos> receivers = new HashSet<>();
             HashSet<BlockPos> scannedCable = new HashSet<>();
             for (EnumFacing facing : EnumFacing.values()) {
@@ -105,6 +122,9 @@ public class DMXProvider implements IDMXProvider, INBTSerializable<NBTTagCompoun
             }
             scannedCable.clear();
             devices = new HashSet<>(receivers);
+            if (devices.isEmpty()) {
+                lastEmptyScan = now;
+            }
         }
         for (BlockPos receiver : devices) {
             IBlockState blockState = world.getBlockState(receiver);
@@ -124,5 +144,6 @@ public class DMXProvider implements IDMXProvider, INBTSerializable<NBTTagCompoun
     @Override
     public void refreshDevices() {
         devices = null;
+        lastEmptyScan = Long.MIN_VALUE;
     }
 }

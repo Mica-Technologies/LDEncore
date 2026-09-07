@@ -29,6 +29,10 @@ public final class TheatricalConfigHandler {
     @Config.Comment("Client-side rendering")
     public static final Rendering RENDERING = new Rendering();
 
+    @Config.Name("artnet")
+    @Config.Comment("Art-Net input")
+    public static final ArtNet ARTNET = new ArtNet();
+
     private TheatricalConfigHandler() {
     }
 
@@ -38,6 +42,15 @@ public final class TheatricalConfigHandler {
 
         @Config.Comment("Set this to false to prevent moving lights consuming power")
         public boolean consumePower = true;
+    }
+
+    public static final class ArtNet {
+        @Config.Comment({
+                "The address a newly placed ArtNet Interface listens on, on the player's own machine.",
+                "0.0.0.0 means every network interface, which is what receives the broadcast Art-Net",
+                "a real lighting console sends. Set a single address to listen on only that one."
+        })
+        public String defaultListenAddress = "0.0.0.0";
     }
 
     public static final class Rendering {

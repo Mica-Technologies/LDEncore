@@ -37,6 +37,48 @@ listed below as they are ported.
 
 ### Added
 
+- **Art-Net, ported.** An Art-Net interface block now receives real Art-Net from lighting
+  software on the player's own machine and pushes it down the DMX cables in-game. The player who
+  owns the interface reads the feed on their client and forwards it; the server accepts it only
+  from that player, and only if they are an operator, since it is the one input that comes from
+  outside the game.
+  - The Art-Net clients are only created on the side that needs them. Upstream built the manager
+    on the common proxy, so a dedicated server opened an Art-Net receive socket that nothing ever
+    read from.
+  - An address that cannot be bound no longer poisons itself. Upstream stored a client before
+    starting it, so once a bind failed every later read on that address got a dead client back
+    for the rest of the session -- and an interface is often configured before the network it
+    names exists. The failure is now logged once and the address can be retried. The client map
+    is synchronised too, where upstream's plain map was touched by both the network thread and
+    the tile tick.
+  - Sockets are closed when the game stops rather than only when a server stops, so leaving a
+    single-player world back to the main menu no longer leaks one per address.
+  - An unchanged universe is sent once a second instead of ten times, while a changing one still
+    goes at the full rate, so a live cue does not lag.
+  - **A real lighting console now works.** Upstream bound the socket to the single address typed
+    into the interface, and a socket bound to one address does not receive packets sent to the
+    broadcast address on most systems -- which is exactly how a physical desk emits Art-Net. A
+    blank address, `0.0.0.0` or `all` now listens on every local interface, and that is the
+    default for a newly placed interface; the address can still be set to a single interface,
+    and the default is configurable.
+  - **The screen says whether anything is arriving.** It now shows whether a socket is actually
+    listening on the configured address and how long ago a universe last came in, alongside who
+    owns the interface. Upstream showed none of this, and "is it reaching the game at all" is
+    the first question anyone wiring up a console has.
+  - Upstream's `ArtNetThread` is not carried over: nothing referenced it, its running flag was a
+    constant false, and the Art-Net client already runs its own receive thread.
+  - A DMX source no longer caches "nothing attached" forever. Upstream recorded the devices on
+    a source's cable run the first time it looked and rebuilt that list only when something
+    disturbed the network, so a source that looked before its neighbours had finished loading
+    could stay dead until a player broke and replaced a block nearby. An empty result is now
+    treated as "nothing found yet" and re-checked once a second, while a list with anything in
+    it is still cached exactly as before. This is hardening against a race we reasoned about
+    rather than a fix for a failure we reproduced.
+  - Verified in a dev client against real Art-Net packets: a universe sent to the machine
+    reaches the interface, is forwarded to the server, and lights a moving light wired to it,
+    with a second interface on a different universe correctly seeing nothing. Broadcast Art-Net
+    to 255.255.255.255 is received too, and the screen reports "Receiving Art-Net" while it
+    flows.
 - **Rendering, ported.** Fixtures are visible again: the fixture renderer draws a light's static,
   pan and tilt parts with its live pan and tilt, hanging correctly from a truss or an internally
   wired bar and flipping when a moving light is hung upside down, and casts the light beam,
@@ -96,8 +138,8 @@ listed below as they are ported.
   light entity, the config options (one `config/theatrical.cfg` with upstream's two
   categories), and all assets converted to the 1.12 layout (blockstates in Forge's format,
   textures under `blocks/`/`items/`, recipes using ore-dictionary ingredients, `en_us.lang`).
-  The dimmed-power, socapex and DMX networks all run on the server. **Not yet:** Art-Net polling
-  on the client, The One Probe overlays and the Patchouli guide, which come in their own phases.
+  The dimmed-power, socapex and DMX networks all run on the server. **Not yet:** The One Probe
+  overlays and the Patchouli guide, which come in their own phases.
   - Bug fixes on the way, in our own words: the dimmer rack read its DMX channels at the
     wrong offset and so put out nothing at any DMX address other than 0; the remote
     positioner aimed generic lights the wrong way on two of the four facings; dimmed power

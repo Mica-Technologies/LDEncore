@@ -21,6 +21,7 @@ package dev.theatricalmod.theatrical;
 
 import dev.theatricalmod.theatrical.api.capabilities.WorldSocapexNetwork;
 import dev.theatricalmod.theatrical.api.capabilities.dmx.WorldDMXNetwork;
+import dev.theatricalmod.theatrical.artnet.ArtNetManager;
 import dev.theatricalmod.theatrical.api.capabilities.dmx.provider.DMXProvider;
 import dev.theatricalmod.theatrical.api.capabilities.dmx.provider.IDMXProvider;
 import dev.theatricalmod.theatrical.api.capabilities.dmx.receiver.DMXReceiver;
@@ -46,6 +47,7 @@ import net.minecraftforge.fml.common.Mod;
 import net.minecraftforge.fml.common.SidedProxy;
 import net.minecraftforge.fml.common.event.FMLInitializationEvent;
 import net.minecraftforge.fml.common.event.FMLPostInitializationEvent;
+import net.minecraftforge.fml.common.event.FMLServerStoppingEvent;
 import net.minecraftforge.fml.common.event.FMLPreInitializationEvent;
 import net.minecraftforge.fml.common.eventhandler.SubscribeEvent;
 import net.minecraftforge.fml.common.gameevent.TickEvent;
@@ -80,6 +82,24 @@ public class TheatricalMod {
     @SidedProxy(clientSide = CLIENT_PROXY, serverSide = COMMON_PROXY)
     public static TheatricalCommon proxy;
 
+    /**
+     * The Art-Net clients, one per address an interface listens on.
+     *
+     * CHANGED FROM UPSTREAM: upstream created this on the common proxy and so ran an Art-Net
+     * receive socket on a dedicated server as well, where nothing ever read from it. Art-Net
+     * only ever reaches the game through the owning player's client, so the manager is only
+     * created there.
+     */
+    private static ArtNetManager artNetManager;
+
+    /** Never null: a server that never polls simply gets a manager holding no clients. */
+    public static ArtNetManager getArtNetManager() {
+        if (artNetManager == null) {
+            artNetManager = new ArtNetManager();
+        }
+        return artNetManager;
+    }
+
     @Mod.EventHandler
     public void preInit(FMLPreInitializationEvent event) {
         LOGGER.info("Initialising {} {} (Forge 1.12.2 port of Theatrical)", Tags.MODNAME, Tags.VERSION);
@@ -98,6 +118,19 @@ public class TheatricalMod {
     @Mod.EventHandler
     public void postInit(FMLPostInitializationEvent event) {
         proxy.postInit(event);
+    }
+
+    /**
+     * Closes every Art-Net socket when the game stops.
+     *
+     * CHANGED FROM UPSTREAM: upstream shut the clients down when the server stopped, which on
+     * a single-player world leaked every socket on the way back to the main menu, since the
+     * client keeps running. This also clears the failed-address list, so a player who fixes
+     * their network setup and rejoins is not still refused.
+     */
+    @Mod.EventHandler
+    public void serverStopping(FMLServerStoppingEvent event) {
+        getArtNetManager().shutdownAll();
     }
 
     private void registerCapabilities() {
