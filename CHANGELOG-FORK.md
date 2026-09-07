@@ -37,6 +37,25 @@ listed below as they are ported.
 
 ### Added
 
+- **Every block, item and tile entity, ported.** Truss, IWB, generic light, moving light,
+  the four cables, dimmer rack, socapex distro, Art-Net interface, DMX-redstone interface,
+  basic lighting desk, the illuminator light block, the dev-only test DMX block, the
+  positioner and wrench, and the four crafting ingredients, with their tiles, the falling
+  light entity, the config options (one `config/theatrical.cfg` with upstream's two
+  categories), and all assets converted to the 1.12 layout (blockstates in Forge's format,
+  textures under `blocks/`/`items/`, recipes using ore-dictionary ingredients, `en_us.lang`).
+  The dimmed-power, socapex and DMX networks all run on the server. **Not yet:** GUIs, the
+  fixture and beam renderers, Art-Net polling on the client, The One Probe overlays and the
+  Patchouli guide, which come in their own phases -- so blocks place and work but fixtures
+  render as plain models and nothing opens on right-click.
+  - Bug fixes on the way, in our own words: the dimmer rack read its DMX channels at the
+    wrong offset and so put out nothing at any DMX address other than 0; the remote
+    positioner aimed generic lights the wrong way on two of the four facings; dimmed power
+    cables and cable tiles now save their state (a reloaded cable came back empty and did
+    not flag its network); the network walkers only follow cable arms that actually connect
+    (upstream's check always answered yes).
+  - Fork-authored asset: a placeholder wrench texture. Upstream's wrench referenced a texture
+    that was never shipped.
 - **The API layer, ported.** Everything under `api/`: the DMX universe, the DMX provider and
   receiver capabilities and the per-world DMX network, the socapex provider/receiver
   capabilities and the per-world socapex network, the mod's own power capability, cable
@@ -72,6 +91,20 @@ listed below as they are ported.
 
 - `libs/artnet4j-0.6.1.jar` -- unchanged upstream file, now consumed through `shadowImplementation`
   and relocated at build time.
+- `assets/theatrical/blockstates/*.json` -- rewritten in Forge's 1.12 blockstate format (cables keep
+  upstream's multipart form); model references lose the `block/` prefix 1.12 does not use.
+- `assets/theatrical/models/block/**/*.json` -- texture references moved to 1.12's `blocks/`
+  folder; Blockbench's `credit`/`groups` metadata dropped; `lighting_console.json` had its UVs
+  rescaled because 1.12 does not read `texture_size`.
+- `assets/theatrical/models/item/*.json` -- texture references moved to `items/`; the Patchouli
+  guide and the unused bundled-cable models are not carried over.
+- `assets/theatrical/textures/**` -- moved from `block/` and `item/` to `blocks/` and `items/`;
+  the `.psd` source file upstream shipped inside the jar is not carried over; `items/wrench.png`
+  is new (fork-authored placeholder).
+- `assets/theatrical/recipes/*.json` -- converted from 1.16 data-pack recipes: tag ingredients
+  became ore-dictionary entries, coloured wool became `minecraft:wool` with metadata, the empty
+  pattern row in the lighting desk recipe became a blank row.
+- `assets/theatrical/lang/en_us.lang` -- generated from upstream's `en_us.json`.
 
 ---
 

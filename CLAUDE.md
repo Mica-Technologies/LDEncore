@@ -185,8 +185,38 @@ api/                    the mod's API (also published as the -api jar via apiPac
                                                      contracts a fixture tile fulfils
 fixtures/               the two built-in Fixture definitions and TheatricalFixtures, which
                         creates the registry in RegistryEvent.NewRegistry and registers them
-util/                   CapabilityStorageProvider (delegates to INBTSerializable)
+block/                  TheatricalBlocks (eager instances + Register<Block>, also registers the
+                        tiles); BlockHangable (hangs from an ISupport, falls when it goes,
+                        lands BROKEN; the flag rides on the item's NBT); light/ (BlockLight ->
+                        generic / intelligent / moving light, BlockIlluminator = the invisible
+                        light-level block the beam places); cables/ (BlockCable implements
+                        api.ICable; six connection props computed in getActualState); power/
+                        (dimmer rack, socapex distro); control/ (lighting desk); interfaces/
+                        (Art-Net, DMX->redstone); rigging/ (truss, IWB); test/
+tiles/                  TileEntityTheatricalBase (readNBT/getNBT drive both save and sync);
+                        lights/TileEntityFixture is the heart: every 5 ticks, if shouldTrace(),
+                        ray-trace along pan/tilt and keep a BlockIlluminator where the beam
+                        lands; power/ (dimmed cable pushes to neighbours; dimmer rack: DMX in,
+                        FE in, six socapex channels out; distro: five sockets); control/ (the
+                        desk: 12 faders, grand master, cues, fades); interfaces/
+items/                  TheatricalItems (ItemBlocks + positioner, wrench, ingredients; cog is
+                        oredict gearIron); ItemPositioner links to a generic light by NBT
+entity/                 FallingLightEntity (EntityFallingBlock that lands broken)
+client/                 TheatricalClient (@SidedProxy; item models, illuminator state mapper),
+                        gui/TheatricalGuiHandler (ids; containers/screens arrive with the GUI
+                        phase)
+network/                TheatricalNetworkHandler -- the two sync calls the tiles make; empty
+                        until the network phase
+util/                   CapabilityStorageProvider (delegates to INBTSerializable), FixtureUtil
+TheatricalConfigHandler @Config: fixtures.emitLight / consumePower, rendering.lightBeamOpacity
 ```
+
+1.12 block-state rules the port follows: every property set must fit 4 metadata bits
+(`getStateFromMeta`/`getMetaFromState`); anything that does not (cable connections) is
+computed in `getActualState` and left out of metadata. Blockstate JSON uses Forge's
+`forge_marker` format so partial property lists work; cables use vanilla multipart.
+Blockstate model references have no `block/` prefix on 1.12; model `parent` and texture
+references do (`block/...`, `blocks/...`).
 
 Two api-package rules the port introduced, both so `api/` depends on nothing else:
 

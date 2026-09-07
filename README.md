@@ -94,7 +94,13 @@ Mica Technologies after the corresponding 1.16 upstream files, file by file, and
 header saying so. Nothing of upstream's 1.16 source is compiled on this branch; the reference
 copy lives on `1.16.3`. The build is the GregTechCEu buildscripts (RetroFuturaGradle) rather than
 upstream's ForgeGradle, and artnet4j is shaded under a relocated package instead of being merged
-in as-is.
+in as-is. Ported so far: the API and capabilities, every block, item and tile entity, the falling
+light entity, the config and all assets (see the changelog for what each step fixed on the way).
+Still to come: GUIs, the fixture and beam renderers, Art-Net polling, The One Probe overlays and
+the Patchouli guide. Deliberate fork differences beyond the port itself: the creative tab is
+labelled LDEncore; the placeholder wrench texture is ours (upstream shipped none); several
+upstream bugs are fixed (a dimmer rack that ignored every DMX address other than 0, a positioner
+that aimed lights the wrong way on two facings, cables that forgot their state on reload).
 
 **The 1.16.4 baseline (`1.16.3` branch) -- no gameplay changes:**
 
