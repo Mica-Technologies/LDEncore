@@ -1,9 +1,9 @@
 package dev.theatricalmod.theatrical.api;
 
-import dev.theatricalmod.theatrical.tiles.cables.CableType;
+import net.minecraft.util.Direction;
 
 public interface IAcceptsCable {
 
-    CableType[] getAcceptedCables();
+    CableType[] getAcceptedCables(Direction side);
 
 }

@@ -1,25 +1,28 @@
 package dev.theatricalmod.theatrical.api.capabilities.socapex;
 
-import java.util.ArrayList;
-import java.util.List;
-import net.minecraft.nbt.NBTTagCompound;
+import net.minecraft.nbt.CompoundNBT;
 import net.minecraft.nbt.NBTUtil;
 import net.minecraft.util.math.BlockPos;
 import net.minecraftforge.common.capabilities.Capability;
 import net.minecraftforge.common.capabilities.CapabilityInject;
 import net.minecraftforge.common.util.INBTSerializable;
 
-public class SocapexReceiver implements ISocapexReceiver, INBTSerializable<NBTTagCompound> {
+import java.util.ArrayList;
+import java.util.List;
+
+public class SocapexReceiver implements ISocapexReceiver, INBTSerializable<CompoundNBT> {
 
     @CapabilityInject(ISocapexReceiver.class)
     public static Capability<ISocapexReceiver> CAP;
 
     private int[] channels;
-    private String identifier;
     private BlockPos pos;
 
     private List<BlockPos> blockPosList = new ArrayList<>();
 
+    public SocapexReceiver() {
+        this.channels = new int[8];
+    }
 
     public SocapexReceiver(BlockPos pos) {
         this.channels = new int[8];
@@ -27,31 +30,25 @@ public class SocapexReceiver implements ISocapexReceiver, INBTSerializable<NBTTa
     }
 
     @Override
-    public NBTTagCompound serializeNBT() {
-        NBTTagCompound nbtTagCompound = new NBTTagCompound();
-        if (identifier != null) {
-            nbtTagCompound.setString("identifier", identifier);
-        }
+    public CompoundNBT serializeNBT() {
+        CompoundNBT nbtTagCompound = new CompoundNBT();
         for (int i = 0; i < channels.length; i++) {
-            nbtTagCompound.setInteger("channel_" + i, channels[i]);
+            nbtTagCompound.putInt("channel_" + i, channels[i]);
         }
-        nbtTagCompound.setTag("pos", NBTUtil.createPosTag(pos));
+        nbtTagCompound.put("pos", NBTUtil.writeBlockPos(pos));
         return nbtTagCompound;
     }
 
     @Override
-    public void deserializeNBT(NBTTagCompound nbt) {
-        if (nbt.hasKey("identifier")) {
-            this.identifier = nbt.getString("identifier");
-        }
+    public void deserializeNBT(CompoundNBT nbt) {
         int[] channels = new int[8];
         for (int i = 0; i < 8; i++) {
-            if (nbt.hasKey("channel_" + i)) {
-                channels[i] = nbt.getInteger("channel_" + i);
+            if (nbt.contains("channel_" + i)) {
+                channels[i] = nbt.getInt("channel_" + i);
             }
         }
-        if (nbt.hasKey("pos")) {
-            pos = NBTUtil.getPosFromTag(nbt.getCompoundTag("pos"));
+        if (nbt.contains("pos")) {
+            pos = NBTUtil.readBlockPos(nbt.getCompound("pos"));
         }
         this.channels = channels;
     }
@@ -108,18 +105,9 @@ public class SocapexReceiver implements ISocapexReceiver, INBTSerializable<NBTTa
         return true;
     }
 
-    @Override
-    public String getIdentifier() {
-        return identifier;
-    }
 
     @Override
-    public void assignIdentifier(String identifier) {
-        this.identifier = identifier;
-    }
-
-    @Override
-    public BlockPos getPos() {
+    public BlockPos getReceiverPos() {
         return pos;
     }
 
@@ -130,5 +118,10 @@ public class SocapexReceiver implements ISocapexReceiver, INBTSerializable<NBTTa
     @Override
     public List<BlockPos> getDevices() {
         return blockPosList;
+    }
+
+    @Override
+    public int getTotalChannels() {
+        return 0;
     }
 }

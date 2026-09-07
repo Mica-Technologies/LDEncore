@@ -1,6 +1,7 @@
 package dev.theatricalmod.theatrical.api.capabilities.socapex;
 
-import net.minecraft.nbt.NBTTagCompound;
+
+import net.minecraft.nbt.CompoundNBT;
 import net.minecraft.util.math.BlockPos;
 
 public class SocapexPatch {
@@ -16,22 +17,22 @@ public class SocapexPatch {
         this.receiverSocket = receiverSocket;
     }
 
-    public NBTTagCompound serialize() {
-        NBTTagCompound nbtTagCompound = new NBTTagCompound();
+    public CompoundNBT serialize() {
+        CompoundNBT nbtTagCompound = new CompoundNBT();
         if (receiver != null) {
-            nbtTagCompound.setInteger("receiver", receiverSocket);
-            nbtTagCompound.setInteger("x", receiver.getX());
-            nbtTagCompound.setInteger("y", receiver.getY());
-            nbtTagCompound.setInteger("z", receiver.getZ());
+            nbtTagCompound.putInt("receiver", receiverSocket);
+            nbtTagCompound.putInt("x", receiver.getX());
+            nbtTagCompound.putInt("y", receiver.getY());
+            nbtTagCompound.putInt("z", receiver.getZ());
         }
         return nbtTagCompound;
     }
 
-    public void deserialize(NBTTagCompound nbtTagCompound) {
-        if (nbtTagCompound.hasKey("x")) {
-            this.receiver = new BlockPos(nbtTagCompound.getInteger("x"), nbtTagCompound.getInteger("y"), nbtTagCompound.getInteger("z"));
+    public void deserialize(CompoundNBT nbtTagCompound) {
+        if (nbtTagCompound.contains("x")) {
+            this.receiver = new BlockPos(nbtTagCompound.getInt("x"), nbtTagCompound.getInt("y"), nbtTagCompound.getInt("z"));
         }
-        this.receiverSocket = nbtTagCompound.getInteger("receiver");
+        this.receiverSocket = nbtTagCompound.getInt("receiver");
     }
 
     public BlockPos getReceiver() {

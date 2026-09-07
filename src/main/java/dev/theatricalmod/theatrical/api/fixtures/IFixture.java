@@ -14,4 +14,6 @@ public interface IFixture {
 
     boolean emitsLight();
 
+    boolean isUpsideDown();
+
 }

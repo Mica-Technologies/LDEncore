@@ -1,22 +1,23 @@
 package dev.theatricalmod.theatrical.api.fixtures;
 
-import dev.theatricalmod.theatrical.tiles.TileFixture;
-import dev.theatricalmod.theatrical.tiles.TileMovingHead;
-import dev.theatricalmod.theatrical.tiles.TileTungstenFixture;
+import dev.theatricalmod.theatrical.tiles.lights.TileEntityFixture;
+import dev.theatricalmod.theatrical.tiles.lights.TileEntityGenericFixture;
+import dev.theatricalmod.theatrical.tiles.lights.TileEntityIntelligentFixture;
+
 import java.util.function.Supplier;
 
 public enum FixtureType {
 
-    INTELLIGENT(TileMovingHead::new),
-    TUNGSTEN(TileTungstenFixture::new);
+    INTELLIGENT(TileEntityIntelligentFixture::new),
+    TUNGSTEN(TileEntityGenericFixture::new);
 
-    private Supplier<? extends TileFixture> tileClass;
+    private final Supplier<? extends TileEntityFixture> tileClass;
 
-    FixtureType(Supplier<? extends TileFixture> tileClass) {
+    FixtureType(Supplier<? extends TileEntityFixture> tileClass) {
         this.tileClass = tileClass;
     }
 
-    public Supplier<? extends TileFixture> getTileClass() {
+    public Supplier<? extends TileEntityFixture> getTileClass() {
         return this.tileClass;
     }
 }

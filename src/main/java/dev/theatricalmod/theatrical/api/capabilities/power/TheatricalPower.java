@@ -1,19 +1,23 @@
 package dev.theatricalmod.theatrical.api.capabilities.power;
 
-import net.minecraft.nbt.NBTTagCompound;
+import net.minecraft.nbt.CompoundNBT;
 import net.minecraftforge.common.capabilities.Capability;
 import net.minecraftforge.common.capabilities.CapabilityInject;
 import net.minecraftforge.common.util.INBTSerializable;
 
-public class TheatricalPower implements ITheatricalPowerStorage, INBTSerializable<NBTTagCompound> {
+public class TheatricalPower implements ITheatricalPowerStorage, INBTSerializable<CompoundNBT> {
 
     @CapabilityInject(ITheatricalPowerStorage.class)
     public static Capability<ITheatricalPowerStorage> CAP;
 
     private int power;
-    private int capacity;
-    private int maxReceive;
-    private int maxExtract;
+    private final int capacity;
+    private final int maxReceive;
+    private final int maxExtract;
+
+    public TheatricalPower(){
+        this(100, 100, 100, 0);
+    }
 
     public TheatricalPower(int capacity, int maxReceive, int maxExtract) {
         this(capacity, maxReceive, maxExtract, 0);
@@ -27,15 +31,15 @@ public class TheatricalPower implements ITheatricalPowerStorage, INBTSerializabl
     }
 
     @Override
-    public NBTTagCompound serializeNBT() {
-        NBTTagCompound tagCompound = new NBTTagCompound();
-        tagCompound.setInteger("power", power);
+    public CompoundNBT serializeNBT() {
+        CompoundNBT tagCompound = new CompoundNBT();
+        tagCompound.putInt("power", power);
         return tagCompound;
     }
 
     @Override
-    public void deserializeNBT(NBTTagCompound nbt) {
-        power = nbt.getInteger("power");
+    public void deserializeNBT(CompoundNBT nbt) {
+        power = nbt.getInt("power");
     }
 
     @Override

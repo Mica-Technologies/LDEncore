@@ -1,16 +1,17 @@
 package dev.theatricalmod.theatrical.api.fixtures;
 
-import net.minecraft.client.renderer.block.model.IBakedModel;
+
+import net.minecraft.util.ResourceLocation;
 
 public interface IFixtureModelProvider {
 
     HangableType getHangType();
 
-    IBakedModel getStaticModel();
+    ResourceLocation getStaticModel();
 
-    IBakedModel getTiltModel();
+    ResourceLocation getTiltModel();
 
-    IBakedModel getPanModel();
+    ResourceLocation getPanModel();
 
     float[] getTiltRotationPosition();
 

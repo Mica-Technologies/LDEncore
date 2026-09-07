@@ -1,6 +1,6 @@
 {
   "parent": "block/cube_all",
   "textures": {
-    "all": "theatrical:blocks/dmx_interface"
+    "all": "theatrical:block/dmx_interface"
   }
 }

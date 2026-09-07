@@ -1,26 +1,19 @@
 {
-  "forge_marker": 1,
-  "defaults": {
-    "model": "theatrical:dimmer_rack"
-  },
   "variants": {
-    "normal": [
-      {}
-    ],
-    "inventory": [
-      {}
-    ],
-    "facing": {
-      "north": {},
-      "south": {
-        "y": 180
-      },
-      "west": {
-        "y": 270
-      },
-      "east": {
-        "y": 90
-      }
+    "facing=north": {
+      "model": "theatrical:block/dimmer_rack"
+    },
+    "facing=south": {
+      "model": "theatrical:block/dimmer_rack",
+      "y": 180
+    },
+    "facing=west": {
+      "model": "theatrical:block/dimmer_rack",
+      "y": 270
+    },
+    "facing=east": {
+      "model": "theatrical:block/dimmer_rack",
+      "y": 90
     }
   }
 }

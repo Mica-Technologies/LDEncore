@@ -1,2 +1,32 @@
-# Auto detect text files and perform LF normalization
+# ---------------------------------------------------------------------------
+# Mica Technologies fork (LDEncore). Upstream Theatrical had no .gitattributes on this
+# branch; this is the dev-configurations/templates/gitattributes template plus the
+# generated-data rule ForgeGradle projects usually carry.
+# ---------------------------------------------------------------------------
+
+# Normalize line endings: store LF in the repo, let git decide checkout per the rules below
 * text=auto
+
+# Data-generator output always generates with LF; pin it so a Windows checkout does not
+# report every generated JSON as modified.
+src/generated/**/.cache/cache text eol=lf
+src/generated/**/*.json text eol=lf
+
+# Scripts that must keep LF (run under bash/sh even on Windows)
+*.sh text eol=lf
+gradlew text eol=lf
+
+# Windows scripts that must keep CRLF
+*.bat text eol=crlf
+*.cmd text eol=crlf
+*.ps1 text eol=crlf
+
+# Binary files -- never touch line endings
+*.png binary
+*.jpg binary
+*.gif binary
+*.ico binary
+*.jar binary
+*.zip binary
+*.psd binary
+*.pdn binary

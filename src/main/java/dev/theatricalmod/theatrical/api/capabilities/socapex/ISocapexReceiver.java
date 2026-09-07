@@ -1,7 +1,8 @@
 package dev.theatricalmod.theatrical.api.capabilities.socapex;
 
-import java.util.List;
 import net.minecraft.util.math.BlockPos;
+
+import java.util.List;
 
 public interface ISocapexReceiver {
 
@@ -17,11 +18,9 @@ public interface ISocapexReceiver {
 
     boolean canReceive(int channel);
 
-    String getIdentifier();
-
-    void assignIdentifier(String identifier);
-
-    BlockPos getPos();
+    BlockPos getReceiverPos();
 
     List<BlockPos> getDevices();
+
+    int getTotalChannels();
 }

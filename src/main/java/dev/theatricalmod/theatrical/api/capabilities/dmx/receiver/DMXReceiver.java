@@ -1,23 +1,24 @@
 package dev.theatricalmod.theatrical.api.capabilities.dmx.receiver;
 
-import dev.theatricalmod.theatrical.handlers.TheatricalPacketHandler;
-import dev.theatricalmod.theatrical.packets.SendDMXPacket;
-import java.util.Arrays;
-import net.minecraft.nbt.NBTTagCompound;
+import net.minecraft.nbt.CompoundNBT;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.world.World;
 import net.minecraftforge.common.capabilities.Capability;
 import net.minecraftforge.common.capabilities.CapabilityInject;
 import net.minecraftforge.common.util.INBTSerializable;
 
-public class DMXReceiver implements IDMXReceiver, INBTSerializable<NBTTagCompound> {
+import java.util.Arrays;
+
+public class DMXReceiver implements IDMXReceiver, INBTSerializable<CompoundNBT> {
 
     @CapabilityInject(IDMXReceiver.class)
-    public static Capability<IDMXReceiver> CAP;
+    public static final Capability<IDMXReceiver> CAP = null;
 
     private int dmxStartPoint;
     private int dmxChannels;
     private byte[] dmxValues;
+
+    public DMXReceiver(){}
 
     public DMXReceiver(int dmxChannels, int dmxStartPoint){
         this.dmxChannels = dmxChannels;
@@ -44,17 +45,19 @@ public class DMXReceiver implements IDMXReceiver, INBTSerializable<NBTTagCompoun
         if(data.length > this.dmxStartPoint) {
             this.dmxValues = Arrays.copyOfRange(data, this.dmxStartPoint, this.dmxStartPoint + this.dmxChannels);
         }
-        if(!world.isRemote)
-            TheatricalPacketHandler.INSTANCE.sendToAll(new SendDMXPacket(pos, dmxValues));
+//        if(!world.isRemote) {
+//            Dimension dimension = world.dimension;
+//            TheatricalNetworkHandler.MAIN.send(PacketDistributor.DIMENSION.with(dimension::getType), new SendDMXPacket(pos, this.dmxValues));
+//        }
     }
 
     @Override
-    public NBTTagCompound serializeNBT() {
+    public CompoundNBT serializeNBT() {
         return null;
     }
 
     @Override
-    public void deserializeNBT(NBTTagCompound nbt) {
+    public void deserializeNBT(CompoundNBT nbt) {
 
     }
 

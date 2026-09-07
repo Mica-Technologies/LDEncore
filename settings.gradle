@@ -1,0 +1,18 @@
+// Mica Technologies fork (LDEncore): this file did not exist upstream. It pins the plugin
+// repositories ForgeGradle 6 needs and enables toolchain auto-provisioning, so a machine
+// that only has a JDK 17 to run Gradle can still compile the mod against Java 8.
+pluginManagement {
+    repositories {
+        gradlePluginPortal()
+        maven {
+            name = 'MinecraftForge'
+            url = 'https://maven.minecraftforge.net/'
+        }
+    }
+}
+
+plugins {
+    id 'org.gradle.toolchains.foojay-resolver-convention' version '0.7.0'
+}
+
+rootProject.name = 'LDEncore'

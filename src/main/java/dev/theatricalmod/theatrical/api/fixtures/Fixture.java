@@ -1,22 +1,22 @@
 package dev.theatricalmod.theatrical.api.fixtures;
 
+import dev.theatricalmod.theatrical.TheatricalMod;
 import dev.theatricalmod.theatrical.api.ChannelsDefinition;
-import dev.theatricalmod.theatrical.util.Reference;
-import net.minecraft.client.renderer.block.model.IBakedModel;
+import net.minecraft.client.renderer.model.IBakedModel;
 import net.minecraft.util.ResourceLocation;
 import net.minecraftforge.common.MinecraftForge;
 import net.minecraftforge.event.RegistryEvent.Register;
 import net.minecraftforge.registries.ForgeRegistry;
-import net.minecraftforge.registries.IForgeRegistryEntry.Impl;
+import net.minecraftforge.registries.ForgeRegistryEntry;
 import net.minecraftforge.registries.RegistryBuilder;
 
-public class Fixture extends Impl<Fixture> {
+public class Fixture extends ForgeRegistryEntry<Fixture> {
 
     private static ForgeRegistry<Fixture> REGISTRY;
 
     public static void createRegistry() {
         if (REGISTRY == null) {
-            ResourceLocation registryName = new ResourceLocation(Reference.MOD_ID, "fixtures");
+            ResourceLocation registryName = new ResourceLocation(TheatricalMod.MOD_ID, "fixtures");
             REGISTRY = (ForgeRegistry<Fixture>) new RegistryBuilder<Fixture>().setType(Fixture.class).setName(registryName).create();
             MinecraftForge.EVENT_BUS.post(new Register<>(registryName, REGISTRY));
         }
@@ -26,25 +26,26 @@ public class Fixture extends Impl<Fixture> {
         return REGISTRY;
     }
 
-    private ResourceLocation name;
-    private FixtureType fixtureType;
-    private HangableType hangableType;
-    private ResourceLocation staticModelLocation;
-    private ResourceLocation hookedModelLocation;
-    private ResourceLocation tiltModelLocation;
-    private ResourceLocation panModelLocation;
-    private float[] tiltRotationPosition;
-    private float[] panRotationPosition;
-    private float[] beamStartPosition;
-    private float defaultRotation;
-    private float beamWidth;
-    private float rayTraceRotation;
-    private float maxLightDistance;
-    private int maxEnergy;
-    private int energyUse;
-    private int energyUseTimer;
-    private int channelCount;
-    private ChannelsDefinition channelsDefinition;
+    private final ResourceLocation name;
+    private final FixtureType fixtureType;
+    private final HangableType hangableType;
+    private final ResourceLocation staticModelLocation;
+    private final ResourceLocation hookedModelLocation;
+    private final ResourceLocation tiltModelLocation;
+    private final ResourceLocation panModelLocation;
+    private final ResourceLocation[] textures;
+    private final float[] tiltRotationPosition;
+    private final float[] panRotationPosition;
+    private final float[] beamStartPosition;
+    private final float defaultRotation;
+    private final float beamWidth;
+    private final float rayTraceRotation;
+    private final float maxLightDistance;
+    private final int maxEnergy;
+    private final int energyUse;
+    private final int energyUseTimer;
+    private final int channelCount;
+    private final ChannelsDefinition channelsDefinition;
 
     private IBakedModel staticModel;
     private IBakedModel hookedModel;
@@ -68,9 +69,9 @@ public class Fixture extends Impl<Fixture> {
      * @param beamWidth The width of the beam
      * @param rayTraceRotation Any extra raytracing rotation
      */
-    public Fixture(ResourceLocation name, FixtureType fixtureType, HangableType hangableType, ResourceLocation staticModelLocation, ResourceLocation hookedModelLocation, ResourceLocation tiltModelLocation, ResourceLocation panModelLocation, float[] tiltRotationPosition, float[] panRotationPosition, float[] beamStartPosition, float defaultRotation, float beamWidth, float rayTraceRotation, float maxLightDistance, int maxEnergy, int energyUse, int energyUseTimer, int channelCount, ChannelsDefinition channelsDefinition) {
+    public Fixture(ResourceLocation name, FixtureType fixtureType, HangableType hangableType, ResourceLocation staticModelLocation, ResourceLocation hookedModelLocation, ResourceLocation tiltModelLocation, ResourceLocation panModelLocation, float[] tiltRotationPosition, float[] panRotationPosition, float[] beamStartPosition, float defaultRotation, float beamWidth, float rayTraceRotation, float maxLightDistance, int maxEnergy, int energyUse, int energyUseTimer, int channelCount, ChannelsDefinition channelsDefinition, ResourceLocation... textures) {
         this.name = name;
-        this.setRegistryName(new ResourceLocation(name.getNamespace(), name.getPath() + "_fixture"));
+        this.setRegistryName(name);
         this.fixtureType = fixtureType;
         this.hangableType = hangableType;
         this.staticModelLocation = staticModelLocation;
@@ -89,6 +90,7 @@ public class Fixture extends Impl<Fixture> {
         this.channelCount = channelCount;
         this.channelsDefinition = channelsDefinition;
         this.maxEnergy = maxEnergy;
+        this.textures = textures;
     }
 
     public ResourceLocation getName() {
@@ -197,5 +199,9 @@ public class Fixture extends Impl<Fixture> {
 
     public int getMaxEnergy() {
         return maxEnergy;
+    }
+
+    public ResourceLocation[] getTextures() {
+        return textures;
     }
 }

@@ -1,8 +1,9 @@
 package dev.theatricalmod.theatrical.api.capabilities.socapex;
 
-import java.util.List;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.world.World;
+
+import java.util.List;
 
 public interface ISocapexProvider {
 
@@ -31,4 +32,6 @@ public interface ISocapexProvider {
     List<ISocapexReceiver> getDevices(World world, BlockPos controller);
 
     int[] getPatchedCables(ISocapexReceiver socapexReceiver);
+
+    String getIdentifier(BlockPos pos);
 }

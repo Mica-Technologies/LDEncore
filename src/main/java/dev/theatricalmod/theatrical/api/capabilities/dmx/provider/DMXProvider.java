@@ -1,24 +1,26 @@
 package dev.theatricalmod.theatrical.api.capabilities.dmx.provider;
 
+import dev.theatricalmod.theatrical.api.CableType;
 import dev.theatricalmod.theatrical.api.capabilities.dmx.receiver.DMXReceiver;
 import dev.theatricalmod.theatrical.api.capabilities.dmx.receiver.IDMXReceiver;
 import dev.theatricalmod.theatrical.api.dmx.DMXUniverse;
-import dev.theatricalmod.theatrical.tiles.cables.CableType;
-import dev.theatricalmod.theatrical.tiles.cables.TileCable;
-import java.util.HashSet;
-import net.minecraft.nbt.NBTTagCompound;
+import dev.theatricalmod.theatrical.block.cables.BlockCable;
+import net.minecraft.block.BlockState;
+import net.minecraft.nbt.CompoundNBT;
 import net.minecraft.tileentity.TileEntity;
-import net.minecraft.util.EnumFacing;
+import net.minecraft.util.Direction;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.world.World;
 import net.minecraftforge.common.capabilities.Capability;
 import net.minecraftforge.common.capabilities.CapabilityInject;
 import net.minecraftforge.common.util.INBTSerializable;
 
-public class DMXProvider implements IDMXProvider, INBTSerializable<NBTTagCompound> {
+import java.util.HashSet;
+
+public class DMXProvider implements IDMXProvider, INBTSerializable<CompoundNBT> {
 
     @CapabilityInject(IDMXProvider.class)
-    public static Capability<IDMXProvider> CAP;
+    public static final Capability<IDMXProvider> CAP = null;
 
     private DMXUniverse dmxUniverse;
     private HashSet<BlockPos> devices = null;
@@ -35,12 +37,12 @@ public class DMXProvider implements IDMXProvider, INBTSerializable<NBTTagCompoun
     }
 
     @Override
-    public NBTTagCompound serializeNBT() {
+    public CompoundNBT serializeNBT() {
         return null;
     }
 
     @Override
-    public void deserializeNBT(NBTTagCompound nbt) {
+    public void deserializeNBT(CompoundNBT nbt) {
 
     }
 
@@ -50,28 +52,24 @@ public class DMXProvider implements IDMXProvider, INBTSerializable<NBTTagCompoun
     }
 
 
-    public void addToList(HashSet<BlockPos> scanned, World world, BlockPos pos, EnumFacing facing){
-        TileEntity tileEntity = world.getTileEntity(pos);
-        if(tileEntity != null && tileEntity.hasCapability(DMXReceiver.CAP, facing)){
-            if (scanned.add(pos)) {
-                if(tileEntity instanceof TileCable){
-                    TileCable cable = (TileCable) tileEntity;
-                    for (int i = 0; i < 6; i++) {
-                        if (cable.hasSide(i)) {
-                            for (EnumFacing facing1 : EnumFacing.VALUES) {
-                                if (facing1 != facing) {
-                                    BlockPos connected = cable.isConnectedSides(facing1, i, CableType.DMX);
-                                    if (connected != null) {
-                                        addToList(scanned, world, connected, facing1.getOpposite());
-                                    }
-                                }
-                            }
-                        }
+    public void addToList(HashSet<BlockPos> scanned, World world, BlockPos pos, Direction facing, HashSet<BlockPos> scannedCable){
+        BlockState blockState = world.getBlockState(pos);
+        if (blockState.getBlock() instanceof BlockCable && ((BlockCable) blockState.getBlock()).getCableType() == CableType.DMX) {
+            scannedCable.add(pos);
+            for (Direction direction : Direction.values()) {
+                if(direction != facing) {
+                    if (((BlockCable) blockState.getBlock()).canConnect(world, pos, direction) && !scannedCable.contains(pos.offset(direction))) {
+                        addToList(scanned, world, pos.offset(direction), direction.getOpposite(), scannedCable);
                     }
-                }else{
-                    for (EnumFacing facing1 : EnumFacing.VALUES) {
+                }
+            }
+        } else {
+            TileEntity tileEntity = world.getTileEntity(pos);
+            if (tileEntity != null && (tileEntity.getCapability(DMXReceiver.CAP, facing).isPresent())) {
+                if (scanned.add(pos)) {
+                    for (Direction facing1 : Direction.values()) {
                         if (facing1 != facing) {
-                            addToList(scanned, world, pos.offset(facing1), facing1.getOpposite());
+                            addToList(scanned, world, pos.offset(facing1), facing1.getOpposite(), scannedCable);
                         }
                     }
                 }
@@ -82,20 +80,26 @@ public class DMXProvider implements IDMXProvider, INBTSerializable<NBTTagCompoun
     @Override
     public void updateDevices(World world, BlockPos controllerPos) {
         if(devices == null) {
-            if (world.isRemote) {
-                devices = new HashSet<>();
-                return;
-            }
+//            if (world.isRemote) {
+//                devices = new HashSet<>();
+//                return;
+//            }
             HashSet<BlockPos> receivers = new HashSet<>();
-            for(EnumFacing facing : EnumFacing.VALUES){
-                addToList(receivers, world, controllerPos.offset(facing), facing.getOpposite());
+            HashSet<BlockPos> scannedCable = new HashSet<>();
+            for(Direction facing : Direction.values()){
+                addToList(receivers, world, controllerPos.offset(facing), facing.getOpposite(), scannedCable);
             }
+            scannedCable.clear();
             devices = new HashSet<>(receivers);
         }
         for (BlockPos receiver : devices) {
+            BlockState blockState = world.getBlockState(receiver);
+            if (blockState.getBlock() instanceof BlockCable) {
+                continue;
+            }
             TileEntity tile = world.getTileEntity(receiver);
-            if(tile != null && !(tile instanceof TileCable)) {
-                IDMXReceiver idmxReceiver = tile.getCapability(DMXReceiver.CAP, null);
+            if (tile != null) {
+                IDMXReceiver idmxReceiver = tile.getCapability(DMXReceiver.CAP, null).orElse(null);
                 if (idmxReceiver != null) {
                     idmxReceiver.receiveDMXValues(dmxUniverse.getDMXChannels(), world, receiver);
                 }
