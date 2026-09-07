@@ -1,0 +1,34 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "pattern": [
+    "IGI",
+    "MLM",
+    "BDB"
+  ],
+  "key": {
+    "I": {
+      "type": "forge:ore_dict",
+      "ore": "ingotIron"
+    },
+    "G": {
+      "type": "forge:ore_dict",
+      "ore": "blockGlass"
+    },
+    "M": {
+      "item": "theatrical:motor"
+    },
+    "L": {
+      "item": "theatrical:led"
+    },
+    "B": {
+      "type": "forge:ore_dict",
+      "ore": "blockIron"
+    },
+    "D": {
+      "item": "theatrical:dmx_cable"
+    }
+  },
+  "result": {
+    "item": "theatrical:moving_light"
+  }
+}

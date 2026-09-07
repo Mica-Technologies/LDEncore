@@ -1,0 +1,26 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "pattern": [
+    "WWW",
+    "IRI",
+    "WWW"
+  ],
+  "key": {
+    "W": {
+      "item": "minecraft:wool",
+      "data": 15
+    },
+    "I": {
+      "type": "forge:ore_dict",
+      "ore": "ingotIron"
+    },
+    "R": {
+      "type": "forge:ore_dict",
+      "ore": "dustRedstone"
+    }
+  },
+  "result": {
+    "item": "theatrical:dmx_cable",
+    "count": 6
+  }
+}

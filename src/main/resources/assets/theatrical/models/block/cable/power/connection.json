@@ -1,0 +1,7 @@
+{
+  "textures": {
+    "0": "theatrical:blocks/cable_power",
+    "particle": "theatrical:blocks/cable_power"
+  },
+  "parent": "theatrical:block/cable/connection"
+}

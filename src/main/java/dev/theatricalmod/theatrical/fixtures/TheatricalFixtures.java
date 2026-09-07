@@ -39,8 +39,10 @@ public final class TheatricalFixtures {
 
     @SubscribeEvent
     public static void onRegisterFixtures(RegistryEvent.Register<Fixture> event) {
-        event.getRegistry().register(MOVING_LIGHT);
-        event.getRegistry().register(FRESNEL);
+        // Registry names are applied here, inside the event, so the active mod container is
+        // ours when Forge checks the namespace prefix.
+        event.getRegistry().register(MOVING_LIGHT.setRegistryName(MOVING_LIGHT.getName()));
+        event.getRegistry().register(FRESNEL.setRegistryName(FRESNEL.getName()));
         TheatricalMod.LOGGER.info("Registered {} fixtures", event.getRegistry().getKeys().size());
     }
 }

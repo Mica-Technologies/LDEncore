@@ -1,1 +1,32 @@
+# LDEncore -- Mica Technologies' fork of Theatrical, ported to Forge 1.12.2.
+# CHANGED FROM UPSTREAM: converted from upstream's en_us.json to 1.12's .lang format;
+# the creative tab is labelled LDEncore (the fork's name); the guide strings come with
+# the Patchouli phase; config screen labels are fork additions.
+
+tile.theatrical.artnet_interface.name=ArtNet Interface
+tile.theatrical.basic_lighting_desk.name=Basic Lighting Desk
+tile.theatrical.dimmed_power_cable.name=Dimmed Power Cable
+tile.theatrical.dimmer_rack.name=Dimmer Rack
+tile.theatrical.dmx_cable.name=DMX Cable
+tile.theatrical.generic_light.name=Generic Light
+tile.theatrical.iwb.name=Internally Wired Bar (IWB)
+tile.theatrical.moving_light.name=Moving Light
+tile.theatrical.power_cable.name=Power Cable
+tile.theatrical.redstone_interface.name=DMX-Redstone Interface
+tile.theatrical.socapex_cable.name=Socapex Cable
+tile.theatrical.socapex_distribution.name=Socapex Distro
+tile.theatrical.test_dmx.name=Test DMX Block
+tile.theatrical.truss.name=MT100 Truss
+item.theatrical.bulb.name=Tungsten Bulb
+item.theatrical.cog.name=Mechanical Cog
+item.theatrical.led.name=LED
+item.theatrical.motor.name=Electrical Motor
+item.theatrical.positioner.name=Remote Light Positioner
+item.theatrical.wrench.name=Wrench
 itemGroup.theatrical=LDEncore
+
+# Falling light entity
+entity.theatrical.falling_light.name=Falling Light
+
+# Config screen
+config.theatrical.title=LDEncore

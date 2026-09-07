@@ -1,0 +1,24 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "pattern": [
+    "III",
+    "DPD",
+    "III"
+  ],
+  "key": {
+    "P": {
+      "item": "theatrical:dimmed_power_cable"
+    },
+    "D": {
+      "item": "theatrical:dmx_cable"
+    },
+    "I": {
+      "type": "forge:ore_dict",
+      "ore": "ingotIron"
+    }
+  },
+  "result": {
+    "item": "theatrical:iwb",
+    "count": 6
+  }
+}

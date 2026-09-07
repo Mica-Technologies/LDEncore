@@ -1,0 +1,23 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "pattern": [
+    "III",
+    "SDS",
+    "III"
+  ],
+  "key": {
+    "I": {
+      "type": "forge:ore_dict",
+      "ore": "ingotIron"
+    },
+    "S": {
+      "item": "theatrical:socapex_cable"
+    },
+    "D": {
+      "item": "theatrical:dmx_cable"
+    }
+  },
+  "result": {
+    "item": "theatrical:dimmer_rack"
+  }
+}

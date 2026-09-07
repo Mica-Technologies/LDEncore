@@ -1,0 +1,13 @@
+{
+  "forge_marker": 1,
+  "defaults": {
+    "model": "theatrical:truss"
+  },
+  "variants": {
+    "axis": {
+      "x": {},
+      "y": {},
+      "z": {}
+    }
+  }
+}

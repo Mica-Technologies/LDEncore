@@ -9,6 +9,10 @@
  *   - 1.12's registry API: IForgeRegistryEntry.Impl, and the registry is created in
  *     RegistryEvent.NewRegistry (see createRegistry's caller) rather than by posting a
  *     Register event by hand;
+ *   - the registry name is no longer set in the constructor: on 1.12 that runs during class
+ *     initialisation, before Forge has the mod's container active, and Forge then warns
+ *     about a "potentially dangerous alternative prefix". The registering code sets it
+ *     inside the registry event instead (getName() still carries it);
  *   - the baked model handles (IBakedModel fields and their accessors) are gone from this
  *     class. IBakedModel is a client-only class, and a dedicated server has no such class to
  *     load; the client keeps its baked models in its own cache keyed by fixture.
@@ -98,7 +102,8 @@ public class Fixture extends IForgeRegistryEntry.Impl<Fixture> {
      */
     public Fixture(ResourceLocation name, FixtureType fixtureType, HangableType hangableType, ResourceLocation staticModelLocation, ResourceLocation hookedModelLocation, ResourceLocation tiltModelLocation, ResourceLocation panModelLocation, float[] tiltRotationPosition, float[] panRotationPosition, float[] beamStartPosition, float defaultRotation, float beamWidth, float rayTraceRotation, float maxLightDistance, int maxEnergy, int energyUse, int energyUseTimer, int channelCount, ChannelsDefinition channelsDefinition, ResourceLocation... textures) {
         this.name = name;
-        this.setRegistryName(name);
+        // The registry name is applied by whoever registers the fixture (see
+        // TheatricalFixtures), inside the registry event, so Forge sees the right active mod.
         this.fixtureType = fixtureType;
         this.hangableType = hangableType;
         this.staticModelLocation = staticModelLocation;

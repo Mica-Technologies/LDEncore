@@ -7,12 +7,15 @@
  *
  * CHANGED FROM UPSTREAM:
  *   - 1.12.2 @Mod lifecycle (FMLPreInitialization/Initialization/PostInitialization events)
- *     in place of the 1.16 constructor + mod-bus setup; registration, network and Art-Net
- *     wiring is added phase by phase as it is ported;
- *   - the fixture registry is created by TheatricalFixtures in RegistryEvent.NewRegistry
- *     rather than from here;
+ *     in place of the 1.16 constructor + mod-bus setup;
+ *   - @SidedProxy (TheatricalCommon / client.TheatricalClient) in place of DistExecutor;
+ *   - blocks, items, tiles and entities register from their own @EventBusSubscriber classes
+ *     rather than DeferredRegisters owned here; the fixture registry is created by
+ *     TheatricalFixtures in RegistryEvent.NewRegistry;
  *   - the world capabilities are attached with 1.12's AttachCapabilitiesEvent<World> and
- *     ticked from WorldTickEvent exactly as upstream did, minus LazyOptional.
+ *     ticked from WorldTickEvent exactly as upstream did, minus LazyOptional;
+ *   - the creative tab is labelled LDEncore (see the lang file), the mod's own name;
+ *   - the Art-Net manager, network channel and The One Probe IMC arrive with their phases.
  */
 package dev.theatricalmod.theatrical;
 
@@ -28,18 +31,25 @@ import dev.theatricalmod.theatrical.api.capabilities.socapex.ISocapexProvider;
 import dev.theatricalmod.theatrical.api.capabilities.socapex.ISocapexReceiver;
 import dev.theatricalmod.theatrical.api.capabilities.socapex.SocapexProvider;
 import dev.theatricalmod.theatrical.api.capabilities.socapex.SocapexReceiver;
+import dev.theatricalmod.theatrical.client.gui.TheatricalGuiHandler;
+import dev.theatricalmod.theatrical.items.TheatricalItems;
+import dev.theatricalmod.theatrical.network.TheatricalNetworkHandler;
 import dev.theatricalmod.theatrical.util.CapabilityStorageProvider;
+import net.minecraft.creativetab.CreativeTabs;
+import net.minecraft.item.ItemStack;
 import net.minecraft.util.ResourceLocation;
 import net.minecraft.world.World;
 import net.minecraftforge.common.MinecraftForge;
 import net.minecraftforge.common.capabilities.CapabilityManager;
 import net.minecraftforge.event.AttachCapabilitiesEvent;
 import net.minecraftforge.fml.common.Mod;
+import net.minecraftforge.fml.common.SidedProxy;
 import net.minecraftforge.fml.common.event.FMLInitializationEvent;
 import net.minecraftforge.fml.common.event.FMLPostInitializationEvent;
 import net.minecraftforge.fml.common.event.FMLPreInitializationEvent;
 import net.minecraftforge.fml.common.eventhandler.SubscribeEvent;
 import net.minecraftforge.fml.common.gameevent.TickEvent;
+import net.minecraftforge.fml.common.network.NetworkRegistry;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
@@ -50,25 +60,44 @@ public class TheatricalMod {
 
     public static final Logger LOGGER = LogManager.getLogger(Tags.MODID);
 
+    private static final String COMMON_PROXY = "dev.theatricalmod.theatrical.TheatricalCommon";
+    private static final String CLIENT_PROXY = "dev.theatricalmod.theatrical.client.TheatricalClient";
+
     private static final ResourceLocation DMX_NETWORK_ID = new ResourceLocation(MOD_ID, "dmx_world_network");
     private static final ResourceLocation SOCAPEX_NETWORK_ID = new ResourceLocation(MOD_ID, "socapex_network");
 
+    /** The creative tab. Its label comes from the lang key {@code itemGroup.theatrical}. */
+    public static final CreativeTabs THEATRICAL_TAB = new CreativeTabs(MOD_ID) {
+        @Override
+        public ItemStack createIcon() {
+            return new ItemStack(TheatricalItems.DIMMER_RACK);
+        }
+    };
+
     @Mod.Instance
     public static TheatricalMod instance;
+
+    @SidedProxy(clientSide = CLIENT_PROXY, serverSide = COMMON_PROXY)
+    public static TheatricalCommon proxy;
 
     @Mod.EventHandler
     public void preInit(FMLPreInitializationEvent event) {
         LOGGER.info("Initialising {} {} (Forge 1.12.2 port of Theatrical)", Tags.MODNAME, Tags.VERSION);
         registerCapabilities();
+        TheatricalNetworkHandler.init();
         MinecraftForge.EVENT_BUS.register(this);
+        proxy.preInit(event);
     }
 
     @Mod.EventHandler
     public void init(FMLInitializationEvent event) {
+        NetworkRegistry.INSTANCE.registerGuiHandler(this, new TheatricalGuiHandler());
+        proxy.init(event);
     }
 
     @Mod.EventHandler
     public void postInit(FMLPostInitializationEvent event) {
+        proxy.postInit(event);
     }
 
     private void registerCapabilities() {
@@ -115,6 +144,47 @@ public class TheatricalMod {
             if (socapexNetwork != null) {
                 socapexNetwork.tick(world);
             }
+        }
+    }
+
+    /** Flags both world networks for a re-walk on the next tick. Server worlds only. */
+    public static void refreshNetworks(World world) {
+        if (world == null || world.isRemote) {
+            return;
+        }
+        if (world.hasCapability(WorldDMXNetwork.CAP, null)) {
+            WorldDMXNetwork dmx = world.getCapability(WorldDMXNetwork.CAP, null);
+            if (dmx != null) {
+                dmx.setRefresh(true);
+            }
+        }
+        if (world.hasCapability(WorldSocapexNetwork.CAP, null)) {
+            WorldSocapexNetwork socapex = world.getCapability(WorldSocapexNetwork.CAP, null);
+            if (socapex != null) {
+                socapex.setRefresh(true);
+            }
+        }
+    }
+
+    /** Flags only the DMX network for a re-walk. */
+    public static void refreshDmxNetwork(World world) {
+        if (world == null || world.isRemote || !world.hasCapability(WorldDMXNetwork.CAP, null)) {
+            return;
+        }
+        WorldDMXNetwork dmx = world.getCapability(WorldDMXNetwork.CAP, null);
+        if (dmx != null) {
+            dmx.setRefresh(true);
+        }
+    }
+
+    /** Flags only the socapex network for a re-walk. */
+    public static void refreshSocapexNetwork(World world) {
+        if (world == null || world.isRemote || !world.hasCapability(WorldSocapexNetwork.CAP, null)) {
+            return;
+        }
+        WorldSocapexNetwork socapex = world.getCapability(WorldSocapexNetwork.CAP, null);
+        if (socapex != null) {
+            socapex.setRefresh(true);
         }
     }
 }
