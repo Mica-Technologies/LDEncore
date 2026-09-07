@@ -10,27 +10,28 @@ working with code in this repository. It is the agent-facing companion to `READM
 Theatrical Team. Theatrical adds live-events equipment -- fresnels, moving heads, dimmer racks,
 DMX/Art-Net control, power and DMX cabling, truss -- to Minecraft. Mod id: `theatrical`.
 
-The fork exists to **backport the mod to Forge 1.12.2**. What the repository currently builds is
-the inherited upstream baseline: **Minecraft 1.16.4 / Forge 35.1.37, Theatrical 0.7.2** plus the
-unreleased fixes that landed on upstream's `1.16.3` branch before it was archived (February 2023).
-The backport is planned, not started; the plan lives in `docs/agent-plans/MASTER_PLAN.md`
-(gitignored, see *Planning docs*).
+**This branch (`1.12`, the GitHub default) is the Forge 1.12.2 port**, which is the reason the
+fork exists. It is a translation of upstream's mature 1.16.4 code to 1.12.2 APIs, done bottom-up
+and phase by phase; the plan and its current status live in `docs/agent-plans/MASTER_PLAN.md`
+(gitignored, see *Planning docs*). Until a subsystem is ported it simply is not here.
 
-Branches: **`1.12` is the repository's default branch and the home of the Forge 1.12.2
-backport.** Until the port lands there it still holds upstream's 2019 prototype -- an early
-version of the mod from before the 1.15/1.16 rewrite (140 Java files, Albedo-based lighting, a
-JSON custom-fixture system) that does not build and is reference material only, not the port's
-starting point. **`1.16.3`** is the resurrected upstream baseline (this scaffolding, the working
-1.16.4 build) and the source the port is translated from. `1.15.1`, `1.18.2`,
-`feature/cccompat`, `new-cables` and `working-audio-thing` were inherited from upstream and are
-untouched. GitHub only honours `workflow_run` and `workflow_dispatch` for workflow files on the
-default branch, so the `.github/workflows/` set has to exist on `1.12` too (Phase 1 of the plan
-copies the scaffolding there).
+**The `1.16.3` branch is the reference.** It holds the resurrected upstream baseline (Theatrical
+0.7.2 for Minecraft 1.16.4 plus upstream's unreleased fixes) with a working ForgeGradle 6 build,
+and its own `CLAUDE.md` describing that code. When porting, read the 1.16 file there:
+`git show 1.16.3:src/main/java/dev/theatricalmod/theatrical/<path>`, or keep a worktree beside
+this checkout (`git worktree add ../LDEncore-1.16 1.16.3`). The 1.16 line is frozen: it gets no
+feature work, only what is needed to keep it building.
 
-Build system is **ForgeGradle 6** with a hand-written `build.gradle` -- *not* the GregTechCEu
-Buildscripts used by the sibling Mica 1.12.2 mods (RCMC, CSM, LDOG, LDFAWE). That is a deliberate
-choice for the 1.16 baseline; the 1.12.2 backport branch is expected to adopt the GregTechCEu
-buildscripts like its siblings, and the plan covers that.
+Other inherited upstream branches (`1.15.1`, `1.18.2`, `feature/cccompat`, `new-cables`,
+`working-audio-thing`) are untouched. This branch's own pre-2026 history is upstream's 2019
+prototype of the mod (Albedo lighting, JSON custom fixtures, ComputerCraft integration); it does
+not build and the port is not based on it, but its 1.12-native pieces (TESR, GUI, packet handler,
+Albedo hook) are worth reading when the corresponding phase comes up.
+
+Build system is the **GregTechCEu buildscripts** (RetroFuturaGradle) -- the same as the sibling
+Mica 1.12.2 mods (RCMC, CSM, LDOG, LDFAWE). `build.gradle` is the unmodified buildscript
+(`//version:` header); project settings go in `buildscript.properties`, extra Gradle logic in
+`addon.gradle`, dependencies in `dependencies.gradle`, repositories in `repositories.gradle`.
 
 ## Rules that are not negotiable
 
@@ -38,37 +39,41 @@ buildscripts like its siblings, and the plan covers that.
 
 Theatrical is Apache-2.0, and section 4(b) of that licence requires that **any modified file
 carries a prominent notice stating that it was changed**. This is a licence obligation, not a
-style preference. Every time you edit a file inherited from upstream:
+style preference. On this branch almost every Java file is a *port* of an upstream 1.16 file:
+written by us, after theirs, to a different API. Treat those as modified upstream files and mark
+them.
 
-- **Java sources** -- add (or extend) a comment block at the very top of the file, above the
-  `package` line:
+- **Ported Java sources** (a 1.12.2 counterpart of an upstream 1.16 file) -- comment block at
+  the very top, above the `package` line:
 
   ```java
   /*
-   * CHANGED FROM UPSTREAM (Mica Technologies fork, LDEncore):
-   *   - <what changed and why, one line per change>
-   * Original work Copyright the Theatrical Team (Rushmead and contributors),
-   * licensed under the Apache License, Version 2.0.
+   * LDEncore -- Mica Technologies' fork of Theatrical, ported to Forge 1.12.2.
+   *
+   * Part of the 1.12.2 port. Written by Mica Technologies after upstream's
+   * <path/File.java> (Theatrical Team, Apache License 2.0); the upstream file targets
+   * Forge 1.16 and this is its 1.12.2 counterpart, not a copy.
+   *
+   * CHANGED FROM UPSTREAM: <what differs beyond the mechanical API translation, one line
+   * per behavioural change, e.g. "raytraces only while powered">
    */
   ```
 
-  Upstream's own 1.16 sources mostly have no licence header; three files do. Keep theirs and put
-  the fork notice above it.
+- **Fork-authored Java files with no upstream counterpart** -- a shorter header: the first
+  line plus "Fork-authored file, Apache License 2.0." No `CHANGED FROM UPSTREAM` line.
 
 - **Gradle, properties, TOML, YAML, shell, `.gitignore`-style files** -- a `# CHANGED FROM
-  UPSTREAM (Mica Technologies fork, LDEncore): ...` (or `//` for Gradle) comment at the top.
+  UPSTREAM (Mica Technologies fork, LDEncore): ...` (or `//` for Gradle) comment at the top when
+  the file has an upstream counterpart; "Fork-authored file" when it does not.
 
-- **Files that cannot carry a comment** (JSON assets/data, PNG textures, the artnet4j jar, the
-  `.psd`) -- record the file path and what changed in `CHANGELOG-FORK.md` under *Modified files
-  without comment support* for the current release section. That list is the notice.
+- **Files that cannot carry a comment** (JSON assets, PNG textures, the artnet4j jar) -- record
+  the file path and what changed in `CHANGELOG-FORK.md` under *Modified files without comment
+  support* for the current release section. Assets copied from upstream unchanged need no entry;
+  assets converted to the 1.12 format (texture paths, blockstate format, recipes) do.
 
-- **New files you create** are fork additions, not modifications, and need no `CHANGED FROM
-  UPSTREAM` notice. Give new Java files a short header identifying them as part of the LDEncore
-  fork under Apache-2.0 so a reader can tell fork code from upstream code at a glance.
-
-A useful test before committing: `git diff --name-only <upstream-base>..HEAD` should list only
-files that either carry the notice or appear in the changelog list. Today the upstream base is
-commit `764cff3` (upstream's final `1.16.3` commit).
+A useful test before committing: every new or changed file under `src/` should have one of the
+headers above, and `git diff --name-only 69fdc47..HEAD` (the commit that started this line)
+should list only files that carry a notice or appear in the changelog list.
 
 ### 2. Keep the README's "What this fork changes" section current
 
@@ -77,7 +82,8 @@ builds differ from Theatrical, and it exists because we want to be plainly trans
 we ship under a name that is not ours. When a change alters behaviour, adds or removes a feature,
 changes a dependency, or changes what is in the jar, update that section in the same commit,
 alongside the per-release entry in `CHANGELOG-FORK.md`. The two are not redundant: the changelog
-is the ledger, the README section is the current-state summary.
+is the ledger, the README section is the current-state summary. Ported features are listed in the
+changelog as they land, and the README says so.
 
 ### 3. Stay silent towards the upstream repository
 
@@ -105,191 +111,144 @@ tracking, since it never leaves this machine. That is the only place they belong
 - **Create commits** when work reaches a logical checkpoint -- keep them descriptive and
   well-organized. Use conventional, descriptive commit messages that explain *why*, not just
   *what*, and group related changes; don't lump unrelated work together.
-- **Never push** to any remote. The user will review and push manually.
+- **Never push** to any remote unless the user has granted it in the current session. The user
+  reviews and pushes. Pushing this branch publishes a pre-release, so even with permission,
+  push only states that build and load.
 - Commit identity for this repo is `mica-alex` (the global default). Verify with
   `git config user.email` before committing.
 - Never `git add -f` anything under `docs/agent-plans/`.
 
 ## Build commands
 
-ForgeGradle 6 requires **Java 17+ to run Gradle**, while the mod compiles against a **Java 8**
-toolchain (`java_target=8` in `gradle.properties`). Both are needed. Set `JAVA_HOME` to a 17+ JDK;
-Gradle locates or auto-provisions the Java 8 toolchain via the foojay resolver in
-`settings.gradle`. On this machine the JDKs are IntelliJ-managed under `~/.jdks/` (Windows:
-`C:\Users\<username>\.jdks\`): `azul-17.0.19` and `azul-1.8.0_482`. `java` is **not** on `PATH`,
-so `JAVA_HOME` must be set explicitly. If toolchain detection ever fails to find the Java 8 JDK,
-export `JAVA_HOME_8_X64=<path to the JDK 8>` -- `gradle.properties` reads it (that is how CI
-finds its JDKs too).
+Set `JAVA_HOME` to a **JDK 17-22** install before each `./gradlew` invocation (**21 is what CI
+uses**; RetroFuturaGradle wants the Gradle process on 21+, and Gradle 8.9 supports up to 22). The
+compiler and mod code target **Java 8** via Jabel; only the JVM that runs Gradle changes. Gradle
+provisions the Java 8 runtime for `runClient`/`runServer` itself.
+
+On this machine the JDKs are IntelliJ-managed under `~/.jdks/` (Windows:
+`C:\Users\<username>\.jdks\`): `azul-17.0.19` works; `java` is **not** on `PATH`.
 
 ```bash
-JAVA_HOME="C:/Users/<username>/.jdks/azul-17.0.19" ./gradlew build           # compile + jar -> build/libs/
-JAVA_HOME="C:/Users/<username>/.jdks/azul-17.0.19" ./gradlew runClient       # dev client
-JAVA_HOME="C:/Users/<username>/.jdks/azul-17.0.19" ./gradlew runServer       # dev dedicated server
-JAVA_HOME="C:/Users/<username>/.jdks/azul-17.0.19" ./gradlew runData         # regenerate src/generated/resources
-JAVA_HOME="C:/Users/<username>/.jdks/azul-17.0.19" ./gradlew genIntellijRuns # Forge Client/Server/Data IDE configs
-JAVA_HOME="C:/Users/<username>/.jdks/azul-17.0.19" ./gradlew clean           # NOT `clean build` -- see gotchas
+JAVA_HOME="C:/Users/<username>/.jdks/azul-17.0.19" ./gradlew build       # compile + jar -> build/libs/
+JAVA_HOME="C:/Users/<username>/.jdks/azul-17.0.19" ./gradlew runClient   # dev client (Java 8)
+JAVA_HOME="C:/Users/<username>/.jdks/azul-17.0.19" ./gradlew runServer   # dev dedicated server
+JAVA_HOME="C:/Users/<username>/.jdks/azul-17.0.19" ./gradlew clean
 ```
 
-There are no unit tests (`:test` is `NO-SOURCE`). Verification means building and launching; a
-green compile says nothing about whether the mod loads, so after any change to registration,
+There are no unit tests yet (`enableJUnit = false`). Verification means building and launching;
+a green compile says nothing about whether the mod loads. After any change to registration,
 capabilities, rendering or resources, run the client and read `run/logs/latest.log` for missing
-models/textures and registry errors.
+models/textures and registry errors -- the `mod-verify` skill is the ritual for this repo.
 
-## IntelliJ run configurations
+`.github/scripts/server-smoke-test.sh` (added when the port has enough to load) boots a
+dedicated server and asserts `Done (`; until then `./gradlew runServer` with `run/eula.txt`
+set to `eula=true` does the same by hand.
 
-`.idea/runConfigurations/` holds six **versioned** run configurations, numbered the way the
-GregTechCEu buildscript numbers its generated ones in the sibling mods:
+## IntelliJ
 
-| | Task |
-|---|---|
-| 1. Run Client | `runClient` |
-| 2. Run Server | `runServer` |
-| 3. Run Data Generators | `runData` |
-| 4. Build Jars | `build` |
-| 5. Clean | `clean` |
-| 6. Generate IntelliJ Runs | `genIntellijRuns` |
+Import the Gradle project; the buildscript's idea-ext integration generates the run
+configurations ("1. Setup Workspace", "2. Run Client", "3. Run Server", "7. Build Jars", and the
+Java 17/21 client variants). **Nothing under `.idea/` is versioned on this branch.** The
+numbered configs the `1.16.3` branch commits by hand are the same shape; here they are generated.
 
-They are plain `GradleRunConfiguration` files referencing nothing but `$PROJECT_DIR$` and a task
-name, which is what makes them portable enough to version. **If a task is renamed, update the
-matching XML** -- nothing verifies these automatically.
-
-**Do not commit anything else from `.idea/`.** ForgeGradle's `genIntellijRuns` writes its own
-`Application` configs into the same directory (`runClient.xml`, `runServer.xml`, `runData.xml`).
-Those are the better configs for day-to-day debugging, but they embed absolute paths into
-`~/.gradle` and the checkout. `.gitignore` versions only files matching `[0-9]__*.xml`.
-
-## Architecture
+## Architecture (as ported so far)
 
 Package root is `dev.theatricalmod.theatrical` -- **upstream's namespace, deliberately kept**, as
-is the mod id `theatrical`. The id is a compatibility contract with saves and packs; renaming the
-package would make every comparison against upstream a manual diff. Do not rebrand either.
+is the mod id `theatrical`. The id is a compatibility contract with saves and packs; keeping the
+package makes every file map 1:1 onto its 1.16 original. Do not rebrand either.
 
 ```
-TheatricalMod.java              @Mod entry point. Registers the Fixture registry, the two config
-                                specs, deferred registers, capabilities, world capabilities
-                                (DMX network, socapex network) and the world-tick that drives them;
-                                owns the ArtNetManager
-TheatricalCommon / Client       sided proxies; client registers renderers, screens, key handling
-TheatricalConfigHandler         ForgeConfigSpec: common (emitLight, consumePower), client
-                                (lightBeamOpacity)
-api/                            the mod's own API: capabilities (DMX provider/receiver, socapex
-                                provider/receiver, TheatricalPower energy storage, the world-level
-                                DMX and socapex networks), the DMX universe model, fixture
-                                definitions (Fixture is a Forge registry entry; IFixture, IRGB,
-                                HangableType, GelType), CableType/CableSide
-artnet/                         ArtNetManager + ArtNetThread wrapping the shaded artnet4j client.
-                                One client per IP string. Runs client-side; data is forwarded to the
-                                server by SendArtNetToServerPacket
-block/                          blocks by family: light/ (generic fixture, moving light, the
-                                Illuminator block that is the beam's light source, BlockLight base,
-                                BlockHangable), cables/ (BlockCable + power/dimmed-power variants),
-                                power/ (dimmer rack, socapex distribution), control/ (basic lighting
-                                console), interfaces/ (Art-Net, DMX-redstone), rigging/ (truss, IWB),
-                                test/. TheatricalBlocks holds the DeferredRegister
-tiles/                          block entities, same families. TileEntityFixture is the heart of the
-                                lighting model: it ray-traces along pan/tilt every tick, places or
-                                updates an Illuminator block where the beam lands, and removes the
-                                old one. TileEntityCable and the power/ tiles push power to
-                                neighbours; the DMX side is world-network based instead
-                                (WorldDMXNetwork walks cables and caches receivers)
-client/                         TileEntityFixtureRenderer (fixture models + beam), FallingLightRenderer,
-                                gui/ (containers + screens for every block with a UI, widgets for
-                                faders/plugs/sockets), tile/ (render types, lighting desk renderer)
-network/                        SimpleChannel packets, one class per action. TheatricalNetworkHandler
-                                registers them
-entity/                         FallingLightEntity -- a fixture whose support was removed falls as
-                                an entity and breaks
-fixtures/                       the two registered Fixture definitions (fresnel, moving light)
-data/                           data generators; output committed under src/generated/resources
-                                (recipes, loot tables, item models, tags, en_us lang, and the
-                                Patchouli book via PatchouliProvider)
-compat/top/                     The One Probe integration, registered through IMC
-util/                           CapabilityStorageProvider, FixtureUtil
+TheatricalMod.java      @Mod entry point (1.12.2 lifecycle: preInit / init / postInit).
+                        Registration, capabilities, network and Art-Net wiring are added
+                        here as each phase lands.
+Tags.java               generated by the buildscript at build time (mod id, name, version);
+                        never edit, never commit (it lives under build/).
 ```
 
-**Dependencies:** The One Probe (compile, optional at runtime, integration behind IMC), Patchouli
-(compile; the book is data, so the mod runs without Patchouli installed), PatchouliProvider (datagen
-only), artnet4j (shaded into the jar; GPL-3.0, see `NOTICE`). All come from mavens named in
-`build.gradle`.
+The target layout is upstream's 1.16 layout, translated: `api/` (capabilities, DMX universe,
+fixture registry), `block/`, `tiles/`, `items/`, `network/`, `client/` (renderers, GUIs),
+`artnet/`, `fixtures/`, `compat/top/`, `util/`. See the `1.16.3` branch's `CLAUDE.md` for what
+each of those does upstream, and the plan for the order they are ported in.
 
-**Resources:** hand-written assets live in `src/main/resources`; everything under
-`src/generated/resources` is datagen output and should be regenerated with `runData` rather than
-edited by hand. `src/main/resources/META-INF/accesstransformer.cfg` opens two vanilla members
-(`WorldRenderer.drawShape`, `FallingBlockEntity.fallTile`).
+**Dependencies today:** artnet4j only, shaded and relocated (`shadowImplementation` in
+`dependencies.gradle`; GPL-3.0, see `NOTICE`). JEI and The One Probe are on the dev classpath via
+`includeCommonDevEnvMods` for testing. Patchouli and the TOP compat are added in their phases.
 
 ## Conventions & gotchas
 
 ### Build
 
-- **Dependency POMs with `_mapped_` coordinates crash configuration.** The One Probe's published
-  POM declares Forge and JEI with `_mapped_official_1.16.5` versions. ForgeGradle 6's
-  deobfuscating repository tries to remap those again and recurses until the daemon overflows its
-  stack, and it does so while resolving the origin artifact, before `transitive = false` on our
-  declaration applies. `build.gradle` strips the declared dependencies with a component metadata
-  rule. If a new dependency produces `StackOverflowError` / `Could not initialize class
-  net.minecraftforge.artifactural.api.artifact.Internal` at configuration time, that is the cause;
-  add it to the same rule.
-- **Dev runs need ModLauncher 8.1.3.** Forge 1.16.4 ships ModLauncher 8.0.9, which calls a
-  `ManifestEntryVerifier` constructor Java 8u321+ removed; `runClient`/`runServer` then die at
-  launch with `NoSuchMethodError: sun.security.util.ManifestEntryVerifier.<init>`. `build.gradle`
-  puts `cpw.mods:modlauncher:8.1.3` on the runtime classpath (`runtimeOnly`) so Gradle's conflict
-  resolution replaces 8.0.9 for dev runs only. The built jar is unaffected. Do not remove it when
-  tidying dependencies.
-- **`clean build` in one invocation fails.** ForgeGradle resolves the Minecraft dependency during
-  configuration and `clean` then deletes what it resolved. Run them separately; CI only ever runs
-  `build`.
-- **`gradlew` must stay mode `100755`** (upstream committed it as `100644`, which fails every
-  `run: ./gradlew` step on the Ubuntu runners). `.gitattributes` pins it to LF.
-- **Snapshot mappings.** The code is written against MCP `snapshot_20201028-1.16.3` names
-  (`func_`/`field_` in the AT, `getTileEntity`, `isRemote` in code). Do not switch the channel to
-  `official` casually: every source file would need renaming.
-- **Dev-run libraries.** Non-mod jars are only visible to ModLauncher if they are on the
-  `minecraft_classpath` token, which is why `build.gradle` has the `library` configuration and the
-  `lazyToken`. Put any new plain-Java library on `library` (or `shade`, which extends it), not
-  bare `implementation`.
-- **`org.gradle.daemon=false`** is inherited from upstream and kept; ForgeGradle's memory use
-  makes a lingering daemon more trouble than the startup cost.
+- **`build.gradle` is the buildscript; do not edit it.** Customisation goes in `addon.gradle`,
+  `buildscript.properties`, `dependencies.gradle`, `repositories.gradle`. The auto-update check is
+  disabled in `gradle.properties` because it fetches GitHub during configuration and has failed
+  CI on sibling mods; `./gradlew updateBuildScript` refreshes it deliberately.
+- **`apiPackage` must point at a directory that exists.** It is empty until the `api/` package is
+  ported (Phase 2); setting it earlier fails configuration with "Could not resolve apiPackage".
+- **Jar naming:** `includeMCVersionJar = true`, so the jar is `LDEncore-1.12.2-<version>.jar`
+  and `project.version` is `1.12.2-<version>`. That is deliberate: it keeps 1.12.2 jars visibly
+  distinct from the 1.16 line's `LDEncore-<version>-forge-mc1.16.jar` on the shared Releases page.
+- **Versioning:** `modVersion` is empty, so the buildscript derives it from git via the
+  palantir git-version plugin (`git describe --tags --first-parent`). CI tags HEAD immediately
+  before building, so release builds get exactly the tag. Local builds off an untagged commit get
+  the short sha plus `.dirty` when the tree has changes (e.g. `1.12.2-69fdc47.dirty`); the
+  `1.16.3` line's tags are on that branch's first-parent line only, so they are never picked up
+  here. There is no `mod_version` fallback (that is a `1.16.3` thing).
+- **artnet4j is relocated** to `dev.theatricalmod.theatrical.shadow.ch.bildspur.artnet` in the
+  published jar. In dev it is on the classpath un-relocated. Never reference the relocated name
+  in source; never turn `minimizeShadowedDependencies` on without checking that the Art-Net client
+  still works from a built jar (the minimiser cannot see reflective/threaded use).
+- **`Tags` is generated.** `generateGradleTokenClass` writes `dev.theatricalmod.theatrical.Tags`
+  with `MODID`, `MODNAME`, `VERSION`; `@Mod` reads it. Do not create a `Tags.java` by hand.
+- **Manifest guard:** `addon.gradle` fails `reobfJar` if the published jar declares a
+  `TweakClass`, because FML 1.12.2 silently drops such jars from mod discovery. A shaded
+  dependency's manifest is the usual way that sneaks in.
+- **Modern Java syntax is on** (`enableModernJavaSyntax`, Jabel): `var`, switch expressions,
+  records and text blocks compile to Java 8 bytecode. The *library* is still Java 8 -- no
+  `List.of`, `Optional.isEmpty`, `String.isBlank`, streams `toList()`.
+
+### Porting
+
+- Port one subsystem at a time, in dependency order, and keep the build green at every commit.
+  The 1.16 file is the specification; the 2019 file in this branch's history is a hint for the
+  1.12 API, not a source of behaviour.
+- MCP names: the buildscript uses RetroFuturaGradle's default 1.12.2 mappings (the `stable`
+  channel; upstream's 2019 branch used `snapshot_20180814`, so a few names differ from that
+  code); expect `world.isRemote`, `getTileEntity`, `NBTTagCompound`, `ITickable`, `EnumFacing`,
+  `AxisAlignedBB`.
+- Client-only classes must never be reachable from common code on a dedicated server; upstream's
+  `DistExecutor` split becomes `@SidedProxy` here. Test with `runServer`, not just `runClient`.
+- Fix the known upstream bugs as their code is ported (the plan lists them), and describe each in
+  `CHANGELOG-FORK.md` in our own words.
 
 ### Versioning and CI
 
-`build.gradle` resolves the mod version in this order:
-
-1. `-PmodVersionOverride=...` or the `MOD_VERSION` environment variable
-2. the release-shaped git tag on HEAD (`YYYY.MM.DD`, or `YYYY.MM.DD-pre.HHMM.<tz>+<sha>`), which
-   CI creates immediately before building
-3. `mod_version` in `gradle.properties` -- the upstream release this fork sits on
-
-The resolved value becomes the manifest `Implementation-Version`, which `mods.toml` reads through
-`${file.jarVersion}`. `upstream_version` in `gradle.properties` is printed into every release body.
-
 **`printModVersion` / `printArchivesBaseName` / `printModName` / `printMinecraftVersion` /
-`printUpstreamVersion` are a contract** with `.github/workflows/build-mod-release-pre-release-main.yml`.
-Renaming one breaks the release build. `build.gradle` prints a JVM banner during configuration
-that `-q` does not suppress, which is why the workflow reads those tasks with
-`| tail -n 1 | xargs`. Don't "simplify" it.
+`printUpstreamVersion` in `addon.gradle` are a contract** with
+`.github/workflows/build-mod-release-pre-release-main.yml`. Renaming one breaks the release
+build. The workflow reads the last line of each (`| tail -n 1 | xargs`).
 
 Three workflows, matching the sibling Mica mods (see the header comment in each for the
 fork-specific deltas):
 
-- `test-mod-build-pr.yml` -- builds every pull request.
+- `test-mod-build-pr.yml` -- builds every pull request on JDK 21.
 - `build-mod-release-pre-release-main.yml` -- on push to `1.12` or `1.16.3`, tags the commit and
   publishes a pre-release with checksums. `workflow_dispatch` with `release=true` cuts a full
   release (pick the branch in the dispatch dialog). The tag is created *before* the build, because
-  the version resolution above reads it. Both branches share one tag namespace and one Releases
-  page; the release name carries the Minecraft version, and `printMinecraftVersion` is what feeds
-  it.
+  the version resolution reads it. Both branches share one tag namespace and one Releases page.
 - `cleanup-mod-pre-releases.yml` -- prunes pre-releases past 90 days, keeping the newest 3 and
   anything with 5+ downloads. Its `workflow_run` trigger matches the release workflow by name, so
-  those two strings must stay in sync.
+  those two strings must stay in sync. GitHub only fires `workflow_run` and `workflow_dispatch`
+  from workflow files on the default branch, which is this one.
+
+The `1.16.3` copy of the release and PR workflows installs JDK 8 + 17 for ForgeGradle 6; this
+branch's installs JDK 21 for RetroFuturaGradle. Keep them in step otherwise.
 
 ### Fork hygiene
 
-- Keep the diff against upstream small and legible. Where a fork-specific change is needed in an
-  inherited file, the `CHANGED FROM UPSTREAM` notice (rule 1) is where the *why* goes; keep it
-  specific enough that a future reader can tell whether the change is still needed.
 - `.gitignore` and `.gitattributes` keep fork additions in a delimited block below the upstream
-  content, for the same reason.
-- `CHANGELOG-FORK.md` is ours; add entries under `## Unreleased`. Upstream had no changelog.
+  content.
+- `CHANGELOG-FORK.md` is ours; add entries under the 1.12.2 line's `## Unreleased`. Upstream had
+  no changelog.
 - No upstream issue/PR references anywhere that gets committed (rule 3).
 
 ## Planning docs
@@ -298,7 +257,7 @@ fork-specific deltas):
 It is local scratch; nothing in it is authoritative. When a plan and the code disagree, **the code
 wins**: verify by reading the source before believing a checkbox.
 
-`docs/agent-plans/MASTER_PLAN.md` is the plan for the Forge 1.12.2 backport: the phases, the
-1.16-vs-1.12 feasibility assessment, whether the 1.16 line stays maintained, and the triage of
-upstream's open issues (which may be referenced by number *there*, and only there). Start a work
-session by reading its STATUS section.
+`docs/agent-plans/MASTER_PLAN.md` is the plan for the Forge 1.12.2 port: the phases, the
+1.16-vs-1.12 feasibility assessment, the decision to freeze 1.16, and the triage of upstream's
+open issues (which may be referenced by number *there*, and only there). Start a work session by
+reading its STATUS section.

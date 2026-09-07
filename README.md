@@ -29,40 +29,43 @@ the repository was archived, and no version of the mod exists for **Forge 1.12.2
 our servers and modpacks run.
 
 This fork exists to **bring Theatrical to Forge 1.12.2**, and to keep it buildable and maintained
-on our release infrastructure. It starts from the final state of upstream's default `1.16.3`
-branch (Theatrical 0.7.2 for Minecraft 1.16.4, plus the unreleased fixes that landed after it),
-which is what this repository currently builds. The 1.12.2 backport is the goal, not yet the
-state of the code; see the roadmap below.
+on our release infrastructure. Two lines of work live in this repository:
+
+- **The 1.12.2 port**, on this branch (`1.12`, the default). It is a translation of the mature
+  1.16 code to Forge 1.12.2 APIs, built with the same GregTechCEu buildscripts as our other
+  1.12.2 mods. **It is in progress.** Right now it is a mod skeleton that loads and does nothing;
+  fixtures, dimming, cabling and control arrive phase by phase (see the roadmap).
+- **The 1.16.4 baseline**, on the `1.16.3` branch: the final state of upstream's default branch
+  (Theatrical 0.7.2 for Minecraft 1.16.4 plus the unreleased fixes after it), resurrected so it
+  builds again on a current toolchain. It is the reference the port is translated from, and it
+  is what the published builds currently are.
 
 **Scope of support:**
 
 | | |
 |---|---|
-| **Minecraft version (today)** | 1.16.4 (Forge 35.1.37) -- the inherited upstream baseline |
-| **Minecraft version (goal)** | 1.12.2, Forge -- the backport this fork exists for |
+| **Minecraft version (goal)** | 1.12.2, Forge -- the backport this fork exists for; in progress on `1.12` |
+| **Minecraft version (published today)** | 1.16.4 (Forge 35.1.37) -- the inherited upstream baseline, from `1.16.3` |
 | **Mod loader** | Forge only |
 | **Other versions** | Not supported here -- use the [official mod](https://www.curseforge.com/minecraft/mc-mods/theatrical) |
 
 Upstream kept one branch per Minecraft version (`1.12`, `1.15.1`, `1.16.3`, `1.18.2`, plus a few
-feature branches), and the fork inherited them all. Two matter here:
-
-- **`1.12`** -- the default branch, and where the Forge 1.12.2 backport is being built. Until the
-  port lands it still contains upstream's 2019 prototype: an early, much smaller version of the
-  mod from before Theatrical was rewritten for 1.15/1.16, which does not build with current
-  tooling. That old code is reference material for the port, not its starting point.
-- **`1.16.3`** -- the resurrected 1.16.4 baseline described above, which the port is translated
-  from and which currently produces the published builds.
-
-The other inherited branches are left untouched.
+feature branches), and the fork inherited them all. `1.12` originally held upstream's 2019
+prototype, an early and much smaller version of the mod from before Theatrical was rewritten for
+1.15/1.16; that code remains in this branch's history as reference material, but the port is not
+built on it. The other inherited branches are left untouched.
 
 ### Roadmap
 
-1. **Now:** make the inherited 1.16.4 code build again on a current toolchain, publish it from
-   this repository, and document the fork. *(This is done -- see below.)*
-2. **Next:** backport the mod to Forge 1.12.2 on the `1.12` branch, feature by feature, keeping
-   the 1.16 behaviour as the reference.
-3. **Then:** decide, based on how the backport goes, whether the 1.16.4 line keeps receiving
-   fixes alongside 1.12.2 or is frozen at its current state.
+1. **Done:** make the inherited 1.16.4 code build again on a current toolchain, publish it from
+   this repository, and document the fork.
+2. **Done:** start the 1.12.2 line on this branch with the fleet build system and an empty mod
+   that loads on Forge 1.12.2.
+3. **In progress:** port the mod, bottom-up -- API and capabilities, then blocks/items/tiles and
+   assets, networking and GUIs, rendering, Art-Net and control, the in-game guide and compat --
+   keeping the 1.16 behaviour as the reference and fixing the known upstream bugs on the way.
+4. **Then:** release the 1.12.2 line. The 1.16.4 line is frozen at its resurrected state: it
+   stays buildable, but 1.12.2 is the only version that receives work.
 
 ### Downloads
 
@@ -72,7 +75,11 @@ Builds are published to this repository's [Releases](../../releases) page.
 - **Pre-releases** are cut automatically on every push. They are not guaranteed to be stable, and
   they are pruned after 90 days.
 
-Every release names the upstream Theatrical version it is based on.
+Both lines publish to the same page; tell them apart by the jar name and the Minecraft version in
+the release title. 1.12.2 jars are `LDEncore-1.12.2-<version>.jar`; 1.16.4 jars are
+`LDEncore-<version>-forge-mc1.16.jar`. **Until the port reaches a playable state, 1.12.2
+pre-releases are skeleton builds and not worth installing.** Every release names the upstream
+Theatrical version it is based on.
 
 ---
 
@@ -82,7 +89,14 @@ We want to be transparent about exactly how these builds differ from Theatrical.
 kept current; [`CHANGELOG-FORK.md`](CHANGELOG-FORK.md) has the per-release detail, and every
 modified file carries a notice at its top (see [Licensing](#licensing)).
 
-**Changed so far (no gameplay changes yet):**
+**The 1.12.2 line (this branch):** a port in progress. The Java sources here are written by
+Mica Technologies after the corresponding 1.16 upstream files, file by file, and each carries a
+header saying so. Nothing of upstream's 1.16 source is compiled on this branch; the reference
+copy lives on `1.16.3`. The build is the GregTechCEu buildscripts (RetroFuturaGradle) rather than
+upstream's ForgeGradle, and artnet4j is shaded under a relocated package instead of being merged
+in as-is.
+
+**The 1.16.4 baseline (`1.16.3` branch) -- no gameplay changes:**
 
 - **Build system.** Rewritten from ForgeGradle 3 / Gradle 4.9 to ForgeGradle 6 / Gradle 8, because
   the original could no longer be built: it depended on jcenter and on a The One Probe maven that
@@ -99,15 +113,17 @@ modified file carries a notice at its top (see [Licensing](#licensing)).
   IntelliJ run configurations and GitHub Actions workflows, all following the conventions of our
   other mod forks.
 
-**Not changed:** all Java sources, assets, data-generator output and the in-game Patchouli guide
-are exactly as upstream left them.
+**Not changed on `1.16.3`:** all Java sources, assets, data-generator output and the in-game
+Patchouli guide are exactly as upstream left them.
 
 ---
 
 ## What the mod does
 
-Theatrical adds equipment from the live-events industry. In the 1.16.4 version this fork
-currently builds, that is:
+Theatrical adds equipment from the live-events industry. This describes the 1.16.4 version the
+port is translated from; it is the feature set the 1.12.2 line is working towards, and until a
+feature is listed in [`CHANGELOG-FORK.md`](CHANGELOG-FORK.md) as ported it is not in the 1.12.2
+builds yet.
 
 ### Fixtures
 
@@ -175,34 +191,42 @@ address, and your lighting software should target that same machine.
 
 ## Building
 
-Requires two JDKs. ForgeGradle 6 needs **Java 17 or newer to run Gradle**; the mod compiles
-against a **Java 8** toolchain, which Gradle will locate or provision automatically (the foojay
-resolver is configured in `settings.gradle`).
+### This branch (`1.12`, Forge 1.12.2)
+
+The build is the [GregTechCEu buildscripts](https://github.com/GregTechCEu/Buildscripts)
+(RetroFuturaGradle), the same setup as our other 1.12.2 mods. Gradle itself runs on **JDK 17 to
+22 (21 recommended, and what CI uses)**; the compiler and the mod stay on Java 8 via Jabel, and
+Gradle provisions the Java 8 runtime it needs.
 
 ```bash
-# Build the mod (jar lands in build/libs/)
-JAVA_HOME="/path/to/jdk-17" ./gradlew build
+# Build the mod (jar lands in build/libs/ as LDEncore-1.12.2-<version>.jar)
+JAVA_HOME="/path/to/jdk-21" ./gradlew build
 
-# Run the dev client / server
-JAVA_HOME="/path/to/jdk-17" ./gradlew runClient
-JAVA_HOME="/path/to/jdk-17" ./gradlew runServer
+# Run the dev client / server (Java 8 runtime, provisioned automatically)
+JAVA_HOME="/path/to/jdk-21" ./gradlew runClient
+JAVA_HOME="/path/to/jdk-21" ./gradlew runServer
 
-# Regenerate data-generator output (recipes, loot tables, item models, the Patchouli book)
-JAVA_HOME="/path/to/jdk-17" ./gradlew runData
-
-# Generate the "Forge Client/Server/Data" IntelliJ run configurations
-JAVA_HOME="/path/to/jdk-17" ./gradlew genIntellijRuns
+# Apple Silicon: see addon.gradle for the -Prosetta path
 ```
 
-Run `clean` and `build` as separate invocations; ForgeGradle resolves Minecraft during
-configuration and `clean build` in one go deletes what it just resolved.
+IntelliJ run configurations are generated on project import by the buildscript's idea-ext
+integration; nothing under `.idea/` is versioned on this branch.
+
+### The `1.16.3` branch (Forge 1.16.4)
+
+ForgeGradle 6 needs **Java 17 or newer to run Gradle**; the mod compiles against a **Java 8**
+toolchain, which Gradle provisions automatically. Same commands as above, plus `runData` to
+regenerate data-generator output and `genIntellijRuns` for the IDE run configurations. Run `clean`
+and `build` as separate invocations there.
 
 ### Versioning
 
 Release builds take their version from the git tag that CI creates immediately before building
-(`YYYY.MM.DD`, or `YYYY.MM.DD-pre.HHMM.<tz>+<sha>` for a pre-release). Local builds with no such
-tag fall back to `mod_version` in `gradle.properties`, which records the upstream release this fork
-sits on. To force a version, pass `-PmodVersionOverride=...`.
+(`YYYY.MM.DD`, or `YYYY.MM.DD-pre.HHMM.<tz>+<sha>` for a pre-release). On this branch the
+buildscript derives it with `git describe`, so a local build off an untagged commit reports the
+nearest tag plus a commit count and `.dirty` marker; on `1.16.3` an untagged build falls back to
+the upstream base version. Every release body names the upstream Theatrical release the build is
+translated from (`upstream_version` in `gradle.properties`).
 
 See [CLAUDE.md](CLAUDE.md) for the fuller developer notes, including the rules every contributor
 (human or otherwise) has to follow about marking changed files.

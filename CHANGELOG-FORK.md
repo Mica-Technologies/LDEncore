@@ -20,7 +20,44 @@ release that changed them, so the section 4(b) notice requirement is still met.
 The file is named `CHANGELOG-FORK.md` rather than `CHANGELOG.md` to match the sibling Mica forks,
 where the bare name is reserved for an upstream mirror.
 
+Two lines of the mod are published from this repository and both are recorded here: the
+**1.12.2 port** (the `1.12` branch, jars `LDEncore-1.12.2-<version>.jar`) and the frozen
+**1.16.4 baseline** (the `1.16.3` branch, jars `LDEncore-<version>-forge-mc1.16.jar`). Each
+branch carries the canonical copy of its own section.
+
 ---
+
+# 1.12.2 line
+
+## Unreleased
+
+Translated from upstream **Theatrical 0.7.2** (the final state of the archived `1.16.3` branch).
+**Port in progress: these builds are a skeleton that loads and does nothing.** Features are
+listed below as they are ported.
+
+### Added
+
+- **The 1.12.2 line itself.** The branch now builds with the GregTechCEu buildscripts
+  (RetroFuturaGradle, Gradle on JDK 21, mod on Java 8 via Jabel) like the sibling Mica 1.12.2
+  mods, with the same date-tag versioning and GitHub Actions workflows as the 1.16 line. The
+  mod registers on Forge 1.12.2 and logs its version; nothing else is ported yet.
+- `mcmod.info` identifies the mod as LDEncore, credits Theatrical/Rushmead, and links to this
+  repository.
+
+### Changed
+
+- **artnet4j is shaded and relocated** (`dev.theatricalmod.theatrical.shadow.ch.bildspur.artnet`)
+  rather than merged into the jar as-is, so it cannot clash with another mod bundling the same
+  library.
+
+### Modified files without comment support
+
+- `libs/artnet4j-0.6.1.jar` -- unchanged upstream file, now consumed through `shadowImplementation`
+  and relocated at build time.
+
+---
+
+# 1.16.4 line
 
 ## Unreleased
 
