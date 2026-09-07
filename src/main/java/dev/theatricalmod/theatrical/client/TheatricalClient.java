@@ -7,8 +7,11 @@
  *
  * CHANGED FROM UPSTREAM: the client @SidedProxy. It registers item models (1.12 needs
  * ModelLoader.setCustomModelResourceLocation per item; 1.16 finds them by name) and applies
- * a DMX provider's universe when the server sends it. The renderers, texture stitching and
- * the Art-Net polling come with their phases of the port.
+ * a DMX provider's universe when the server sends it, binds the tile-entity and entity
+ * renderers, and declares which blocks render on the cutout layer (1.16 sets that through
+ * RenderTypeLookup; 1.12 asks the block). Texture stitching and the baking of the fixture part
+ * models live in client/model/FixtureModels, because 1.12 has no addSpecialModel. The Art-Net
+ * polling comes with its phase of the port.
  */
 package dev.theatricalmod.theatrical.client;
 
@@ -30,6 +33,11 @@ import dev.theatricalmod.theatrical.client.gui.screen.ScreenDMXRedstoneInterface
 import dev.theatricalmod.theatrical.client.gui.screen.ScreenDimmerRack;
 import dev.theatricalmod.theatrical.client.gui.screen.ScreenGenericFixture;
 import dev.theatricalmod.theatrical.client.gui.screen.ScreenIntelligentFixture;
+import dev.theatricalmod.theatrical.client.tile.TileEntityRendererBasicLightingDesk;
+import dev.theatricalmod.theatrical.entity.FallingLightEntity;
+import dev.theatricalmod.theatrical.tiles.control.TileEntityBasicLightingControl;
+import dev.theatricalmod.theatrical.tiles.lights.TileEntityGenericFixture;
+import dev.theatricalmod.theatrical.tiles.lights.TileEntityIntelligentFixture;
 import dev.theatricalmod.theatrical.items.TheatricalItems;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.renderer.block.model.ModelResourceLocation;
@@ -40,7 +48,10 @@ import net.minecraft.util.math.BlockPos;
 import net.minecraft.world.World;
 import net.minecraftforge.client.event.ModelRegistryEvent;
 import net.minecraftforge.client.model.ModelLoader;
+import net.minecraftforge.fml.client.registry.ClientRegistry;
+import net.minecraftforge.fml.client.registry.RenderingRegistry;
 import net.minecraftforge.fml.common.Mod;
+import net.minecraftforge.fml.common.event.FMLPreInitializationEvent;
 import net.minecraftforge.fml.common.eventhandler.SubscribeEvent;
 import net.minecraftforge.fml.relauncher.Side;
 
@@ -51,9 +62,33 @@ import java.util.Collections;
 public class TheatricalClient extends TheatricalCommon {
 
     @Override
+    public void preInit(FMLPreInitializationEvent event) {
+        super.preInit(event);
+        ClientRegistry.bindTileEntitySpecialRenderer(TileEntityGenericFixture.class, new TileEntityFixtureRenderer());
+        ClientRegistry.bindTileEntitySpecialRenderer(TileEntityIntelligentFixture.class, new TileEntityFixtureRenderer());
+        ClientRegistry.bindTileEntitySpecialRenderer(TileEntityBasicLightingControl.class, new TileEntityRendererBasicLightingDesk());
+        RenderingRegistry.registerEntityRenderingHandler(FallingLightEntity.class, FallingLightRenderer::new);
+    }
+
+    @Override
     public World getClientWorld() {
         return Minecraft.getMinecraft().world;
     }
+
+    /**
+     * How often a provider re-walks its cable run on the client, in milliseconds.
+     *
+     * CHANGED FROM UPSTREAM: upstream called refreshDevices() on every universe packet, which
+     * threw the cached device list away and walked the whole DMX cable run again -- for a
+     * provider updating every tick, twenty full network walks a second per provider, on the
+     * render thread. Nothing on the client invalidates that cache when a cable is added or
+     * removed, which is why upstream refreshed unconditionally; this keeps that correctness by
+     * rescanning on a timer instead, so rewiring still shows up promptly while a steady stream
+     * of DMX no longer re-walks anything.
+     */
+    private static final long DEVICE_RESCAN_INTERVAL_MS = 1000L;
+
+    private final java.util.Map<BlockPos, Long> lastDeviceScan = new java.util.HashMap<>();
 
     @Override
     public void handleProviderDMXUpdate(BlockPos pos, byte[] data) {
@@ -66,9 +101,19 @@ public class TheatricalClient extends TheatricalCommon {
             return;
         }
         IDMXProvider provider = tile.getCapability(DMXProvider.CAP, null);
-        if (provider != null) {
-            provider.getUniverse(world).setDmxChannels(data);
+        if (provider == null) {
+            return;
         }
+        provider.getUniverse(world).setDmxChannels(data);
+
+        long now = System.currentTimeMillis();
+        Long last = lastDeviceScan.get(pos);
+        if (last == null || now - last >= DEVICE_RESCAN_INTERVAL_MS) {
+            lastDeviceScan.put(pos, now);
+            provider.refreshDevices();
+        }
+        // Pushes the universe into every receiver on the run, scanning first if it has to.
+        provider.updateDevices(world, pos);
     }
 
     @Nullable

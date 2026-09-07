@@ -37,6 +37,29 @@ listed below as they are ported.
 
 ### Added
 
+- **Rendering, ported.** Fixtures are visible again: the fixture renderer draws a light's static,
+  pan and tilt parts with its live pan and tilt, hanging correctly from a truss or an internally
+  wired bar and flipping when a moving light is hung upside down, and casts the light beam,
+  coloured and faded by the fixture's own DMX intensity and the beam-opacity config. The lighting
+  desk's physical faders and their slots are drawn on the desk surface along with its step and
+  mode, and a light knocked off its bar renders as it falls.
+  - One structural difference from upstream, in our own words. On 1.16 a fixture's part models
+    are registered for baking with a single call and then fetched from the model manager; 1.12
+    has no such call, and the model manager only knows models reachable from a blockstate or an
+    item model, which a fixture's parts are not. The fork loads and bakes them itself and hands
+    them to the renderers, and registers their textures at stitch time. The parts are then drawn
+    in their own local coordinates so that the pan and tilt rotations compose with them, where
+    upstream's draw call bakes the block position into the vertices.
+  - Two upstream bugs are fixed, in our own words. The lighting desk's physical faders never
+    moved: the travel was computed in integer arithmetic, so every fader below full evaluated to
+    no movement at all. And a DMX universe arriving at a client was stored but never pushed into
+    the fixtures on that cable run, so a fixture's brightness and colour only ever changed for
+    players who had the block's screen open. Both now behave as the desk and the lights obviously
+    should.
+  - The client no longer re-walks a provider's whole DMX cable run on every universe packet.
+    Upstream discarded the cached device list each time, which for a provider sending every tick
+    meant twenty full network walks a second, on the render thread. The list is rebuilt on a
+    timer instead, so rewiring still shows up promptly.
 - **Networking and every screen, ported.** All ten client/server packets and the six screens
   behind them: the DMX address screen shared by the moving light and the DMX-redstone
   interface, the Art-Net interface screen, the generic fixture's pan/tilt sliders, the dimmer
@@ -73,10 +96,8 @@ listed below as they are ported.
   light entity, the config options (one `config/theatrical.cfg` with upstream's two
   categories), and all assets converted to the 1.12 layout (blockstates in Forge's format,
   textures under `blocks/`/`items/`, recipes using ore-dictionary ingredients, `en_us.lang`).
-  The dimmed-power, socapex and DMX networks all run on the server. **Not yet:** the fixture
-  and beam renderers, Art-Net polling on the client, The One Probe overlays and the Patchouli
-  guide, which come in their own phases -- so blocks place and work but fixtures render as
-  plain models and cast no visible beam.
+  The dimmed-power, socapex and DMX networks all run on the server. **Not yet:** Art-Net polling
+  on the client, The One Probe overlays and the Patchouli guide, which come in their own phases.
   - Bug fixes on the way, in our own words: the dimmer rack read its DMX channels at the
     wrong offset and so put out nothing at any DMX address other than 0; the remote
     positioner aimed generic lights the wrong way on two of the four facings; dimmed power

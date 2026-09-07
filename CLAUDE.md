@@ -203,7 +203,14 @@ items/                  TheatricalItems (ItemBlocks + positioner, wrench, ingred
                         oredict gearIron); ItemPositioner links to a generic light by NBT
 entity/                 FallingLightEntity (EntityFallingBlock that lands broken)
 client/                 TheatricalClient (@SidedProxy; item models, illuminator state mapper,
-                        client-side DMX universe updates); gui/TheatricalGuiHandler (one id per
+                        client-side DMX universe updates, and it binds the renderers);
+                        TileEntityFixtureRenderer (the fixture's static/pan/tilt parts and its
+                        beam), tile/TileEntityRendererBasicLightingDesk (the desk's physical
+                        faders, their slots and its two labels), FallingLightRenderer;
+                        model/FixtureModels loads, bakes and caches the fixture part models and
+                        registers their textures, because 1.12 has no addSpecialModel and the
+                        model manager cannot see a model that no blockstate or item model
+                        reaches; gui/TheatricalGuiHandler (one id per
                         screen; getClientGuiElement delegates to the proxy so a dedicated
                         server never loads a GuiContainer subclass); gui/container/ (one
                         Container per screen, each with a real canInteractWith); gui/screen/
@@ -294,6 +301,25 @@ each of those does upstream, and the plan for the order they are ported in.
   and server), configured in `run/config/mcmcp.cfg`. `run/options.txt` mutes the client so
   background testing is silent. Screen coordinates from `client_gui_widgets` are in scaled GUI
   units; `client_gui_click_at` takes display pixels, which at this scale factor is double.
+
+### Rendering
+
+- **Fixture blocks render nothing themselves** (`ENTITYBLOCK_ANIMATED`); everything visible comes
+  from the tile-entity renderer. Their blockstate JSON still matters, because it is what puts the
+  fixture textures in the atlas.
+- **Fixture part models are not reachable from any blockstate**, so they are baked by hand in
+  `FixtureModels` on `ModelBakeEvent` and their textures registered on `TextureStitchEvent.Pre`.
+  A new fixture needs its textures listed in its `Fixture` constructor or they will not stitch.
+- **Draw parts with `renderModelBrightnessColor`**, which emits a model in its own local
+  coordinates, so the pan and tilt rotations compose with it. `renderModel` bakes the block
+  position into the vertices and cannot be combined with GL transforms. Because that vertex
+  format carries no light value, set the lightmap by hand from `world.getCombinedLight`.
+- **A generic light is not a DMX receiver.** It is dimmed by a dimmer rack over socapex; only the
+  intelligent/moving fixture takes DMX. Wiring a DMX source to a fresnel and expecting a beam is
+  a category error, not a bug.
+- **A fixture with `consumePower` on needs a power source to light at all.** The dev world has
+  none, so set `fixtures.consumePower=false` in `run/config/theatrical.cfg` when testing beams.
+  The config is read at startup, so the client has to be restarted after editing it.
 
 ### Porting
 
