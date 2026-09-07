@@ -202,11 +202,21 @@ tiles/                  TileEntityTheatricalBase (readNBT/getNBT drive both save
 items/                  TheatricalItems (ItemBlocks + positioner, wrench, ingredients; cog is
                         oredict gearIron); ItemPositioner links to a generic light by NBT
 entity/                 FallingLightEntity (EntityFallingBlock that lands broken)
-client/                 TheatricalClient (@SidedProxy; item models, illuminator state mapper),
-                        gui/TheatricalGuiHandler (ids; containers/screens arrive with the GUI
-                        phase)
-network/                TheatricalNetworkHandler -- the two sync calls the tiles make; empty
-                        until the network phase
+client/                 TheatricalClient (@SidedProxy; item models, illuminator state mapper,
+                        client-side DMX universe updates); gui/TheatricalGuiHandler (one id per
+                        screen; getClientGuiElement delegates to the proxy so a dedicated
+                        server never loads a GuiContainer subclass); gui/container/ (one
+                        Container per screen, each with a real canInteractWith); gui/screen/
+                        (ScreenDMXAddressBase is shared by the moving light and the redstone
+                        interface; the rest are one per block); gui/widgets/ (ButtonFader,
+                        ButtonPlug, ButtonSocket)
+network/                TheatricalNetworkHandler registers the ten messages on one
+                        SimpleNetworkWrapper, keeping upstream's discriminator ids, and sends
+                        provider universes only to players tracking the chunk. PacketUtil is
+                        the gate every server-bound packet goes through: it checks the chunk is
+                        loaded, the tile is the expected type and the sender is within reach,
+                        then runs the change on the server thread. Never touch the world
+                        directly from a message handler.
 util/                   CapabilityStorageProvider (delegates to INBTSerializable), FixtureUtil
 TheatricalConfigHandler @Config: fixtures.emitLight / consumePower, rendering.lightBeamOpacity
 ```
@@ -266,6 +276,24 @@ each of those does upstream, and the plan for the order they are ported in.
 - **Modern Java syntax is on** (`enableModernJavaSyntax`, Jabel): `var`, switch expressions,
   records and text blocks compile to Java 8 bytecode. The *library* is still Java 8 -- no
   `List.of`, `Optional.isEmpty`, `String.isBlank`, streams `toList()`.
+
+### Testing in a dev client
+
+- **Never run a Gradle build while a dev client is open.** The build empties
+  `build/classes/java/main`, and any class the running client happens to load during that window
+  fails to resolve. The JVM caches that failure for the life of the process, so the class throws
+  `NoClassDefFoundError` from then on even once the file is back on disk. The symptom is a
+  feature that half works -- a screen that draws but whose buttons do nothing -- with no
+  exception in the log, and it survives further rebuilds. Always stop the client first, and if a
+  client is behaving inexplicably, restart it before believing anything it tells you.
+- **Verify each phase in a running client, not just a green build.** Most of the bugs found in
+  this port compiled perfectly. Right-click the block, change the value, close the screen, reopen
+  it, and check the value came back -- that exercises the packet, the server-side change, the
+  save and the sync in one pass.
+- **The MCMCP orchestrator drives this instance** as `LDEncore Dev` on ports 25614/25615 (client
+  and server), configured in `run/config/mcmcp.cfg`. `run/options.txt` mutes the client so
+  background testing is silent. Screen coordinates from `client_gui_widgets` are in scaled GUI
+  units; `client_gui_click_at` takes display pixels, which at this scale factor is double.
 
 ### Porting
 

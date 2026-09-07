@@ -14,7 +14,10 @@
  *     that declared its own;
  *   - the loop guard upstream added in its final commit (do not re-enter a cable already
  *     scanned) is kept: without it a ring of socapex cable overflows the stack;
- *   - patch() no longer NPEs when called before the first device scan.
+ *   - patch() no longer NPEs when called before the first device scan;
+ *   - scanDevices() is new, so a rack can find what is wired to it before it has power.
+ *     Upstream scanned only from updateDevices, which the rack calls after its power check,
+ *     so patching a rack that had never been energised silently did nothing.
  */
 package dev.theatricalmod.theatrical.api.capabilities.socapex;
 
@@ -94,14 +97,20 @@ public class SocapexProvider implements ISocapexProvider, INBTSerializable<NBTTa
     }
 
     @Override
-    public void updateDevices(World world, BlockPos controllerPos) {
-        if (devices == null) {
-            if (world.isRemote) {
-                devices = new HashMap<>();
-                return;
-            }
-            scan(world, controllerPos);
+    public void scanDevices(World world, BlockPos controllerPos) {
+        if (devices != null) {
+            return;
         }
+        if (world.isRemote) {
+            devices = new HashMap<>();
+            return;
+        }
+        scan(world, controllerPos);
+    }
+
+    @Override
+    public void updateDevices(World world, BlockPos controllerPos) {
+        scanDevices(world, controllerPos);
         for (EnumFacing direction : devices.keySet()) {
             BlockPos receiverPos = devices.get(direction);
             IBlockState blockState = world.getBlockState(receiverPos);

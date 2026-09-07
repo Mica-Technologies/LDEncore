@@ -12,7 +12,11 @@
 package dev.theatricalmod.theatrical;
 
 import dev.theatricalmod.theatrical.tiles.interfaces.TileEntityArtNetInterface;
+import net.minecraft.entity.player.EntityPlayer;
+import net.minecraft.util.math.BlockPos;
 import net.minecraft.world.World;
+
+import javax.annotation.Nullable;
 import net.minecraftforge.fml.common.event.FMLInitializationEvent;
 import net.minecraftforge.fml.common.event.FMLPostInitializationEvent;
 import net.minecraftforge.fml.common.event.FMLPreInitializationEvent;
@@ -43,5 +47,22 @@ public class TheatricalCommon {
      * to do.
      */
     public void pollArtNet(TileEntityArtNetInterface tile) {
+    }
+
+    /**
+     * Called on the client when the server sends a DMX provider's universe. The server has
+     * nothing to do: it owns the authoritative copy already.
+     */
+    public void handleProviderDMXUpdate(BlockPos pos, byte[] data) {
+    }
+
+    /**
+     * Builds the screen for a GUI id. Null on the server, which never opens one; the client
+     * proxy is where the GuiContainer subclasses are named, so a dedicated server never
+     * loads a client-only class.
+     */
+    @Nullable
+    public Object getClientGuiElement(int id, EntityPlayer player, World world, BlockPos pos) {
+        return null;
     }
 }

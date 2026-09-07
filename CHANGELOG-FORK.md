@@ -37,6 +37,35 @@ listed below as they are ported.
 
 ### Added
 
+- **Networking and every screen, ported.** All ten client/server packets and the six screens
+  behind them: the DMX address screen shared by the moving light and the DMX-redstone
+  interface, the Art-Net interface screen, the generic fixture's pan/tilt sliders, the dimmer
+  rack's patch panel, and the basic lighting desk with its twelve faders, grand master, cue
+  list and fade times. Right-clicking a block now opens its interface again.
+  - The packet layer is hardened, in our own words. Every server-bound packet now resolves its
+    block through one shared helper that checks the chunk is loaded, the tile is of the type
+    the packet expects, and the sender is within reach, then runs the change on the server
+    thread. Upstream took the position on the wire at face value and touched the world from
+    the network thread, so a crafted or stale packet could edit a block the sender was nowhere
+    near, or trip a concurrent-modification crash. Payloads are bounds-checked and clamped as
+    well: a fader index outside the desk's range is dropped rather than indexing the array, and
+    a zero or negative fade time no longer reaches the per-tick division that threw.
+  - DMX universe updates are sent only to the players tracking that chunk. Upstream broadcast
+    every provider's universe to every player in the dimension.
+  - Two upstream bugs are fixed, in our own words. Patching a dimmer rack silently did nothing
+    until the rack was energised, because the rack only looked for the distros on its socapex
+    run after its power check, so an unpowered rack believed nothing was connected and refused
+    every patch; the scan now happens first, which is when players actually patch. And the
+    dimmer rack screen walked the whole socapex cable run once per rendered frame; the result
+    is now reused for a second.
+  - Two screens differ structurally from upstream: the moving light's and the redstone
+    interface's DMX address screens were identical, and are now one shared base; and the
+    generic fixture's sliders send at most one packet per tick instead of one per pixel of
+    drag.
+  - Verified in a dev client: each of the six screens opens, accepts a change and shows it
+    again after being closed and reopened. On the lighting desk, moving faders and pressing
+    Go records a cue, and the step and mode buttons move the desk between cues and between
+    program and run mode.
 - **Every block, item and tile entity, ported.** Truss, IWB, generic light, moving light,
   the four cables, dimmer rack, socapex distro, Art-Net interface, DMX-redstone interface,
   basic lighting desk, the illuminator light block, the dev-only test DMX block, the
@@ -44,10 +73,10 @@ listed below as they are ported.
   light entity, the config options (one `config/theatrical.cfg` with upstream's two
   categories), and all assets converted to the 1.12 layout (blockstates in Forge's format,
   textures under `blocks/`/`items/`, recipes using ore-dictionary ingredients, `en_us.lang`).
-  The dimmed-power, socapex and DMX networks all run on the server. **Not yet:** GUIs, the
-  fixture and beam renderers, Art-Net polling on the client, The One Probe overlays and the
-  Patchouli guide, which come in their own phases -- so blocks place and work but fixtures
-  render as plain models and nothing opens on right-click.
+  The dimmed-power, socapex and DMX networks all run on the server. **Not yet:** the fixture
+  and beam renderers, Art-Net polling on the client, The One Probe overlays and the Patchouli
+  guide, which come in their own phases -- so blocks place and work but fixtures render as
+  plain models and cast no visible beam.
   - Bug fixes on the way, in our own words: the dimmer rack read its DMX channels at the
     wrong offset and so put out nothing at any DMX address other than 0; the remote
     positioner aimed generic lights the wrong way on two of the four facings; dimmed power
@@ -110,7 +139,9 @@ listed below as they are ported.
 - `assets/theatrical/recipes/*.json` -- converted from 1.16 data-pack recipes: tag ingredients
   became ore-dictionary entries, coloured wool became `minecraft:wool` with metadata, the empty
   pattern row in the lighting desk recipe became a blank row.
-- `assets/theatrical/lang/en_us.lang` -- generated from upstream's `en_us.json`.
+- `assets/theatrical/lang/en_us.lang` -- generated from upstream's `en_us.json`, plus a name
+  for the illuminator block, which upstream never gave one and which therefore showed its raw
+  translation key in any overlay that named it.
 
 ---
 

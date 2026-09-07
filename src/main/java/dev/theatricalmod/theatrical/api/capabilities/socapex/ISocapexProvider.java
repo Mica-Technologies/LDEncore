@@ -4,7 +4,9 @@
  * Part of the 1.12.2 port. Written by Mica Technologies after upstream's
  * api/capabilities/socapex/ISocapexProvider.java (Theatrical Team, Apache License 2.0).
  *
- * CHANGED FROM UPSTREAM: none beyond the port.
+ * CHANGED FROM UPSTREAM: scanDevices is new. Upstream only ever looked for receivers from
+ * inside updateDevices, which a dimmer rack calls after its power check, so an unpowered
+ * rack never knew what was connected to it and rejected every patch the player made.
  */
 package dev.theatricalmod.theatrical.api.capabilities.socapex;
 
@@ -20,6 +22,12 @@ import java.util.List;
 public interface ISocapexProvider {
 
     void updateDevices(World world, BlockPos controllerPos);
+
+    /**
+     * Makes sure the receiver list is populated, without moving any power. Patching is
+     * configuration, so it has to work on a rack that has never been energised.
+     */
+    void scanDevices(World world, BlockPos controllerPos);
 
     void refreshDevices();
 

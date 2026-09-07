@@ -10,7 +10,10 @@
  *   - BUG FIX: the rack read its six DMX channels at (start address + i) from a receiver
  *     whose values are already relative to the start address, so any address other than 0
  *     read past the end and the rack put out nothing. It now reads channel i;
- *   - the GUI title and container come with the GUI phase.
+ *   - the rack looks for the distros wired to it every tick, before the power check rather
+ *     than after it. Upstream scanned only once it had energy, so a rack that had never been
+ *     powered had no idea what was connected and silently rejected every patch made in its
+ *     screen -- which is the one thing you do to a rack before energising it.
  */
 package dev.theatricalmod.theatrical.tiles.power;
 
@@ -114,6 +117,9 @@ public class TileEntityDimmerRack extends TileEntityTheatricalBase implements IT
         if (world.isRemote) {
             return;
         }
+        // Always know what is wired up: patching happens before the rack is ever energised.
+        socapexProvider.scanDevices(world, pos);
+
         int totalPower = 0;
         int[] powerChannels = new int[CHANNELS];
         for (int i = 0; i < CHANNELS; i++) {

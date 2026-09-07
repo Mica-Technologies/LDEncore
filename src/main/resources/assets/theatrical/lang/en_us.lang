@@ -9,6 +9,7 @@ tile.theatrical.dimmed_power_cable.name=Dimmed Power Cable
 tile.theatrical.dimmer_rack.name=Dimmer Rack
 tile.theatrical.dmx_cable.name=DMX Cable
 tile.theatrical.generic_light.name=Generic Light
+tile.theatrical.illuminator.name=Illuminator
 tile.theatrical.iwb.name=Internally Wired Bar (IWB)
 tile.theatrical.moving_light.name=Moving Light
 tile.theatrical.power_cable.name=Power Cable
