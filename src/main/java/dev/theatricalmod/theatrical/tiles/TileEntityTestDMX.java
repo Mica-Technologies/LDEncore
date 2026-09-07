@@ -6,11 +6,16 @@
  * targets Forge 1.16 and this is its 1.12.2 counterpart, not a copy.
  *
  * CHANGED FROM UPSTREAM: 1.12 capability and lifecycle plumbing (ITickable, onLoad,
- * invalidate); the client sync goes through TheatricalNetworkHandler.
+ * invalidate); the client sync goes through TheatricalNetworkHandler; the block now accepts
+ * DMX cable connections (IAcceptsCable) so a cable run visibly attaches to it. Upstream's
+ * did not, which left the debugging block looking unwired even while it was driving the
+ * universe.
  */
 package dev.theatricalmod.theatrical.tiles;
 
 import dev.theatricalmod.theatrical.TheatricalMod;
+import dev.theatricalmod.theatrical.api.CableType;
+import dev.theatricalmod.theatrical.api.IAcceptsCable;
 import dev.theatricalmod.theatrical.api.capabilities.dmx.provider.DMXProvider;
 import dev.theatricalmod.theatrical.api.capabilities.dmx.provider.IDMXProvider;
 import dev.theatricalmod.theatrical.api.dmx.DMXUniverse;
@@ -27,7 +32,7 @@ import java.util.Random;
 /**
  * Debug block: a DMX provider that fills its universe with random values once a second.
  */
-public class TileEntityTestDMX extends TileEntity implements ITickable {
+public class TileEntityTestDMX extends TileEntity implements ITickable, IAcceptsCable {
 
     private final IDMXProvider idmxProvider = new DMXProvider(new DMXUniverse());
     private final Random random = new Random();
@@ -82,5 +87,10 @@ public class TileEntityTestDMX extends TileEntity implements ITickable {
     @Override
     public void onLoad() {
         TheatricalMod.refreshDmxNetwork(world);
+    }
+
+    @Override
+    public CableType[] getAcceptedCables(EnumFacing side) {
+        return new CableType[]{CableType.DMX};
     }
 }

@@ -54,8 +54,14 @@ listed below as they are ported.
     cables and cable tiles now save their state (a reloaded cable came back empty and did
     not flag its network); the network walkers only follow cable arms that actually connect
     (upstream's check always answered yes).
+  - The dev-only test DMX block now accepts cable connections, so a cable run visibly
+    attaches to it. Upstream's did not, which left the debugging block looking unwired even
+    while it was driving the universe.
   - Fork-authored asset: a placeholder wrench texture. Upstream's wrench referenced a texture
     that was never shipped.
+  - Verified in a dev client: every block places and renders, and a test DMX block feeding a
+    cable run into a DMX-redstone interface lights redstone lamps, so the DMX network walker,
+    the receiver and the redstone output all work end to end.
 - **The API layer, ported.** Everything under `api/`: the DMX universe, the DMX provider and
   receiver capabilities and the per-world DMX network, the socapex provider/receiver
   capabilities and the per-world socapex network, the mod's own power capability, cable
