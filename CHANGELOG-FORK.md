@@ -54,4 +54,5 @@ Minecraft 1.16.4 / Forge 35.1.37). No gameplay code has been changed yet.
 
 ### Modified files without comment support
 
-- None yet.
+- `gradle/wrapper/gradle-wrapper.jar` -- replaced with the Gradle 8.7 wrapper jar (was 4.9).
+- `gradlew` -- content unchanged; file mode changed from 644 to 755 so CI can execute it.
