@@ -1,0 +1,35 @@
+# LDEncore -- Mica Technologies' fork of Theatrical, ported to Forge 1.12.2.
+#
+# French translation contributed to upstream Theatrical by SwiTeK (Apache License 2.0),
+# adopted by this fork.
+#
+# CHANGED FROM UPSTREAM: converted from the contributed .json to 1.12's .lang format and its
+# key names (tile.<id>.name rather than block.<id>); the creative tab and the guide carry the
+# fork's name, which is a name rather than a word to translate. Keys the contribution does not
+# cover fall back to English, which is the intended behaviour.
+
+tile.theatrical.artnet_interface.name=Interface ArtNet
+tile.theatrical.basic_lighting_desk.name=Console lumière basique
+tile.theatrical.dimmed_power_cable.name=Câble d'alimentation
+tile.theatrical.dimmer_rack.name=Gradateur éléctrique
+tile.theatrical.dmx_cable.name=Câble DMX
+tile.theatrical.generic_light.name=Projecteur Traditionnelle
+tile.theatrical.iwb.name=Barre avec alimentation intégrée
+tile.theatrical.moving_light.name=Projecteur asservis
+tile.theatrical.power_cable.name=Câble d'alimentation
+tile.theatrical.redstone_interface.name=Interface DMX-Redstone
+tile.theatrical.socapex_cable.name=Câble Socapex
+tile.theatrical.socapex_distribution.name=Distributeur Socapex
+tile.theatrical.test_dmx.name=Test DMX Block
+tile.theatrical.truss.name=Truss MT100
+
+item.theatrical.bulb.name=Ampoule de tungstène
+item.theatrical.cog.name=Pignon mécanique
+item.theatrical.led.name=LED
+item.theatrical.motor.name=Moteur électrique
+item.theatrical.positioner.name=Positionneur de lumière à distance
+item.theatrical.wrench.name=Clé à molette
+
+guide.theatrical.landing_text=Sur l'art du théâtre
+guide.theatrical.name=Guide LDEncore
+itemGroup.theatrical=LDEncore

@@ -16,6 +16,14 @@ dependencies {
     // GPL-3.0, see NOTICE.
     shadowImplementation files('libs/artnet4j-0.6.1.jar')
 
-    // Patchouli (in-game guide) and The One Probe compat are ported in later phases of the
-    // backport; their 1.12.2 coordinates get added here when they are.
+    // The One Probe, for the in-world overlay showing a block's power and DMX. Soft
+    // dependency: this is the version the dev environment already runs, and it is compile-only
+    // and unpublished, so a pack without The One Probe is unaffected. Every reference to its
+    // API lives in compat/top, which is only loaded when the mod is present.
+    devOnlyNonPublishable(rfg.deobf("curse.maven:top-245211:2667280"))
+
+    // Patchouli, which renders the in-game guide. Soft dependency and compile-only: the mod
+    // ships the book's JSON, and a pack without Patchouli simply has no book. Nothing in the
+    // Java sources references it.
+    devOnlyNonPublishable(rfg.deobf("vazkii.patchouli:Patchouli:1.0-23.6"))
 }

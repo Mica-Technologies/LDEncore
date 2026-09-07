@@ -1,7 +1,7 @@
 # LDEncore -- Mica Technologies' fork of Theatrical, ported to Forge 1.12.2.
 # CHANGED FROM UPSTREAM: converted from upstream's en_us.json to 1.12's .lang format;
-# the creative tab is labelled LDEncore (the fork's name); the guide strings come with
-# the Patchouli phase; config screen labels are fork additions.
+# the creative tab is labelled LDEncore (the fork's name), as is the in-game guide; the
+# illuminator gains a name it never had; config screen labels are fork additions.
 
 tile.theatrical.artnet_interface.name=ArtNet Interface
 tile.theatrical.basic_lighting_desk.name=Basic Lighting Desk
@@ -25,6 +25,8 @@ item.theatrical.motor.name=Electrical Motor
 item.theatrical.positioner.name=Remote Light Positioner
 item.theatrical.wrench.name=Wrench
 itemGroup.theatrical=LDEncore
+guide.theatrical.name=LDEncore Guide
+guide.theatrical.landing_text=On the art of theatrics
 
 # Falling light entity
 entity.theatrical.falling_light.name=Falling Light

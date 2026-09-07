@@ -1,0 +1,35 @@
+# LDEncore -- Mica Technologies' fork of Theatrical, ported to Forge 1.12.2.
+#
+# Hebrew translation contributed to upstream Theatrical by CrazyFish159 (Apache License 2.0),
+# adopted by this fork.
+#
+# CHANGED FROM UPSTREAM: converted from the contributed .json to 1.12's .lang format and its
+# key names (tile.<id>.name rather than block.<id>); the creative tab and the guide carry the
+# fork's name, which is a name rather than a word to translate. Keys the contribution does not
+# cover fall back to English, which is the intended behaviour.
+
+tile.theatrical.artnet_interface.name=ArtNet ממשחק
+tile.theatrical.basic_lighting_desk.name=שולחן תאורה בסיסי
+tile.theatrical.dimmed_power_cable.name=כבל חשמל מעומעם
+tile.theatrical.dimmer_rack.name=מתלה דימר
+tile.theatrical.dmx_cable.name=כבל DMX
+tile.theatrical.generic_light.name=אור גנרי
+tile.theatrical.iwb.name=בר חוטי פנימי (IWB)
+tile.theatrical.moving_light.name=אור זז
+tile.theatrical.power_cable.name=כבל חשמל
+tile.theatrical.redstone_interface.name=ממשק DMX-Redstone
+tile.theatrical.socapex_cable.name=Socapex כבל
+tile.theatrical.socapex_distribution.name=Socapex מפיץ
+tile.theatrical.test_dmx.name=בודק DMX
+tile.theatrical.truss.name=MT100 תמיכה
+
+item.theatrical.bulb.name=נורת להט
+item.theatrical.cog.name=גלגל שיניים מכני
+item.theatrical.led.name=לד
+item.theatrical.motor.name=מנוע חשמלי
+item.theatrical.positioner.name=שלט מיקום
+item.theatrical.wrench.name=מפתח ברגים
+
+guide.theatrical.landing_text=על אמנות Theatrical
+guide.theatrical.name=LDEncore מדריך
+itemGroup.theatrical=LDEncore

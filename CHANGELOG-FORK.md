@@ -37,6 +37,29 @@ listed below as they are ported.
 
 ### Added
 
+- **The in-game guide, The One Probe overlay and three translations, ported.** The Patchouli
+  guide is back, with both categories, all seven entries and their crafting pages; the in-world
+  overlay shows a block's power, DMX address and channels, and its socapex channels; and the mod
+  now speaks German, French and Hebrew as well as English.
+  - The guide is titled *LDEncore Guide*, in keeping with the rest of the fork's naming.
+  - The overlay is built differently, in our own words. Upstream had each block implement an
+    interface whose method signature named The One Probe's own types, so ordinary blocks carried
+    a reference to a mod that need not be installed. The lines are now built from the block's
+    capabilities inside the compat package, which is only loaded when The One Probe is present,
+    and a block earns the overlay by having the capability rather than by remembering to
+    implement an interface. It also shows the DMX start address, which is the number a player
+    has to match on their desk and which upstream left out, and a socapex receiver's channels,
+    which upstream showed nothing for.
+  - Both Patchouli and The One Probe stay optional. Neither is bundled and neither is required;
+    a pack without them simply has no guide and no overlay.
+  - **Translations.** German by Nicolas Pfeifer (nicode3141), French by SwiTeK and Hebrew by
+    CrazyFish159, all contributed to upstream Theatrical under the Apache License 2.0 and never
+    released there. This fork adopts them, converted to 1.12's `.lang` format and key names. The
+    creative tab and the guide keep the fork's name in every language, being a name rather than
+    a word to translate, and any string a contribution does not cover falls back to English.
+  - Verified in a dev client: the guide opens and both its crafting pages resolve their recipes,
+    the overlay reads "DMX address: 17 (7 channels)" off a moving light, and the game in German
+    names the blocks in German.
 - **Art-Net, ported.** An Art-Net interface block now receives real Art-Net from lighting
   software on the player's own machine and pushes it down the DMX cables in-game. The player who
   owns the interface reads the feed on their client and forwards it; the server accepts it only
@@ -138,8 +161,7 @@ listed below as they are ported.
   light entity, the config options (one `config/theatrical.cfg` with upstream's two
   categories), and all assets converted to the 1.12 layout (blockstates in Forge's format,
   textures under `blocks/`/`items/`, recipes using ore-dictionary ingredients, `en_us.lang`).
-  The dimmed-power, socapex and DMX networks all run on the server. **Not yet:** The One Probe
-  overlays and the Patchouli guide, which come in their own phases.
+  The dimmed-power, socapex and DMX networks all run on the server.
   - Bug fixes on the way, in our own words: the dimmer rack read its DMX channels at the
     wrong offset and so put out nothing at any DMX address other than 0; the remote
     positioner aimed generic lights the wrong way on two of the four facings; dimmed power

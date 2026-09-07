@@ -33,6 +33,7 @@ import dev.theatricalmod.theatrical.api.capabilities.socapex.ISocapexReceiver;
 import dev.theatricalmod.theatrical.api.capabilities.socapex.SocapexProvider;
 import dev.theatricalmod.theatrical.api.capabilities.socapex.SocapexReceiver;
 import dev.theatricalmod.theatrical.client.gui.TheatricalGuiHandler;
+import dev.theatricalmod.theatrical.compat.top.TOPCompat;
 import dev.theatricalmod.theatrical.items.TheatricalItems;
 import dev.theatricalmod.theatrical.network.TheatricalNetworkHandler;
 import dev.theatricalmod.theatrical.util.CapabilityStorageProvider;
@@ -112,6 +113,7 @@ public class TheatricalMod {
     @Mod.EventHandler
     public void init(FMLInitializationEvent event) {
         NetworkRegistry.INSTANCE.registerGuiHandler(this, new TheatricalGuiHandler());
+        TOPCompat.register();
         proxy.init(event);
     }
 

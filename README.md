@@ -64,7 +64,7 @@ built on it. The other inherited branches are left untouched.
 3. **In progress:** port the mod, bottom-up -- API and capabilities, then blocks/items/tiles and
    assets, networking and GUIs, rendering, Art-Net and control, the in-game guide and compat --
    keeping the 1.16 behaviour as the reference and fixing the known upstream bugs on the way.
-   Everything up to and including Art-Net is done; the in-game guide and compat are next.
+   The port itself is complete; a performance pass and a play-test come next.
 4. **Then:** release the 1.12.2 line. The 1.16.4 line is frozen at its resurrected state: it
    stays buildable, but 1.12.2 is the only version that receives work.
 
@@ -96,9 +96,10 @@ header saying so. Nothing of upstream's 1.16 source is compiled on this branch; 
 copy lives on `1.16.3`. The build is the GregTechCEu buildscripts (RetroFuturaGradle) rather than
 upstream's ForgeGradle, and artnet4j is shaded under a relocated package instead of being merged
 in as-is. Ported so far: the API and capabilities, every block, item and tile entity, the falling
-light entity, the config and all assets, the networking and every screen, the rendering and
-Art-Net (see the changelog for what each step fixed on the way). Still to come: The One Probe
-overlays and the Patchouli guide. Deliberate fork differences beyond the
+light entity, the config and all assets, the networking and every screen, the rendering,
+Art-Net, the in-game guide, the The One Probe overlay and the translations (see the changelog for
+what each step fixed on the way). What remains before a release is a performance pass and a
+play-test. Deliberate fork differences beyond the
 port itself: the creative tab is labelled LDEncore; the placeholder wrench texture is ours
 (upstream shipped none); every server-bound packet is now validated for reach, block type and
 payload range before it is allowed to change the world, and DMX updates go only to the players
