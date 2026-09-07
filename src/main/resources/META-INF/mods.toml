@@ -1,12 +1,20 @@
+# CHANGED FROM UPSTREAM (Mica Technologies fork, LDEncore): displayName, authors, credits,
+# description, displayURL and issueTrackerURL were changed so the in-game mod list identifies
+# this as the fork and so bug reports come to this repository rather than the archived upstream
+# tracker. modId, modLoader and loaderVersion are upstream's, unchanged.
 modLoader="javafml"
 loaderVersion="[34,)"
-issueTrackerURL="https://github.com/theatricalmod/theatrical-forge/issues"
+issueTrackerURL="https://github.com/Mica-Technologies/LDEncore/issues"
 license="Apache-2.0"
 [[mods]]
     modId="theatrical"
     version="${file.jarVersion}"
-    displayName="Theatrical"
-    credits="Manmaed"
-    authors="Rushmead"
+    displayName="LDEncore"
+    displayURL="https://github.com/Mica-Technologies/LDEncore"
+    credits="Theatrical by Rushmead and the Theatrical Team; Manmaed. Fork maintained by Mica Technologies."
+    authors="Rushmead (Theatrical), Mica Technologies (LDEncore fork)"
     description='''
+    Unofficial fork of Theatrical, maintained by Mica Technologies. Not affiliated with or endorsed by the Theatrical project.
+
+    Live events equipment for Minecraft: tungsten and moving lights, dimmer racks, DMX/Art-Net control, power and DMX cabling, truss and rigging.
     '''

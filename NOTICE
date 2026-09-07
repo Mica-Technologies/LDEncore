@@ -1,0 +1,26 @@
+LDEncore
+Copyright 2026 Mica Technologies
+
+This product is an unofficial fork of Theatrical (the Forge edition,
+https://github.com/theatricalmod/theatrical-forge), created by the Theatrical
+Team -- Stuart "Rushmead" Pomeroy, James Conway (615283) and contributors --
+and distributed under the Apache License, Version 2.0. A copy of that license
+is in the LICENSE file. The original authors did not write, review or endorse
+the changes made in this fork.
+
+Modified files
+--------------
+As required by section 4(b) of the Apache License 2.0, every file inherited
+from Theatrical that this fork has changed carries a prominent notice at the
+top of the file stating that it was changed by Mica Technologies, and why.
+Files whose format cannot carry a comment (JSON, images, binaries) are listed
+instead in CHANGELOG-FORK.md. A running summary of all fork changes is kept in
+the "What this fork changes" section of README.md.
+
+Bundled third-party software
+----------------------------
+artnet4j (https://github.com/theatricalmod/artnet4j, a fork of
+https://github.com/cansik/artnet4j; the original library is by Karsten Schmidt)
+is bundled inside the mod jar exactly as upstream Theatrical bundled it. It is
+distributed under the GNU General Public License v3.0 by its authors and is
+not part of the Apache-licensed Theatrical/LDEncore source tree.
