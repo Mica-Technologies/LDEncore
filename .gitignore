@@ -38,6 +38,10 @@ forge*changelog.txt
 *.log
 .cache/
 .DS_Store
+# GregTechCEu buildscripts (1.12.2 line): blowdryer drops spotless files into src, and the
+# server smoke script writes its boot log next to the repo root.
+server-*.log
+.rosetta-natives/
 
 # ---------------------------------------------------------------------------
 # Mica Technologies fork additions

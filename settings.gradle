@@ -1,18 +1,30 @@
-// Mica Technologies fork (LDEncore): this file did not exist upstream. It pins the plugin
-// repositories ForgeGradle 6 needs and enables toolchain auto-provisioning, so a machine
-// that only has a JDK 17 to run Gradle can still compile the mod against Java 8.
 pluginManagement {
     repositories {
-        gradlePluginPortal()
         maven {
-            name = 'MinecraftForge'
-            url = 'https://maven.minecraftforge.net/'
+            // RetroFuturaGradle
+            name 'GTNH Maven'
+            url 'https://nexus.gtnewhorizons.com/repository/public/'
+            //noinspection GroovyAssignabilityCheck
+            mavenContent {
+                includeGroup 'com.gtnewhorizons'
+                includeGroup 'com.gtnewhorizons.retrofuturagradle'
+            }
         }
+        gradlePluginPortal()
+        mavenCentral()
+        mavenLocal()
     }
 }
 
 plugins {
+    id 'com.diffplug.blowdryerSetup' version '1.7.0'
+    // Automatic toolchain provisioning
     id 'org.gradle.toolchains.foojay-resolver-convention' version '0.7.0'
 }
 
-rootProject.name = 'LDEncore'
+blowdryerSetup {
+    repoSubfolder 'spotless'
+    github 'GregTechCEu/Buildscripts', 'tag', 'v1.0.7'
+}
+
+rootProject.name = rootProject.projectDir.getName()

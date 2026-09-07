@@ -8,10 +8,10 @@
 #     unchanged because cleanup-mod-pre-releases.yml keys its workflow_run trigger off it --
 #     and GitHub only honours workflow_run and workflow_dispatch for workflow files that exist
 #     on the default branch, so this file must be present on `1.12` for those to work.
-#   * Two JDKs are installed: Gradle itself needs 17+ for ForgeGradle 6, while the mod
-#     compiles against a Java 8 toolchain (java_target=8).
-#   * The print* task reads use `tail -n 1` because build.gradle prints a JVM banner during
-#     configuration that `-q` does not suppress.
+#   * This branch (`1.12`) builds with the GregTechCEu buildscripts on JDK 21 like RCMC/LDFAWE;
+#     the `1.16.3` branch's copy of this file installs JDK 8 + 17 for ForgeGradle 6 instead.
+#   * The print* task reads use `tail -n 1` so anything printed during configuration cannot
+#     corrupt the value.
 #   * The release body names the upstream Theatrical release the build is based on
 #     (printUpstreamVersion, from upstream_version in gradle.properties).
 
@@ -43,13 +43,13 @@ jobs:
         with:
           fetch-depth: 0
 
-      - name: Set Up JDKs (8 for the mod toolchain, 17 to run Gradle)
+      # RFG runs the Gradle process on Java 21+ (compiler + mod code stay Java 8 via
+      # Jabel); older Gradle-JVM Java versions are deprecated and slated for removal.
+      - name: Set Up JDK 21
         uses: actions/setup-java@v5
         with:
           distribution: 'zulu'
-          java-version: |
-            8
-            17
+          java-version: '21'
 
       - name: Setup Gradle
         uses: gradle/actions/setup-gradle@v6

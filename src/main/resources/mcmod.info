@@ -1,0 +1,19 @@
+[
+  {
+    "modid": "${modid}",
+    "name": "${modname}",
+    "description": "Unofficial fork of Theatrical, ported to Forge 1.12.2 by Mica Technologies. Not affiliated with or endorsed by the Theatrical project. Live events equipment for Minecraft: tungsten and moving lights, dimmer racks, DMX/Art-Net control, power and DMX cabling, truss and rigging.",
+    "version": "${version}",
+    "mcversion": "${mcversion}",
+    "url": "https://github.com/Mica-Technologies/LDEncore",
+    "updateUrl": "",
+    "authorList": ["Rushmead (Theatrical)", "Mica Technologies (LDEncore fork)"],
+    "credits": "Theatrical by Rushmead and the Theatrical Team; Manmaed. Fork maintained by Mica Technologies.",
+    "logoFile": "",
+    "screenshots": [],
+    "dependencies": [],
+    "dependants": [],
+    "requiredMods": [],
+    "useDependencyInformation": "true"
+  }
+]

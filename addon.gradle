@@ -1,0 +1,129 @@
+// LDEncore (Mica Technologies fork of Theatrical) -- Forge 1.12.2 line. Fork-authored file.
+// Additional Gradle configuration layered on top of the GregTechCEu buildscript (build.gradle).
+
+// ---------------------------------------------------------------------------
+// Tools for GitHub Actions
+//
+// The release workflows shell out to these to name the jar and fill in the release body.
+// Their names are a contract with .github/workflows/build-mod-release-pre-release-main.yml
+// -- renaming one breaks the release build. The workflow reads the last line of output
+// (`| tail -n 1 | xargs`) so a banner printed during configuration cannot corrupt the value.
+// ---------------------------------------------------------------------------
+tasks.register('printModVersion') {
+    group = 'other'
+    description = 'Prints the full project version, e.g. 1.12.2-2026.09.07'
+    doLast { println project.version }
+}
+
+tasks.register('printArchivesBaseName') {
+    group = 'other'
+    description = 'Prints the jar base name, e.g. LDEncore'
+    doLast { println project.findProperty('archivesBaseName') }
+}
+
+tasks.register('printModName') {
+    group = 'other'
+    description = 'Prints the human-readable mod name, e.g. LDEncore'
+    doLast { println project.findProperty('modName') }
+}
+
+tasks.register('printMinecraftVersion') {
+    group = 'other'
+    description = 'Prints the targeted Minecraft version, e.g. 1.12.2'
+    doLast { println project.findProperty('minecraftVersion') }
+}
+
+tasks.register('printUpstreamVersion') {
+    group = 'other'
+    description = 'Prints the upstream Theatrical release this port is translated from, e.g. 0.7.2'
+    doLast { println project.findProperty('upstream_version') }
+}
+
+// ---------------------------------------------------------------------------
+// Build-time guard on the published jar's MANIFEST (inherited from the sibling Mica mods).
+//
+// FML 1.12.2's CoreModManager.discoverCoreMods drops ANY jar declaring a TweakClass from
+// mod discovery, silently, with no error anywhere -- and nothing in `build`, `runClient`
+// or `runServer` reads this manifest, so the only place that failure shows is a real
+// launcher against a real pack. This mod has no coremod and must never grow a TweakClass
+// by accident (a shaded dependency's manifest is the usual way it happens).
+// ---------------------------------------------------------------------------
+tasks.matching { it.name == 'reobfJar' }.configureEach {
+    doLast {
+        outputs.files.files.findAll { it.name.endsWith('.jar') }.each { File jarFile ->
+            if (!jarFile.exists()) {
+                return
+            }
+            java.util.jar.Manifest manifest = null
+            new java.util.jar.JarFile(jarFile).withCloseable { jf ->
+                manifest = jf.manifest
+            }
+            if (manifest == null) {
+                throw new GradleException("${jarFile.name} has no MANIFEST.MF")
+            }
+            def tweak = manifest.mainAttributes.getValue('TweakClass')
+            if (tweak != null) {
+                throw new GradleException("Published jar MANIFEST is invalid: ${jarFile.name} declares "
+                        + "TweakClass '${tweak}', which removes the jar from FML 1.12.2 mod discovery.")
+            }
+            logger.lifecycle("Manifest guard OK: ${jarFile.name} (no TweakClass)")
+        }
+    }
+}
+
+// ---------------------------------------------------------------------------
+// ARM macOS (Apple Silicon) support, copied from the sibling RCMC mod.
+//
+// MC 1.12.2 bundles JNA 4.4.0 and java-objc-bridge 1.0.0, both x86_64-only. Override with
+// arm64-compatible versions via java17PatchDependencies for runClient17/runClient21.
+// ---------------------------------------------------------------------------
+if (project.hasProperty('enableJava17RunTasks') && enableJava17RunTasks.toBoolean()) {
+    dependencies {
+        java17PatchDependencies('net.java.dev.jna:jna:5.13.0') { transitive = false }
+        java17PatchDependencies('net.java.dev.jna:jna-platform:5.13.0') { transitive = false }
+        java17PatchDependencies('ca.weblite:java-objc-bridge:1.1') { transitive = false }
+    }
+}
+
+// Apple-Silicon fallback: run the LWJGL2 client under x86_64 (Rosetta 2).
+//
+// Usage:  ./gradlew runClient -Prosetta
+// Requires Rosetta 2 and an x86_64 Java 8 JDK (Adoptium) in a Gradle-auto-detected location.
+// RFG extracts LWJGL2 natives matching the *gradle* JVM's arch (arm64), but the Rosetta
+// client JVM is x86_64, so point LWJGL2 at a directory of x86_64 2.9.4 natives. Populate with:
+//   curl -sSL -o /tmp/n.jar https://libraries.minecraft.net/org/lwjgl/lwjgl/lwjgl-platform/2.9.4-nightly-20150209/lwjgl-platform-2.9.4-nightly-20150209-natives-osx.jar
+//   unzip -o -j /tmp/n.jar '*.dylib' -d .rosetta-natives/lwjgl2
+if (project.hasProperty('rosetta')) {
+    def rosettaLauncher = javaToolchains.launcherFor {
+        languageVersion.set(JavaLanguageVersion.of(8))
+        vendor.set(JvmVendorSpec.ADOPTIUM)
+    }
+    def rosettaNatives = file("${project.rootDir}/.rosetta-natives/lwjgl2")
+    tasks.matching { it.name == 'runClient' }.configureEach {
+        it.javaLauncher.set(rosettaLauncher)
+        it.getExtraJvmArgs().add("-Dorg.lwjgl.librarypath=${rosettaNatives.absolutePath}".toString())
+    }
+    tasks.matching { it.name == 'runServer' }.configureEach {
+        it.javaLauncher.set(rosettaLauncher)
+    }
+}
+
+// ---------------------------------------------------------------------------
+// Ship the generated Tags class in the shadowed jar.
+//
+// With usesShadowedDependencies on, the buildscript publishes shadowJar instead of jar, and
+// shadowJar only packs sourceSets.main.output -- the injectTags output (compiled into the
+// separate `injectedTags` source set) is left out. The constants are inlined wherever they
+// are read, so nothing breaks at runtime, but a jar that references a class it does not carry
+// is a trap for the next reflective use. Add the source set's output explicitly.
+// ---------------------------------------------------------------------------
+if (project.hasProperty('usesShadowedDependencies') && usesShadowedDependencies.toBoolean()) {
+    afterEvaluate {
+        def injected = sourceSets.findByName('injectedTags')
+        if (injected != null) {
+            tasks.named('shadowJar').configure {
+                from(injected.output)
+            }
+        }
+    }
+}

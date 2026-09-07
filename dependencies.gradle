@@ -1,0 +1,21 @@
+// LDEncore (Mica Technologies fork of Theatrical) -- Forge 1.12.2 line. Fork-authored file.
+//
+// Supported configurations (from the GregTechCEu buildscripts):
+//  - api / implementation / compileOnly / compileOnlyApi / runtimeOnly: the usual Gradle meanings.
+//  - runtimeOnlyNonPublishable("g:n:v"): on the runClient/runServer classpath, not a published dependency.
+//  - devOnlyNonPublishable("g:n:v"): compileOnly + runtimeOnlyNonPublishable; use with rfg.deobf(...)
+//    for obfuscated mod jars, e.g. devOnlyNonPublishable(rfg.deobf("curse.maven:top-245211:2667280")).
+//  - shadowImplementation("g:n:v" or files(...)): merged into the jar under a relocated package.
+//    Requires usesShadowedDependencies = true in buildscript.properties.
+//
+// JEI and The One Probe are already on the dev classpath via includeCommonDevEnvMods.
+dependencies {
+    // Art-Net DMX over IP. Upstream bundled this exact jar (no maven artifact exists) and the
+    // 1.16 line still does; here it is shaded and relocated under
+    // dev.theatricalmod.theatrical.shadow so it cannot clash with any other mod carrying it.
+    // GPL-3.0, see NOTICE.
+    shadowImplementation files('libs/artnet4j-0.6.1.jar')
+
+    // Patchouli (in-game guide) and The One Probe compat are ported in later phases of the
+    // backport; their 1.12.2 coordinates get added here when they are.
+}
