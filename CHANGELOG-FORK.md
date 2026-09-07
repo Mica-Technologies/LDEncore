@@ -37,6 +37,24 @@ listed below as they are ported.
 
 ### Added
 
+- **The API layer, ported.** Everything under `api/`: the DMX universe, the DMX provider and
+  receiver capabilities and the per-world DMX network, the socapex provider/receiver
+  capabilities and the per-world socapex network, the mod's own power capability, cable
+  types and sides, and the fixture registry with the two built-in fixtures (fresnel and
+  moving head). The capabilities register and the world networks attach and tick on a
+  dedicated server. No blocks use any of it yet.
+  - Two upstream bugs are fixed on the way, in our own words: a DMX receiver addressed within
+    the last few channels of a universe no longer throws when values arrive (the copy is
+    clamped to the end of the universe), and a receiver's last channel can now actually be
+    written by `updateChannel` (an off-by-one refused it).
+  - Two ports differ structurally from upstream so the API package stands alone: the network
+    walkers follow cables through a new `ICable` interface instead of the cable block class,
+    and fixture types have their tile-entity factory registered by the tiles package instead
+    of naming the tile classes themselves. Baked-model handles are no longer stored on the
+    common `Fixture` class (a client-only type on a dedicated server).
+  - The world network capability objects are now the objects that get ticked; upstream
+    attached one instance and ticked a different, default-constructed one.
+  - The DMX receiver saves its start address and channel count itself.
 - **The 1.12.2 line itself.** The branch now builds with the GregTechCEu buildscripts
   (RetroFuturaGradle, Gradle on JDK 21, mod on Java 8 via Jabel) like the sibling Mica 1.12.2
   mods, with the same date-tag versioning and GitHub Actions workflows as the 1.16 line. The
