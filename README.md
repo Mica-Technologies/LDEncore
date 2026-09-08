@@ -33,19 +33,20 @@ on our release infrastructure. Two lines of work live in this repository:
 
 - **The 1.12.2 port**, on this branch (`1.12`, the default). It is a translation of the mature
   1.16 code to Forge 1.12.2 APIs, built with the same GregTechCEu buildscripts as our other
-  1.12.2 mods. **It is in progress.** Right now it is a mod skeleton that loads and does nothing;
-  fixtures, dimming, cabling and control arrive phase by phase (see the roadmap).
+  1.12.2 mods. **It is the line that gets worked on**, and it is feature-complete against the
+  1.16 baseline: fixtures, dimming, cabling, DMX, Art-Net, the control desk, the in-game guide
+  and the overlay are all here.
 - **The 1.16.4 baseline**, on the `1.16.3` branch: the final state of upstream's default branch
   (Theatrical 0.7.2 for Minecraft 1.16.4 plus the unreleased fixes after it), resurrected so it
-  builds again on a current toolchain. It is the reference the port is translated from, and it
-  is what the published builds currently are.
+  builds again on a current toolchain. It was the reference the port was translated from, and it
+  is now **frozen** -- it stays buildable and receives no feature work.
 
 **Scope of support:**
 
 | | |
 |---|---|
-| **Minecraft version (goal)** | 1.12.2, Forge -- the backport this fork exists for; in progress on `1.12` |
-| **Minecraft version (published today)** | 1.16.4 (Forge 35.1.37) -- the inherited upstream baseline, from `1.16.3` |
+| **Minecraft version** | 1.12.2, Forge -- the backport this fork exists for, and the only line that receives work |
+| **1.16.4 (Forge 35.1.37)** | The inherited upstream baseline on `1.16.3`. Frozen: kept buildable, no feature work |
 | **Mod loader** | Forge only |
 | **Other versions** | Not supported here -- use the [official mod](https://www.curseforge.com/minecraft/mc-mods/theatrical) |
 
@@ -61,12 +62,14 @@ built on it. The other inherited branches are left untouched.
    this repository, and document the fork.
 2. **Done:** start the 1.12.2 line on this branch with the fleet build system and an empty mod
    that loads on Forge 1.12.2.
-3. **In progress:** port the mod, bottom-up -- API and capabilities, then blocks/items/tiles and
+3. **Done:** port the mod, bottom-up -- API and capabilities, then blocks/items/tiles and
    assets, networking and GUIs, rendering, Art-Net and control, the in-game guide and compat --
    keeping the 1.16 behaviour as the reference and fixing the known upstream bugs on the way.
-   The port itself is complete; a performance pass and a play-test come next.
-4. **Then:** release the 1.12.2 line. The 1.16.4 line is frozen at its resurrected state: it
-   stays buildable, but 1.12.2 is the only version that receives work.
+   A performance pass and a bug sweep followed.
+4. **In progress:** play-test and release the 1.12.2 line. The 1.16.4 line is frozen at its
+   resurrected state: it stays buildable, but 1.12.2 is the only version that receives work.
+5. **Then:** the extras upstream never got to, picked by what a pack actually needs -- house
+   lights, floor stands, a wireless DMX receiver, gels, coloured beams.
 
 ### Downloads
 
@@ -78,9 +81,8 @@ Builds are published to this repository's [Releases](../../releases) page.
 
 Both lines publish to the same page; tell them apart by the jar name and the Minecraft version in
 the release title. 1.12.2 jars are `LDEncore-1.12.2-<version>.jar`; 1.16.4 jars are
-`LDEncore-<version>-forge-mc1.16.jar`. **Until the port reaches a playable state, 1.12.2
-pre-releases are skeleton builds and not worth installing.** Every release names the upstream
-Theatrical version it is based on.
+`LDEncore-<version>-forge-mc1.16.jar`. Every release names the upstream Theatrical version it is
+based on.
 
 ---
 
@@ -98,8 +100,8 @@ upstream's ForgeGradle, and artnet4j is shaded under a relocated package instead
 in as-is. Ported so far: the API and capabilities, every block, item and tile entity, the falling
 light entity, the config and all assets, the networking and every screen, the rendering,
 Art-Net, the in-game guide, the The One Probe overlay and the translations (see the changelog for
-what each step fixed on the way). The performance pass is done too; what remains before a release
-is a play-test. Deliberate fork differences beyond the
+what each step fixed on the way) -- that is the whole of the 1.16 mod. Deliberate fork differences
+beyond the
 port itself: the creative tab is labelled LDEncore; the placeholder wrench texture is ours
 (upstream shipped none); every server-bound packet is now validated for reach, block type and
 payload range before it is allowed to change the world, and DMX updates go only to the players

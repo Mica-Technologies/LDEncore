@@ -4,10 +4,14 @@
 # verbatim so this stays diffable against them:
 #   * Upstream Theatrical kept one branch per Minecraft version, so there is no `main`. This
 #     repo's default branch is `1.12` (the Forge 1.12.2 backport line); `1.16.3` is the
-#     resurrected upstream baseline. Both are release branches. The workflow name is left
-#     unchanged because cleanup-mod-pre-releases.yml keys its workflow_run trigger off it --
-#     and GitHub only honours workflow_run and workflow_dispatch for workflow files that exist
-#     on the default branch, so this file must be present on `1.12` for those to work.
+#     resurrected upstream baseline. The workflow name is left unchanged because
+#     cleanup-mod-pre-releases.yml keys its workflow_run trigger off it -- and GitHub only
+#     honours workflow_run and workflow_dispatch for workflow files that exist on the default
+#     branch, so this file must be present on `1.12` for those to work.
+#   * Only `1.12` publishes on push. The `1.16.3` baseline is frozen and its one-off publish is
+#     done, so a commit that merely keeps it building should not put another pre-release on the
+#     shared Releases page. It can still be published deliberately: workflow_dispatch lets you
+#     pick the branch, and this file exists on `1.16.3` too.
 #   * This branch (`1.12`) builds with the GregTechCEu buildscripts on JDK 21 like RCMC/LDFAWE;
 #     the `1.16.3` branch's copy of this file installs JDK 8 + 17 for ForgeGradle 6 instead.
 #   * The print* task reads use `tail -n 1` so anything printed during configuration cannot
@@ -21,7 +25,6 @@ on:
   push:
     branches:
       - 1.12
-      - 1.16.3
   workflow_dispatch:
     inputs:
       release:

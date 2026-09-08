@@ -32,8 +32,17 @@ branch carries the canonical copy of its own section.
 ## Unreleased
 
 Translated from upstream **Theatrical 0.7.2** (the final state of the archived `1.16.3` branch).
-**Port in progress: these builds are a skeleton that loads and does nothing.** Features are
-listed below as they are ported.
+
+**This is Theatrical on Forge 1.12.2.** Everything the 1.16.4 mod does, this does: fresnels and
+moving heads that hang from truss and cast real beams, DMX and socapex cabling, dimmer racks and
+distros, a twelve-fader lighting desk with cues, an Art-Net interface that takes a feed from real
+lighting software on your own machine, a DMX-to-redstone interface, the in-game guide and the
+in-world overlay. The mod id is still `theatrical`, so packs and saves that name it keep working.
+
+None of upstream's 1.16 source is compiled here. Every Java file was written after its 1.16
+counterpart, file by file, against the 1.12.2 API, and each one carries a header saying which
+upstream file it follows and what it does differently. The entries below are the record of that
+work as it landed, newest first, including the upstream bugs fixed on the way.
 
 ### Added
 
