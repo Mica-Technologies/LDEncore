@@ -10,6 +10,9 @@
  * reasons given in TileEntityFixtureRenderer. The fixture comes from the falling block's own
  * state rather than from the block class, so a light that fell from a block whose fixture was
  * later unregistered simply does not draw instead of throwing every frame.
+ *   - BUG FIX: the model is shifted from the entity's centre origin to the block corner before
+ *     the facing rotation rather than after it, so a falling light is drawn where it actually
+ *     is. Three of the four facings drew it up to a whole block away.
  */
 package dev.theatricalmod.theatrical.client;
 
@@ -63,6 +66,11 @@ public class FallingLightRenderer extends Render<FallingLightEntity> {
 
         GlStateManager.pushMatrix();
         GlStateManager.translate(x, y, z);
+        // A falling entity's origin is the middle of the block it came from, but a baked block
+        // model is drawn from that block's corner, so shift to the corner before anything else
+        // -- exactly as vanilla's RenderFallingBlock does. Rotating first would swing the model
+        // around a pivot half a block out and leave it up to a block from the entity.
+        GlStateManager.translate(-0.5D, 0D, -0.5D);
         GlStateManager.translate(0.5D, 0D, 0.5D);
         EnumFacing facing = state.getProperties().containsKey(BlockHangable.FACING)
                 ? state.getValue(BlockHangable.FACING)
@@ -72,7 +80,6 @@ public class FallingLightRenderer extends Render<FallingLightEntity> {
         } else {
             GlStateManager.rotate(facing.getHorizontalAngle(), 0F, 1F, 0F);
         }
-        GlStateManager.translate(-0.5D, 0D, -0.5D);
         GlStateManager.translate(-0.5D, 0D, -0.5D);
 
         RenderHelper.disableStandardItemLighting();

@@ -37,6 +37,21 @@ listed below as they are ported.
 
 ### Added
 
+- **Two bugs found by the first play-test on a real dedicated server.**
+  - **A dimmer rack now finds a distro that was wired up after it.** The rack looks down its
+    socapex cable once and remembers what it found, and the only thing that ever asks it to look
+    again is a rack being placed or broken. So a rack put down before the cable and the distro it
+    feeds -- which is the order anybody builds in -- remembered "nothing attached" for the rest
+    of the session, and because the rack refuses a patch for a socket it has never seen, its
+    screen silently dropped every patch made in it. An empty result is now treated as "nothing
+    found yet" and re-checked once a second, which is what the DMX side already did; a run that
+    did find something is still remembered and costs nothing.
+  - **A light knocked off its bar is drawn where it actually is.** The falling fixture was
+    turned to face the way it hung before being moved from the middle of its old block to the
+    corner the model is drawn from, so the turn swung it around a pivot half a block out. A
+    light facing north landed exactly right and the other three facings were drawn up to a full
+    block away from the thing falling. Vanilla's own falling block does the two in the other
+    order, and now so does this.
 - **Performance pass and bug sweep.** Three things that ran every tick regardless of whether
   anything had changed no longer do, and the bugs that hid behind them are fixed.
   - **A lit generic light no longer re-traces its beam four times a second forever.** Upstream

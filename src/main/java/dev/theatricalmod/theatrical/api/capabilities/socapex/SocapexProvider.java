@@ -17,7 +17,10 @@
  *   - patch() no longer NPEs when called before the first device scan;
  *   - scanDevices() is new, so a rack can find what is wired to it before it has power.
  *     Upstream scanned only from updateDevices, which the rack calls after its power check,
- *     so patching a rack that had never been energised silently did nothing.
+ *     so patching a rack that had never been energised silently did nothing;
+ *   - BUG FIX: an empty scan result is no longer cached for the life of the session. Only a
+ *     dimmer rack ever flags the socapex network for a re-walk, so a rack placed before the
+ *     cable and distro it feeds never saw them. See EMPTY_RESCAN_TICKS.
  */
 package dev.theatricalmod.theatrical.api.capabilities.socapex;
 
@@ -55,8 +58,22 @@ public class SocapexProvider implements ISocapexProvider, INBTSerializable<NBTTa
     @CapabilityInject(ISocapexProvider.class)
     public static Capability<ISocapexProvider> CAP = null;
 
+    /**
+     * How long an empty scan result is trusted before the socapex run is walked again, in ticks.
+     *
+     * CHANGED FROM UPSTREAM: the socapex network is only ever flagged for a re-walk by a dimmer
+     * rack validating or invalidating, so a rack that scanned before the cable and the distro
+     * it feeds existed -- which is the order anybody builds in -- cached "nothing attached" and
+     * stayed blind to them for the rest of the session. Worse, patch() refuses a patch for a
+     * receiver that is not in that map, so the rack's screen silently dropped every patch. An
+     * empty result is now treated as "nothing found yet" and re-checked once a second, exactly
+     * as {@code DMXProvider} does; a non-empty map is still cached as before and costs nothing.
+     */
+    private static final long EMPTY_RESCAN_TICKS = 20L;
+
     private int lastIdentifier = -1;
     private HashMap<EnumFacing, BlockPos> devices = null;
+    private long lastEmptyScan = Long.MIN_VALUE;
     private final int[] channels = new int[CHANNELS];
     private final HashMap<Integer, SocapexPatch[]> patch = new HashMap<>();
 
@@ -98,14 +115,21 @@ public class SocapexProvider implements ISocapexProvider, INBTSerializable<NBTTa
 
     @Override
     public void scanDevices(World world, BlockPos controllerPos) {
-        if (devices != null) {
+        if (world.isRemote) {
+            if (devices == null) {
+                devices = new HashMap<>();
+            }
             return;
         }
-        if (world.isRemote) {
-            devices = new HashMap<>();
+        long now = world.getTotalWorldTime();
+        boolean staleEmpty = devices != null && devices.isEmpty() && now - lastEmptyScan >= EMPTY_RESCAN_TICKS;
+        if (devices != null && !staleEmpty) {
             return;
         }
         scan(world, controllerPos);
+        if (devices.isEmpty()) {
+            lastEmptyScan = now;
+        }
     }
 
     @Override
@@ -135,6 +159,7 @@ public class SocapexProvider implements ISocapexProvider, INBTSerializable<NBTTa
     @Override
     public void refreshDevices() {
         devices = null;
+        lastEmptyScan = Long.MIN_VALUE;
     }
 
     @Override

@@ -98,17 +98,21 @@ upstream's ForgeGradle, and artnet4j is shaded under a relocated package instead
 in as-is. Ported so far: the API and capabilities, every block, item and tile entity, the falling
 light entity, the config and all assets, the networking and every screen, the rendering,
 Art-Net, the in-game guide, the The One Probe overlay and the translations (see the changelog for
-what each step fixed on the way). What remains before a release is a performance pass and a
-play-test. Deliberate fork differences beyond the
+what each step fixed on the way). The performance pass is done too; what remains before a release
+is a play-test. Deliberate fork differences beyond the
 port itself: the creative tab is labelled LDEncore; the placeholder wrench texture is ours
 (upstream shipped none); every server-bound packet is now validated for reach, block type and
 payload range before it is allowed to change the world, and DMX updates go only to the players
 near the block rather than to everyone in the dimension; an Art-Net interface listens on every
 network interface by default, so a real lighting console's broadcast actually reaches the game,
-and its screen says whether anything is arriving; and several upstream bugs are fixed (a dimmer
-rack that ignored every DMX address other than 0, a dimmer rack that refused to be patched until
-it was powered, a positioner that aimed lights the wrong way on two facings, cables that forgot
-their state on reload, a lighting desk whose physical faders never moved).
+and its screen says whether anything is arriving; fixtures, cables and Art-Net sockets no longer
+do work when nothing has changed, so an idle rig costs nothing; and a good many upstream bugs are
+fixed (a dimmer rack that ignored every DMX address other than 0, a dimmer rack that refused to be
+patched until it was powered, a dimmer rack that never noticed a distro wired up after it was
+placed, a positioner that aimed lights the wrong way on two facings, cables that forgot their
+state on reload, a lighting desk whose physical faders never moved, a fixture that would not dim
+unless it also moved, an Art-Net socket that kept a port after its address changed, and a light
+knocked off its bar that was drawn a block away from where it fell).
 
 **The 1.16.4 baseline (`1.16.3` branch) -- no gameplay changes:**
 
