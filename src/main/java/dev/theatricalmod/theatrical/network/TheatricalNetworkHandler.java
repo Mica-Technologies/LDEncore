@@ -11,7 +11,12 @@
  *   - the discriminator ids are upstream's, so the two lines stay comparable;
  *   - a provider's universe is sent to the players tracking that block rather than to
  *     everyone in the dimension. Upstream broadcast a 512-byte array to every player in the
- *     world several times a second, whether or not they could see the block.
+ *     world several times a second, whether or not they could see the block;
+ *   - that universe is encoded with getPacketFrom and handed to each player's own connection,
+ *     not sent with SimpleNetworkWrapper.sendTo. sendTo parks its target player in an attribute
+ *     shared by the whole channel, and FML clears that attribute from the network thread
+ *     whenever any connection opens or closes; a send landing in between dropped the
+ *     receiving player's connection with "PLAYER target expects a Player arg".
  */
 package dev.theatricalmod.theatrical.network;
 
@@ -54,6 +59,13 @@ public final class TheatricalNetworkHandler {
     /**
      * Sends a DMX provider's whole universe to every player currently tracking that block,
      * so their copy of the provider tile can show it.
+     *
+     * Providers call this every few ticks, so it must not use SimpleNetworkWrapper.sendTo:
+     * that stores the target player in a channel-wide attribute and writes afterwards, and FML
+     * clears the attribute on the network thread each time any player connects or disconnects.
+     * Losing that race throws inside the channel and FML drops the connection. getPacketFrom
+     * encodes with a target that takes no player, and the player's own connection sends it.
+     * One packet per player: its payload buffer is consumed when it is written.
      */
     public static void sendProviderUniverse(World world, BlockPos pos, byte[] data) {
         if (world == null || world.isRemote || MAIN == null) {
@@ -62,7 +74,10 @@ public final class TheatricalNetworkHandler {
         SendDMXProviderPacket packet = new SendDMXProviderPacket(pos, data);
         for (EntityPlayer player : world.playerEntities) {
             if (player instanceof EntityPlayerMP && isTracking((EntityPlayerMP) player, world, pos)) {
-                MAIN.sendTo(packet, (EntityPlayerMP) player);
+                EntityPlayerMP playerMP = (EntityPlayerMP) player;
+                if (playerMP.connection != null) {
+                    playerMP.connection.sendPacket(MAIN.getPacketFrom(packet));
+                }
             }
         }
     }

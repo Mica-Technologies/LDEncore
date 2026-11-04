@@ -10,7 +10,11 @@
  *   - EntityFallingBlock keeps its block state private on 1.12, so the state received in
  *     the spawn packet is kept here and getBlock() is overridden to serve it on the client;
  *   - the helmet check reads the wearer's head slot (1.12 stacks do not know their slot);
- *   - the turtle-egg crack sound does not exist on 1.12, so only the glass break plays.
+ *   - the turtle-egg crack sound does not exist on 1.12, so only the glass break plays;
+ *   - a light that lands on a block shorter than a full cube (a path, a slab, a carpet) is
+ *     placed in the cell above it; upstream tried the shorter block's own cell, found it
+ *     occupied and deleted the fixture;
+ *   - a light with nowhere to land drops as a broken item instead of vanishing.
  */
 package dev.theatricalmod.theatrical.entity;
 
@@ -24,10 +28,12 @@ import net.minecraft.entity.MoverType;
 import net.minecraft.entity.item.EntityFallingBlock;
 import net.minecraft.init.SoundEvents;
 import net.minecraft.inventory.EntityEquipmentSlot;
+import net.minecraft.item.ItemStack;
 import net.minecraft.nbt.NBTBase;
 import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.tileentity.TileEntity;
 import net.minecraft.util.DamageSource;
+import net.minecraft.util.NonNullList;
 import net.minecraft.util.SoundCategory;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.MathHelper;
@@ -105,17 +111,27 @@ public class FallingLightEntity extends EntityFallingBlock implements IEntityAdd
         if (!this.world.isRemote) {
             currentPos = new BlockPos(this);
             if (this.onGround) {
-                IBlockState landedOn = this.world.getBlockState(currentPos);
                 this.setDead();
-                if (landedOn.getBlock().isReplaceable(this.world, currentPos)) {
-                    if (this.world.setBlockState(currentPos, fallTile, 3)) {
-                        this.world.playEvent(2001, currentPos, Block.getStateId(fallTile));
+                // Resting on top of anything shorter than a full block (a path, a slab, a
+                // carpet), the entity's own block position is that block, not the cell above
+                // it, so look one up before giving up on placing it.
+                BlockPos landingPos = currentPos;
+                if (!this.world.getBlockState(landingPos).getBlock().isReplaceable(this.world, landingPos)) {
+                    landingPos = landingPos.up();
+                }
+                IBlockState brokenTile = fallTile.getPropertyKeys().contains(BlockHangable.BROKEN)
+                        ? fallTile.withProperty(BlockHangable.BROKEN, true) : fallTile;
+                boolean placed = false;
+                if (this.world.getBlockState(landingPos).getBlock().isReplaceable(this.world, landingPos)) {
+                    if (this.world.setBlockState(landingPos, fallTile, 3)) {
+                        placed = true;
+                        this.world.playEvent(2001, landingPos, Block.getStateId(fallTile));
                         this.world.playSound(null, this.posX, this.posY, this.posZ, SoundEvents.BLOCK_GLASS_BREAK, SoundCategory.BLOCKS, 1, 1);
-                        if (fallTile.getPropertyKeys().contains(BlockHangable.BROKEN)) {
-                            this.world.setBlockState(currentPos, fallTile.withProperty(BlockHangable.BROKEN, true), 3);
+                        if (brokenTile != fallTile) {
+                            this.world.setBlockState(landingPos, brokenTile, 3);
                         }
                         if (this.tileEntityData != null && block.hasTileEntity(fallTile)) {
-                            TileEntity tileentity = this.world.getTileEntity(currentPos);
+                            TileEntity tileentity = this.world.getTileEntity(landingPos);
                             if (tileentity != null) {
                                 NBTTagCompound compound = tileentity.writeToNBT(new NBTTagCompound());
                                 for (String key : this.tileEntityData.getKeySet()) {
@@ -128,6 +144,16 @@ public class FallingLightEntity extends EntityFallingBlock implements IEntityAdd
                                 tileentity.markDirty();
                             }
                         }
+                    }
+                }
+                // Nowhere to put it (it came down on another fixture, a fence, a torch...): drop
+                // it as a broken item, as vanilla's falling blocks drop themselves, rather than
+                // letting the fixture vanish.
+                if (!placed && this.world.getGameRules().getBoolean("doEntityDrops")) {
+                    NonNullList<ItemStack> drops = NonNullList.create();
+                    block.getDrops(drops, this.world, landingPos, brokenTile, 0);
+                    for (ItemStack drop : drops) {
+                        this.entityDropItem(drop, 0.0F);
                     }
                 }
             } else if ((this.fallTime > 100 && (currentPos.getY() < 1 || currentPos.getY() > 256)) || this.fallTime > 600) {

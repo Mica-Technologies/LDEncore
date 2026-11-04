@@ -61,6 +61,24 @@ work as it landed, newest first, including the upstream bugs fixed on the way.
     light facing north landed exactly right and the other three facings were drawn up to a full
     block away from the thing falling. Vanilla's own falling block does the two in the other
     order, and now so does this.
+- **Three bugs found by the first hands-on play-test.**
+  - **Saving and quitting, or joining, no longer drops the connection while a desk is running.**
+    A lighting desk, an Art-Net interface or a test DMX block sends its universe to the players
+    near it every few ticks, and it did so through a channel-wide "who is this for" setting
+    that Forge wipes from the network thread whenever anybody connects or disconnects. A send
+    caught in between failed inside the channel and Forge ended the player's connection with
+    "A fatal error has occurred". In singleplayer that shut the world down on the way in or
+    out; on a server, any player joining or leaving could kick whoever was near a running
+    desk. Each player's packet is now built separately and handed to that player's own
+    connection, which involves no shared setting at all.
+  - **A light that falls onto a path, a slab or a carpet lands instead of vanishing.** Resting
+    on anything shorter than a full block, the falling fixture reported that block as where it
+    was, found it occupied and deleted itself, item and all. It now lands in the space above,
+    and if there is genuinely nowhere to put it, it drops as a broken item the way vanilla's
+    falling sand drops itself. Inherited from upstream, which does the same.
+  - **The probe overlay shows a socapex distro's channels.** It asked the distro for its
+    socapex input without naming a side, and a distro only answers on the face its cable comes
+    in on, so the line never appeared. Every face is now asked.
 - **Performance pass and bug sweep.** Three things that ran every tick regardless of whether
   anything had changed no longer do, and the bugs that hid behind them are fixed.
   - **A lit generic light no longer re-traces its beam four times a second forever.** Upstream

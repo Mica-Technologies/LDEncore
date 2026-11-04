@@ -17,6 +17,7 @@
  *   - Upstream showed a dimmer rack's DMX channels but not the address they start at, which is
  *     the number a player actually has to match on their desk, so the start address is shown
  *     too. A socapex receiver's channels are shown as well; upstream showed nothing for them.
+ *     A distro offers that capability only on its input face, so every face is asked.
  */
 package dev.theatricalmod.theatrical.compat.top;
 
@@ -35,8 +36,10 @@ import mcjty.theoneprobe.api.ProbeMode;
 import net.minecraft.block.state.IBlockState;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.tileentity.TileEntity;
+import net.minecraft.util.EnumFacing;
 import net.minecraft.world.World;
 
+import javax.annotation.Nullable;
 import java.util.function.Function;
 
 /** Adds LDEncore's power and DMX readouts to The One Probe's in-world overlay. */
@@ -96,10 +99,7 @@ public class TOPInfoProvider implements IProbeInfoProvider, Function<ITheOneProb
     }
 
     private void addSocapex(IProbeInfo info, TileEntity tile) {
-        if (!tile.hasCapability(SocapexReceiver.CAP, null)) {
-            return;
-        }
-        ISocapexReceiver receiver = tile.getCapability(SocapexReceiver.CAP, null);
+        ISocapexReceiver receiver = findSocapexReceiver(tile);
         if (receiver == null) {
             return;
         }
@@ -110,6 +110,23 @@ public class TOPInfoProvider implements IProbeInfoProvider, Function<ITheOneProb
             }
         }
         info.text("Socapex: " + live + " of " + receiver.getTotalChannels() + " channels live");
+    }
+
+    /**
+     * A distro exposes its socapex input only on the face its cable comes in on, so asking
+     * with no side finds nothing; try the unsided query first, then every face.
+     */
+    @Nullable
+    private static ISocapexReceiver findSocapexReceiver(TileEntity tile) {
+        if (tile.hasCapability(SocapexReceiver.CAP, null)) {
+            return tile.getCapability(SocapexReceiver.CAP, null);
+        }
+        for (EnumFacing side : EnumFacing.values()) {
+            if (tile.hasCapability(SocapexReceiver.CAP, side)) {
+                return tile.getCapability(SocapexReceiver.CAP, side);
+            }
+        }
+        return null;
     }
 
     @Override
