@@ -9,6 +9,7 @@ Settings live in `config/theatrical.cfg`, and can also be changed in game from t
 |---|---|---|
 | `emitLight` | `true` | Whether a beam actually lights up where it lands. Turn off to keep the visible beams but leave the world's lighting alone. |
 | `consumePower` | `true` | Whether moving heads need Forge Energy. Turn off for building and testing, or for a creative world with no power mods. It does **not** affect fresnels, which are always powered through a dimmer rack. |
+| `lightUpdateBudgetMillis` | `2.0` | The most milliseconds per world tick spent moving the real light where beams land (0.1 to 50). Every move makes Minecraft recalculate the light around it, which is the main server cost of a moving rig; the beams themselves always move at once, only the light they cast catches up within this budget. See [Performance](performance.md). |
 
 ## `rendering`
 

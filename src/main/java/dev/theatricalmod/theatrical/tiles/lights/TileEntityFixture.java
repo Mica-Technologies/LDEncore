@@ -12,6 +12,11 @@
  *   - the redstone particle upstream spawned at the beam end every trace is dropped: it was
  *     a no-op on a 1.16 server world but on 1.12 a server-side spawnParticle is broadcast
  *     to every client;
+ *   - illuminator writes go through IlluminatorQueue, which spreads the light recalculation
+ *     each one causes over a per-tick budget, and never overwrite a block a player has put in
+ *     the spot (upstream replaced whatever was there);
+ *   - the light a beam casts moves only once the beam has held a new spot for half a second,
+ *     or once a second while it keeps moving; the visible beam still follows every trace;
  *   - the trace/illuminator behaviour is otherwise upstream's, deliberately, so the port
  *     can be compared against the 1.16 reference before the performance redesign.
  */
@@ -81,6 +86,14 @@ public abstract class TileEntityFixture extends TileEntityTheatricalBase impleme
     }
 
     private BlockPos lightBlock;
+    /** Where the beam has been landing while the light has not yet followed it. */
+    private BlockPos candidateLightBlock;
+    private int candidateTraces;
+    private int tracesSinceLightMove;
+    /** Traces a new landing spot must hold before the light moves there (two = half a second). */
+    private static final int LIGHT_SETTLE_TRACES = 2;
+    /** Traces after which a still-moving beam's light catches up anyway (four = one second). */
+    private static final int LIGHT_MAX_STALE_TRACES = 4;
 
     public void setFixture(Fixture fixture) {
         this.fixture = fixture;
@@ -212,18 +225,40 @@ public abstract class TileEntityFixture extends TileEntityTheatricalBase impleme
         if (lightPos.equals(pos)) {
             return distance;
         }
-        if (!world.isAirBlock(lightPos) && !(world.getBlockState(lightPos).getBlock() instanceof BlockIlluminator) && hitFace != null) {
+        // Light writes are queued (IlluminatorQueue), so these checks ask what a block will be
+        // once the queue has caught up, not only what it is this instant.
+        if (!IlluminatorQueue.isFreeForLight(world, lightPos) && hitFace != null) {
             lightPos = lightPos.offset(hitFace);
         }
         distance = new Vec3d(lightPos.getX(), lightPos.getY(), lightPos.getZ()).distanceTo(new Vec3d(pos.getX(), pos.getY(), pos.getZ()));
         if (lightPos.equals(lightBlock)) {
+            candidateLightBlock = null;
             return distance;
         }
-        if (lightBlock != null && !lightBlock.equals(lightPos) && world.getBlockState(lightBlock).getBlock() instanceof BlockIlluminator) {
-            world.setBlockState(lightBlock, Blocks.AIR.getDefaultState());
+        // The beam is drawn from the returned distance at once; the light it casts follows only
+        // once the beam has settled on a spot for two traces, or once a second while it keeps
+        // moving. Every move is two light recalculations on the server and a chunk-section
+        // rebuild on every nearby client, so a sweep that moved it on every trace cost four
+        // times as much for a difference nobody can see.
+        tracesSinceLightMove++;
+        if (lightPos.equals(candidateLightBlock)) {
+            candidateTraces++;
+        } else {
+            candidateLightBlock = lightPos;
+            candidateTraces = 1;
         }
-        Block target = world.getBlockState(lightPos).getBlock();
-        if (!world.isAirBlock(lightPos) && !(target instanceof BlockIlluminator)) {
+        boolean settled = candidateTraces >= LIGHT_SETTLE_TRACES;
+        boolean overdue = tracesSinceLightMove >= LIGHT_MAX_STALE_TRACES || lightBlock == null;
+        if (!settled && !overdue) {
+            return distance;
+        }
+        tracesSinceLightMove = 0;
+        candidateLightBlock = null;
+        if (lightBlock != null && !lightBlock.equals(lightPos)
+                && IlluminatorQueue.stateAt(world, lightBlock).getBlock() instanceof BlockIlluminator) {
+            IlluminatorQueue.set(world, lightBlock, Blocks.AIR.getDefaultState());
+        }
+        if (!IlluminatorQueue.isFreeForLight(world, lightPos)) {
             return distance;
         }
         setLightBlock(lightPos);
@@ -324,8 +359,8 @@ public abstract class TileEntityFixture extends TileEntityTheatricalBase impleme
     /** Removes the illuminator this fixture placed, if it is still there. */
     protected void removeLightBlock() {
         if (lightBlock != null && world != null) {
-            if (!world.isAirBlock(lightBlock) && world.getBlockState(lightBlock).getBlock() instanceof BlockIlluminator) {
-                world.setBlockState(lightBlock, Blocks.AIR.getDefaultState());
+            if (IlluminatorQueue.stateAt(world, lightBlock).getBlock() instanceof BlockIlluminator) {
+                IlluminatorQueue.set(world, lightBlock, Blocks.AIR.getDefaultState());
             }
             lightBlock = null;
         }
@@ -353,7 +388,9 @@ public abstract class TileEntityFixture extends TileEntityTheatricalBase impleme
         }
         timer = 0;
 
-        if (shouldTrace()) {
+        // A light move still waiting to settle needs further traces even after the aim stops
+        // changing, or a beam that moved once and stopped would leave its light behind.
+        if (shouldTrace() || (candidateLightBlock != null && emitsLight())) {
             tracedPan = getPan();
             tracedTilt = getTilt();
             double traced = doRayTrace();
@@ -375,18 +412,25 @@ public abstract class TileEntityFixture extends TileEntityTheatricalBase impleme
      * without moving never revised its light level -- a moving light faded to nothing left the
      * room as bright as it had been at full. It now runs whenever the fixture ticks, and still
      * writes a block only when the light value it wants differs from the one already there.
+     *
+     * The write goes through IlluminatorQueue, which spreads the light recalculation it causes
+     * over a per-tick budget. A spot that is no longer free (a player built into it) is left
+     * alone; upstream overwrote whatever was there with an illuminator.
      */
     private void updateIlluminator() {
         if (lightBlock == null || !emitsLight()) {
             return;
         }
+        if (!IlluminatorQueue.isFreeForLight(world, lightBlock)) {
+            return;
+        }
         int lightval = MathHelper.clamp((int) ((getIntensity() / 255F) * 15F), 0, 15);
-        IBlockState existing = world.getBlockState(lightBlock);
-        if (world.isAirBlock(lightBlock) || !(existing.getBlock() instanceof BlockIlluminator)) {
-            world.setBlockState(lightBlock, TheatricalBlocks.ILLUMINATOR.getDefaultState()
-                    .withProperty(BlockIlluminator.LIGHT_VALUE, lightval), 3);
+        IBlockState existing = IlluminatorQueue.stateAt(world, lightBlock);
+        if (!(existing.getBlock() instanceof BlockIlluminator)) {
+            IlluminatorQueue.set(world, lightBlock, TheatricalBlocks.ILLUMINATOR.getDefaultState()
+                    .withProperty(BlockIlluminator.LIGHT_VALUE, lightval));
         } else if (existing.getValue(BlockIlluminator.LIGHT_VALUE) != lightval) {
-            world.setBlockState(lightBlock, existing.withProperty(BlockIlluminator.LIGHT_VALUE, lightval), 3);
+            IlluminatorQueue.set(world, lightBlock, existing.withProperty(BlockIlluminator.LIGHT_VALUE, lightval));
         }
     }
 }

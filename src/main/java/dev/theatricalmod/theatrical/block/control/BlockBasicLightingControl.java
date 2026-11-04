@@ -7,7 +7,8 @@
  *
  * CHANGED FROM UPSTREAM: 1.12 block state plumbing (horizontal facing + powered in
  * metadata); a 3/16-high bounding box instead of a VoxelShape; the GUI opens through the
- * mod's IGuiHandler.
+ * mod's IGuiHandler. A redstone pulse is always Go (run mode first); upstream's pulse in program mode
+ * recorded a cue.
  */
 package dev.theatricalmod.theatrical.block.control;
 
@@ -136,7 +137,7 @@ public class BlockBasicLightingControl extends BlockHorizontal {
                 if (powered) {
                     TileEntity tile = world.getTileEntity(pos);
                     if (tile instanceof TileEntityBasicLightingControl) {
-                        ((TileEntityBasicLightingControl) tile).clickButton();
+                        ((TileEntityBasicLightingControl) tile).redstonePulse();
                     }
                 }
                 world.setBlockState(pos, state.withProperty(POWERED, powered), 2);

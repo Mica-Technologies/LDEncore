@@ -13,6 +13,8 @@
  *   - Go no longer throws when a fade time field is empty or holds something unparsable:
  *     the fields accept digits only and an empty one reads as zero. Upstream parsed both
  *     unconditionally inside the click handler.
+ *   - fork additions for autonomous playback: a Hold field recorded into each cue, Loop and
+ *     Auto buttons (green when on), a Stop button, and "Playing" while the stack runs.
  */
 package dev.theatricalmod.theatrical.client.gui.screen;
 
@@ -21,6 +23,7 @@ import dev.theatricalmod.theatrical.client.gui.container.ContainerBasicLightingC
 import dev.theatricalmod.theatrical.client.gui.widgets.ButtonFader;
 import dev.theatricalmod.theatrical.network.TheatricalNetworkHandler;
 import dev.theatricalmod.theatrical.network.control.ConsoleGoPacket;
+import dev.theatricalmod.theatrical.network.control.DeskOptionPacket;
 import dev.theatricalmod.theatrical.network.control.MoveStepPacket;
 import dev.theatricalmod.theatrical.network.control.ToggleModePacket;
 import dev.theatricalmod.theatrical.network.control.UpdateConsoleFaderPacket;
@@ -44,6 +47,9 @@ public class ScreenBasicLightingConsole extends GuiContainer {
     private static final int BUTTON_FORWARD = 101;
     private static final int BUTTON_GO = 102;
     private static final int BUTTON_MODE = 103;
+    private static final int BUTTON_LOOP = 104;
+    private static final int BUTTON_AUTO = 105;
+    private static final int BUTTON_STOP = 106;
 
     /** Fader widgets carry ids 0..FADERS, with the grand master last. */
     private static final int GRAND_MASTER_ID = TileEntityBasicLightingControl.FADERS;
@@ -53,6 +59,9 @@ public class ScreenBasicLightingConsole extends GuiContainer {
 
     private GuiTextField fadeInTime;
     private GuiTextField fadeOutTime;
+    private GuiTextField holdTime;
+    private GuiButton loopButton;
+    private GuiButton autoButton;
 
     /** Fader value waiting to be sent, and the one last sent, so a drag costs one packet a tick. */
     private int pendingChannel = Integer.MIN_VALUE;
@@ -92,9 +101,15 @@ public class ScreenBasicLightingConsole extends GuiContainer {
         this.buttonList.add(new GuiButton(BUTTON_FORWARD, guiLeft + 145, guiTop + 20, 15, 20, "->"));
         this.buttonList.add(new GuiButton(BUTTON_GO, guiLeft + 130, guiTop + 100, 20, 20, "Go"));
         this.buttonList.add(new GuiButton(BUTTON_MODE, guiLeft + 155, guiTop + 100, 30, 20, "Mode"));
+        this.buttonList.add(new GuiButton(BUTTON_STOP, guiLeft + 197, guiTop + 56, 44, 20, "Stop"));
+        this.loopButton = new GuiButton(BUTTON_LOOP, guiLeft + 197, guiTop + 78, 44, 20, "Loop");
+        this.autoButton = new GuiButton(BUTTON_AUTO, guiLeft + 197, guiTop + 100, 44, 20, "Auto");
+        this.buttonList.add(loopButton);
+        this.buttonList.add(autoButton);
 
         this.fadeInTime = makeTimeField(0, guiLeft + 170, guiTop + 60, desk == null ? 0 : desk.getFadeInTicks());
         this.fadeOutTime = makeTimeField(1, guiLeft + 170, guiTop + 75, desk == null ? 0 : desk.getFadeOutTicks());
+        this.holdTime = makeTimeField(2, guiLeft + 170, guiTop + 45, desk == null ? 0 : desk.getHoldTicks());
     }
 
     private GuiTextField makeTimeField(int id, int x, int y, int value) {
@@ -139,10 +154,19 @@ public class ScreenBasicLightingConsole extends GuiContainer {
                 return;
             case BUTTON_GO:
                 TheatricalNetworkHandler.MAIN.sendToServer(new ConsoleGoPacket(container.blockEntity.getPos(),
-                        readTicks(fadeInTime), readTicks(fadeOutTime)));
+                        readTicks(fadeInTime), readTicks(fadeOutTime), readTicks(holdTime)));
                 return;
             case BUTTON_MODE:
                 TheatricalNetworkHandler.MAIN.sendToServer(new ToggleModePacket(container.blockEntity.getPos()));
+                return;
+            case BUTTON_LOOP:
+                TheatricalNetworkHandler.MAIN.sendToServer(new DeskOptionPacket(container.blockEntity.getPos(), DeskOptionPacket.LOOP));
+                return;
+            case BUTTON_AUTO:
+                TheatricalNetworkHandler.MAIN.sendToServer(new DeskOptionPacket(container.blockEntity.getPos(), DeskOptionPacket.AUTO_START));
+                return;
+            case BUTTON_STOP:
+                TheatricalNetworkHandler.MAIN.sendToServer(new DeskOptionPacket(container.blockEntity.getPos(), DeskOptionPacket.STOP));
                 return;
             default:
                 break;
@@ -170,6 +194,7 @@ public class ScreenBasicLightingConsole extends GuiContainer {
     protected void mouseClicked(int mouseX, int mouseY, int mouseButton) throws IOException {
         this.fadeInTime.mouseClicked(mouseX, mouseY, mouseButton);
         this.fadeOutTime.mouseClicked(mouseX, mouseY, mouseButton);
+        this.holdTime.mouseClicked(mouseX, mouseY, mouseButton);
         super.mouseClicked(mouseX, mouseY, mouseButton);
     }
 
@@ -183,7 +208,8 @@ public class ScreenBasicLightingConsole extends GuiContainer {
 
     @Override
     protected void keyTyped(char typedChar, int keyCode) throws IOException {
-        if (this.fadeInTime.textboxKeyTyped(typedChar, keyCode) || this.fadeOutTime.textboxKeyTyped(typedChar, keyCode)) {
+        if (this.fadeInTime.textboxKeyTyped(typedChar, keyCode) || this.fadeOutTime.textboxKeyTyped(typedChar, keyCode)
+                || this.holdTime.textboxKeyTyped(typedChar, keyCode)) {
             return;
         }
         super.keyTyped(typedChar, keyCode);
@@ -194,6 +220,7 @@ public class ScreenBasicLightingConsole extends GuiContainer {
         super.updateScreen();
         this.fadeInTime.updateCursorCounter();
         this.fadeOutTime.updateCursorCounter();
+        this.holdTime.updateCursorCounter();
 
         if (pendingChannel != Integer.MIN_VALUE && container.blockEntity != null) {
             TheatricalNetworkHandler.MAIN.sendToServer(
@@ -203,6 +230,11 @@ public class ScreenBasicLightingConsole extends GuiContainer {
 
         // Follow the desk's own values, so a second player moving a fader shows here too.
         TileEntityBasicLightingControl desk = container.blockEntity;
+        if (desk != null) {
+            // On in green, off in the default colour.
+            loopButton.packedFGColour = desk.isLoop() ? 0x55FF55 : 0;
+            autoButton.packedFGColour = desk.isAutoStart() ? 0x55FF55 : 0;
+        }
         if (desk != null) {
             byte[] values = desk.getFaders();
             for (ButtonFader fader : faders) {
@@ -234,7 +266,7 @@ public class ScreenBasicLightingConsole extends GuiContainer {
         }
         GlStateManager.pushMatrix();
         GlStateManager.scale(0.8F, 0.8F, 0.8F);
-        fontRenderer.drawString(desk.isRunMode() ? "Run Mode" : "Program Mode", 165, 5, 0x404040);
+        fontRenderer.drawString(desk.isPlaying() ? "Playing" : desk.isRunMode() ? "Run Mode" : "Program Mode", 165, 5, 0x404040);
         fontRenderer.drawString("Step " + desk.getCurrentStep(), 165, 15, 0x404040);
         fontRenderer.drawString("Cues", 265, 5, 0x404040);
         for (int key : desk.getStoredSteps().keySet()) {
@@ -242,6 +274,7 @@ public class ScreenBasicLightingConsole extends GuiContainer {
         }
         fontRenderer.drawString("Fade In", 165, 77, 0x404040);
         fontRenderer.drawString("Fade Out", 165, 95, 0x404040);
+        fontRenderer.drawString("Hold", 165, 58, 0x404040);
         GlStateManager.popMatrix();
     }
 
@@ -251,6 +284,7 @@ public class ScreenBasicLightingConsole extends GuiContainer {
         super.drawScreen(mouseX, mouseY, partialTicks);
         this.fadeInTime.drawTextBox();
         this.fadeOutTime.drawTextBox();
+        this.holdTime.drawTextBox();
         this.renderHoveredToolTip(mouseX, mouseY);
     }
 }

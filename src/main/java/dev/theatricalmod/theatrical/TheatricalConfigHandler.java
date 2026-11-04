@@ -7,7 +7,8 @@
  *
  * CHANGED FROM UPSTREAM: Forge 1.12's annotation config (@Config) replaces ForgeConfigSpec.
  * Upstream split the options into a common and a client file; 1.12 has one file,
- * config/theatrical.cfg, with the same two categories and the same defaults.
+ * config/theatrical.cfg, with the same two categories and the same defaults. Fork additions:
+ * artnet.defaultListenAddress and fixtures.lightUpdateBudgetMillis.
  */
 package dev.theatricalmod.theatrical;
 
@@ -42,6 +43,14 @@ public final class TheatricalConfigHandler {
 
         @Config.Comment("Set this to false to prevent moving lights consuming power")
         public boolean consumePower = true;
+
+        @Config.Comment({
+                "Most milliseconds per world tick spent moving the light where beams land. Each move",
+                "makes Minecraft recalculate the light around it, which is the main server cost of a lit",
+                "rig. Beams always move at once; only the light they cast catches up within this budget."
+        })
+        @Config.RangeDouble(min = 0.1, max = 50)
+        public double lightUpdateBudgetMillis = 2.0;
     }
 
     public static final class ArtNet {

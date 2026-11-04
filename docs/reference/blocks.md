@@ -13,7 +13,7 @@ Everything is in the **LDEncore** creative tab. Use JEI to look up recipes.
 
 | Block | What it is |
 |---|---|
-| **Basic Lighting Desk** | Twelve faders, a grand master and a cue stack. Sends DMX. See [The lighting desk](../guide/lighting-desk.md). |
+| **Basic Lighting Desk** | Twelve faders, a grand master, a cue stack with fades, holds and loops, and an effects engine that can drive any of its 512 channels. Can run a show unattended, driven by redstone, the time of day or `/encore`. See [The lighting desk](../guide/lighting-desk.md). |
 | **ArtNet Interface** | Brings Art-Net from software on your computer into the game as DMX. See [Art-Net](../guide/art-net.md). |
 | **DMX-Redstone Interface** | One DMX channel out as a redstone signal. See [DMX to redstone](../guide/redstone.md). |
 | **Test DMX Block** | Creative only, no recipe. Sends random values on every channel once a second, for checking a rig is wired up. |

@@ -19,6 +19,8 @@
  *     changing it in the config screen takes effect without a restart. Upstream captured it in
  *     a field initialiser, which on 1.16 also ran before the config was loaded.
  *   - A fixture whose models failed to load is skipped rather than throwing once per frame.
+ *   - Each part is replayed from a display list (FixtureModels.draw) instead of being drawn
+ *     quad by quad every frame, which was one tessellator draw per quad.
  */
 package dev.theatricalmod.theatrical.client;
 
@@ -31,7 +33,6 @@ import dev.theatricalmod.theatrical.client.model.FixtureModels;
 import dev.theatricalmod.theatrical.tiles.lights.TileEntityFixture;
 import dev.theatricalmod.theatrical.util.FixtureUtil;
 import net.minecraft.block.state.IBlockState;
-import net.minecraft.client.Minecraft;
 import net.minecraft.client.renderer.BufferBuilder;
 import net.minecraft.client.renderer.GlStateManager;
 import net.minecraft.client.renderer.RenderHelper;
@@ -180,8 +181,8 @@ public class TileEntityFixtureRenderer extends TileEntitySpecialRenderer<TileEnt
         if (model == null) {
             return;
         }
-        Minecraft.getMinecraft().getBlockRendererDispatcher().getBlockModelRenderer()
-                .renderModelBrightnessColor(state, model, 1F, 1F, 1F, 1F);
+        // From a display list: drawing the model directly is one tessellator draw per quad.
+        FixtureModels.draw(model);
     }
 
     /**

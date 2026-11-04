@@ -11,11 +11,19 @@
  * model, and a fixture's parts are reachable from neither, so this loads and bakes them itself
  * during ModelBakeEvent and hands the results to the renderers. The textures they reference are
  * registered during TextureStitchEvent, which is upstream's textureStitch listener translated.
+ *
+ * It also keeps each part model compiled into an OpenGL display list. 1.12's
+ * renderModelBrightnessColor issues one tessellator draw per quad, so a moving head (three parts,
+ * hundreds of quads) cost hundreds of draw calls a frame; replaying a list is one. The lists are
+ * released and rebuilt whenever the models are re-baked, since a resource reload moves the UVs.
  */
 package dev.theatricalmod.theatrical.client.model;
 
 import dev.theatricalmod.theatrical.TheatricalMod;
 import dev.theatricalmod.theatrical.api.fixtures.Fixture;
+import net.minecraft.client.Minecraft;
+import net.minecraft.client.renderer.GLAllocation;
+import net.minecraft.client.renderer.GlStateManager;
 import net.minecraft.client.renderer.block.model.IBakedModel;
 import net.minecraft.client.renderer.vertex.DefaultVertexFormats;
 import net.minecraft.util.ResourceLocation;
@@ -30,7 +38,10 @@ import net.minecraftforge.fml.relauncher.Side;
 import net.minecraftforge.fml.relauncher.SideOnly;
 
 import javax.annotation.Nullable;
+import org.lwjgl.opengl.GL11;
+
 import java.util.HashMap;
+import java.util.IdentityHashMap;
 import java.util.Map;
 
 /** Bakes and holds the fixture part models the fixture renderers draw. */
@@ -39,6 +50,8 @@ import java.util.Map;
 public final class FixtureModels {
 
     private static final Map<ResourceLocation, IBakedModel> BAKED = new HashMap<>();
+    /** A compiled display list per baked part, built the first time the part is drawn. */
+    private static final Map<IBakedModel, Integer> LISTS = new IdentityHashMap<>();
 
     private FixtureModels() {
     }
@@ -51,6 +64,41 @@ public final class FixtureModels {
     @Nullable
     public static IBakedModel get(@Nullable ResourceLocation location) {
         return location == null ? null : BAKED.get(location);
+    }
+
+    /**
+     * Draws a part model in its own local coordinates at full brightness and white, from its
+     * display list (compiled on first use). The caller sets the lightmap, the texture and the
+     * transforms; none of that is recorded in the list, so one list serves every fixture.
+     */
+    public static void draw(IBakedModel model) {
+        Integer list = LISTS.get(model);
+        if (list == null) {
+            int id = GLAllocation.generateDisplayLists(1);
+            if (id == 0) {
+                // No list could be allocated (the driver is out of names): draw it the slow way.
+                drawDirect(model);
+                return;
+            }
+            GlStateManager.glNewList(id, GL11.GL_COMPILE);
+            drawDirect(model);
+            GlStateManager.glEndList();
+            LISTS.put(model, id);
+            list = id;
+        }
+        GlStateManager.callList(list);
+    }
+
+    private static void drawDirect(IBakedModel model) {
+        Minecraft.getMinecraft().getBlockRendererDispatcher().getBlockModelRenderer()
+                .renderModelBrightnessColor(model, 1F, 1F, 1F, 1F);
+    }
+
+    private static void releaseLists() {
+        for (int id : LISTS.values()) {
+            GLAllocation.deleteDisplayLists(id);
+        }
+        LISTS.clear();
     }
 
     @SubscribeEvent
@@ -69,6 +117,7 @@ public final class FixtureModels {
 
     @SubscribeEvent
     public static void onModelBake(ModelBakeEvent event) {
+        releaseLists();
         BAKED.clear();
         if (Fixture.getRegistry() == null) {
             return;

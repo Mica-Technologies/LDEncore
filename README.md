@@ -125,6 +125,17 @@ it landed on a path or a slab). A fixture cut off from its DMX source now goes d
 freezing on its last look, so a broken run is visible. The port's own networking is also
 hardened: a running desk can no longer drop a player's connection when someone joins or leaves.
 
+Beyond upstream's features, the lighting desk can **run a show on its own**: cues hold and move on
+by themselves, the stack loops, a desk can start itself when it loads and resumes a running show
+after a restart, cues can be triggered by redstone or the time of day, an effects engine writes
+sweeps, rainbows, chases and strobes onto any of the desk's 512 channels, and an operator command,
+`/encore`, plays and programs desks from chat, command blocks or tools. A redstone pulse into the
+desk is now always Go (upstream's recorded a cue in program mode). Busy rigs are much cheaper:
+fixtures render from display lists, the desk sends DMX only when it changes, and the real light
+where beams land is moved within a per-tick time budget (`fixtures.lightUpdateBudgetMillis`), so
+a rig of moving heads can no longer stall the server. Every tile now survives a change of its
+block's state, which on 1.12 had wiped a desk's cues on every redstone pulse.
+
 **The 1.16.4 baseline (`1.16.3` branch) -- no gameplay changes:**
 
 - **Build system.** Rewritten from ForgeGradle 3 / Gradle 4.9 to ForgeGradle 6 / Gradle 8, because

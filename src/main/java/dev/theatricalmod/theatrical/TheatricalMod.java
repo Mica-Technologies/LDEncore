@@ -16,12 +16,16 @@
  *     ticked from WorldTickEvent exactly as upstream did, minus LazyOptional;
  *   - the creative tab is labelled LDEncore (see the lang file), the mod's own name;
  *   - the Art-Net manager, network channel and The One Probe IMC arrive with their phases.
+ *   - fork additions: the /encore command is registered on server start, and the world tick
+ *     drains the budgeted illuminator light writes (IlluminatorQueue).
  */
 package dev.theatricalmod.theatrical;
 
 import dev.theatricalmod.theatrical.api.capabilities.WorldSocapexNetwork;
 import dev.theatricalmod.theatrical.api.capabilities.dmx.WorldDMXNetwork;
+import dev.theatricalmod.theatrical.command.CommandEncore;
 import dev.theatricalmod.theatrical.artnet.ArtNetManager;
+import dev.theatricalmod.theatrical.tiles.lights.IlluminatorQueue;
 import dev.theatricalmod.theatrical.api.capabilities.dmx.provider.DMXProvider;
 import dev.theatricalmod.theatrical.api.capabilities.dmx.provider.IDMXProvider;
 import dev.theatricalmod.theatrical.api.capabilities.dmx.receiver.DMXReceiver;
@@ -48,6 +52,7 @@ import net.minecraftforge.fml.common.Mod;
 import net.minecraftforge.fml.common.SidedProxy;
 import net.minecraftforge.fml.common.event.FMLInitializationEvent;
 import net.minecraftforge.fml.common.event.FMLPostInitializationEvent;
+import net.minecraftforge.fml.common.event.FMLServerStartingEvent;
 import net.minecraftforge.fml.common.event.FMLServerStoppingEvent;
 import net.minecraftforge.fml.common.event.FMLPreInitializationEvent;
 import net.minecraftforge.fml.common.eventhandler.SubscribeEvent;
@@ -131,6 +136,11 @@ public class TheatricalMod {
      * their network setup and rejoins is not still refused.
      */
     @Mod.EventHandler
+    public void serverStarting(FMLServerStartingEvent event) {
+        event.registerServerCommand(new CommandEncore());
+    }
+
+    @Mod.EventHandler
     public void serverStopping(FMLServerStoppingEvent event) {
         getArtNetManager().shutdownAll();
     }
@@ -180,6 +190,7 @@ public class TheatricalMod {
                 socapexNetwork.tick(world);
             }
         }
+        IlluminatorQueue.drain(world);
     }
 
     /** Flags both world networks for a re-walk on the next tick. Server worlds only. */

@@ -8,7 +8,8 @@
  * CHANGED FROM UPSTREAM: 1.12 capability plumbing; the facing comes from
  * BlockDirectional.FACING; the socket-to-side mapping is derived from the facing on demand
  * rather than cached when the position is set (the block state is not always available at
- * that moment on 1.12); the channels are saved to NBT.
+ * that moment on 1.12); the channels are saved to NBT. The tile survives a change of facing
+ * (shouldRefresh) instead of being replaced.
  */
 package dev.theatricalmod.theatrical.tiles.power;
 
@@ -37,6 +38,18 @@ import java.util.List;
  * is a socket that feeds dimmed power to whatever is there.
  */
 public class TileEntitySocapexDistribution extends TileEntity implements IAcceptsCable, ISocapexReceiver, ITickable {
+
+    /**
+     * Keeps this tile when only the block's state changes (its facing, a powered flag).
+     * Forge's default for a modded tile is to replace it on any state change, which wiped a
+     * lighting desk's cues on every redstone pulse and a rack's patch when it was turned
+     * with the wrench.
+     */
+    @Override
+    public boolean shouldRefresh(net.minecraft.world.World world, net.minecraft.util.math.BlockPos pos,
+                                 net.minecraft.block.state.IBlockState oldState, net.minecraft.block.state.IBlockState newState) {
+        return oldState.getBlock() != newState.getBlock();
+    }
 
     public static final int CHANNELS = 6;
     public static final int SOCKETS = 5;

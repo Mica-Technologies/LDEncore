@@ -23,6 +23,7 @@ package dev.theatricalmod.theatrical.network;
 
 import dev.theatricalmod.theatrical.TheatricalMod;
 import dev.theatricalmod.theatrical.network.control.ConsoleGoPacket;
+import dev.theatricalmod.theatrical.network.control.DeskOptionPacket;
 import dev.theatricalmod.theatrical.network.control.MoveStepPacket;
 import dev.theatricalmod.theatrical.network.control.ToggleModePacket;
 import dev.theatricalmod.theatrical.network.control.UpdateConsoleFaderPacket;
@@ -57,6 +58,8 @@ public final class TheatricalNetworkHandler {
         MAIN.registerMessage(MoveStepPacket.Handler.class, MoveStepPacket.class, 9, Side.SERVER);
         MAIN.registerMessage(ToggleModePacket.Handler.class, ToggleModePacket.class, 10, Side.SERVER);
         MAIN.registerMessage(SendArtNetToServerPacket.Handler.class, SendArtNetToServerPacket.class, 11, Side.SERVER);
+        // Fork additions start at 12, above upstream's ids.
+        MAIN.registerMessage(DeskOptionPacket.Handler.class, DeskOptionPacket.class, 12, Side.SERVER);
     }
 
     /**

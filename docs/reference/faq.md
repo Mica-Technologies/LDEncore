@@ -62,3 +62,15 @@ LDEncore keeps Theatrical's mod id, `theatrical`, so treat them as the same mod:
 the other, never both. Configs and pack scripts that name `theatrical` keep working. LDEncore is
 for Forge 1.12.2 only; for other versions, use the
 [official Theatrical](https://github.com/theatricalmod).
+
+## My show stopped when everyone left
+
+A desk only runs while its chunk is loaded. When nobody is near, the venue unloads and the show
+pauses; it carries on as soon as someone walks in, and a show that was playing resumes after a
+restart too. To keep it running with nobody there, force-load the chunk with a chunk-loading mod.
+
+## The server or my frame rate struggles with a moving rig
+
+Every time a beam lands somewhere new, the light around that spot is recalculated. See
+[Performance](performance.md) for what that costs and the two settings that tame it, above all
+Forge's `alwaysSetupTerrainOffThread` on clients.

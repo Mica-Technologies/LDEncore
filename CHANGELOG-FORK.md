@@ -38,10 +38,55 @@ branch carries the canonical copy of its own section.
   Art-Net and DMX to redstone, a block and DMX channel reference, every configuration option, and
   troubleshooting. It needs neither Patchouli nor The One Probe, so it covers packs that ship
   without the in-game guide.
+- **Shows that run by themselves.** The lighting desk can now play a show with nobody at it:
+  - **Hold times and loops.** A cue can hold for a set time after fading in and then move on by
+    itself. With Loop on, the stack goes back to the cue the run started from after the last one,
+    for ever.
+  - **Auto-start and resume.** With Auto on, a desk starts playing by itself whenever it loads.
+    A show that is playing when the world saves picks up where it was when the area loads again,
+    after a restart included.
+  - **Time-of-day triggers.** A cue can be set to play at a time of day, so house lights can come
+    up at dawn and the show start at dusk.
+  - **An effects engine.** Effects write a waveform (sine, triangle, saw, square, strobe or
+    random) onto any of the desk's 512 channels, with a phase spread across them: pan and tilt
+    sweeps, colour rainbows, chases, pulses and strobes. They run on the desk all the time, or
+    with a particular cue, and they let one desk drive far more than its twelve faders.
+  - **`/encore`**, an operator command for playing, stopping and stepping a desk, recording cues
+    and setting their times, and adding and clearing effects, from chat, command blocks or tools.
+  - The desk screen gains a Hold field and Stop, Loop and Auto buttons, and says "Playing" while
+    the stack runs.
 
 ### Changed
 
 - The mod list's website link (`mcmod.info`) points at the wiki instead of the repository.
+- **A redstone pulse into a lighting desk is always Go.** In program mode it now switches to run
+  mode and plays, where before a pulse recorded the faders over the current cue.
+- **A busy lighting rig costs far less.** Measured on 64 moving heads (the full figures are on the
+  wiki's Performance page):
+  - Each fixture part is drawn from a display list instead of one draw call per quad every frame:
+    31 to 6 µs a head on the client.
+  - A desk sends its universe only when it changes, plus a keep-alive once a second, instead of
+    every tick to every nearby player: 124 to 8 µs a tick for a steady look, and about a tenth of
+    the network traffic.
+  - The real light where beams land is moved within a time budget per tick
+    (`fixtures.lightUpdateBudgetMillis`, new, default 2 ms), so 64 heads re-aimed together no
+    longer stall the server: the worst tick went from 199 ms to 10 ms. The beams themselves
+    still move at once; only the light on the floor can trail them under load.
+  - A beam's light follows it only once the beam has settled for half a second, or once a second
+    while it keeps moving, instead of on every trace: a sweeping rig makes about a tenth of the
+    light updates.
+
+### Fixed
+
+- **A lighting desk lost all its cues on every redstone pulse**, and a dimmer rack lost its patch
+  or a fixture its address when turned with the wrench. On 1.12, Forge replaces a modded block's
+  tile entity whenever the block's state changes, unless the tile says otherwise. Every LDEncore
+  tile now keeps itself across a state change.
+- **Fades land exactly on their target.** The per-tick fade step was stored in a byte: a short
+  fade across a large change overflowed, and a fade could stop a step or two short, which a
+  looping show would compound.
+- **A beam no longer overwrites a block a player built where its light was.** It moves its light
+  elsewhere instead.
 
 ### Modified files without comment support
 

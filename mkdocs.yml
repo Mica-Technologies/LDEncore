@@ -90,7 +90,9 @@ nav:
   - Reference:
       - Blocks and items: reference/blocks.md
       - DMX addresses and channels: reference/dmx.md
+      - Commands: reference/commands.md
       - Configuration: reference/configuration.md
+      - Performance: reference/performance.md
       - Troubleshooting and FAQ: reference/faq.md
   - About:
       - This is a fork: about/fork.md

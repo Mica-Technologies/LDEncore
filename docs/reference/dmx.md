@@ -28,7 +28,7 @@ One desk can address two racks, or one head plus a rack:
 |---|---|
 | 0–6 | Moving head A |
 | 7–12 | Dimmer rack 1 (six fresnels) |
-| 13–19 | Moving head B (needs Art-Net: the desk only has channels 0–11) |
+| 13–19 | Moving head B (beyond the desk's twelve faders: drive it with desk effects, or Art-Net) |
 | 20 | DMX-Redstone Interface for the house lights |
 
 ## When the signal is lost

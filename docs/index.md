@@ -36,7 +36,7 @@ Team.
 
 -   :material-tune-vertical: **[The lighting desk](guide/lighting-desk.md)**
 
-    Twelve faders, a grand master, and cues with fade times.
+    Faders, cues with fades and holds, effects, and shows that run by themselves.
 
 -   :material-lan: **[Art-Net](guide/art-net.md)**
 
@@ -78,6 +78,9 @@ translated to Forge 1.12.2, plus fixes found along the way. Among the difference
   broadcast reaches the game, and its screen says whether anything is arriving.
 - A fixture cut off from its DMX goes dark instead of freezing on its last look, so a broken run
   is visible.
+- A lighting desk can run a show on its own: looping cue stacks with hold times, auto-start
+  that survives a restart, redstone and time-of-day triggers, an effects engine, and the
+  `/encore` command.
 - An idle rig costs nothing: fixtures stop re-tracing their beams when nothing has changed.
 - Many upstream bugs are fixed, including a dimmer rack that ignored every address but 0, cables
   that forgot their connections on reload, and a fixture that would not dim unless it also moved.

@@ -194,12 +194,19 @@ block/                  TheatricalBlocks (eager instances + Register<Block>, als
                         api.ICable; six connection props computed in getActualState); power/
                         (dimmer rack, socapex distro); control/ (lighting desk); interfaces/
                         (Art-Net, DMX->redstone); rigging/ (truss, IWB); test/
-tiles/                  TileEntityTheatricalBase (readNBT/getNBT drive both save and sync);
+tiles/                  TileEntityTheatricalBase (readNBT/getNBT drive both save and sync;
+                        shouldRefresh keeps the tile across a block-state change, which Forge
+                        1.12 otherwise replaces -- any new tile with state must keep this);
                         lights/TileEntityFixture is the heart: every 5 ticks, if shouldTrace(),
                         ray-trace along pan/tilt and keep a BlockIlluminator where the beam
-                        lands; power/ (dimmed cable pushes to neighbours; dimmer rack: DMX in,
-                        FE in, six socapex channels out; distro: five sockets); control/ (the
-                        desk: 12 faders, grand master, cues, fades); interfaces/
+                        lands. Illuminator writes go through lights/IlluminatorQueue (a per-tick
+                        time budget, merged writes; read pending state with stateAt) and the
+                        light follows a moving beam only once it settles. power/ (dimmed cable
+                        pushes to neighbours; dimmer rack: DMX in, FE in, six socapex channels
+                        out; distro: five sockets); control/ (the desk: 12 faders, grand
+                        master, cues with fades/holds/time triggers, loop, auto-start, saved
+                        playing state, DeskEffect waveforms on any channel; sends only on
+                        change plus a 1 s keep-alive); interfaces/
 items/                  TheatricalItems (ItemBlocks + positioner, wrench, ingredients; cog is
                         oredict gearIron); ItemPositioner links to a generic light by NBT
 entity/                 FallingLightEntity (EntityFallingBlock that lands broken)
@@ -218,15 +225,19 @@ client/                 TheatricalClient (@SidedProxy; item models, illuminator 
                         (ScreenDMXAddressBase is shared by the moving light and the redstone
                         interface; the rest are one per block); gui/widgets/ (ButtonFader,
                         ButtonPlug, ButtonSocket)
-network/                TheatricalNetworkHandler registers the ten messages on one
-                        SimpleNetworkWrapper, keeping upstream's discriminator ids, and sends
-                        provider universes only to players tracking the chunk. PacketUtil is
+network/                TheatricalNetworkHandler registers the messages on one
+                        SimpleNetworkWrapper, keeping upstream's discriminator ids (2-11; fork
+                        additions from 12), and sends provider universes only to players
+                        tracking the chunk, through each player's own connection (never
+                        sendTo: it races FML's cleanAttributes on connect/disconnect). PacketUtil is
                         the gate every server-bound packet goes through: it checks the chunk is
                         loaded, the tile is the expected type and the sender is within reach,
                         then runs the change on the server thread. Never touch the world
                         directly from a message handler.
 util/                   CapabilityStorageProvider (delegates to INBTSerializable), FixtureUtil
-TheatricalConfigHandler @Config: fixtures.emitLight / consumePower, rendering.lightBeamOpacity
+command/                CommandEncore, /encore: plays and programs desks (op level 2)
+TheatricalConfigHandler @Config: fixtures.emitLight / consumePower / lightUpdateBudgetMillis,
+                        rendering.lightBeamOpacity, artnet.defaultListenAddress
 ```
 
 1.12 block-state rules the port follows: every property set must fit 4 metadata bits

@@ -8,7 +8,7 @@
  * CHANGED FROM UPSTREAM: 1.12 IMessage plumbing; the desk is resolved through PacketUtil;
  * the fade times are clamped, where a zero or negative one reached upstream's per-tick
  * division and threw; and the new cue state is sent back to the players watching the block
- * rather than only saved.
+ * rather than only saved. It also carries the hold time a recorded cue gets (fork addition).
  */
 package dev.theatricalmod.theatrical.network.control;
 
@@ -30,14 +30,16 @@ public class ConsoleGoPacket implements IMessage {
     private BlockPos blockPos;
     private int fadeInTicks;
     private int fadeOutTicks;
+    private int holdTicks;
 
     public ConsoleGoPacket() {
     }
 
-    public ConsoleGoPacket(BlockPos blockPos, int fadeInTicks, int fadeOutTicks) {
+    public ConsoleGoPacket(BlockPos blockPos, int fadeInTicks, int fadeOutTicks, int holdTicks) {
         this.blockPos = blockPos;
         this.fadeInTicks = fadeInTicks;
         this.fadeOutTicks = fadeOutTicks;
+        this.holdTicks = holdTicks;
     }
 
     @Override
@@ -45,6 +47,7 @@ public class ConsoleGoPacket implements IMessage {
         blockPos = BlockPos.fromLong(buf.readLong());
         fadeInTicks = buf.readInt();
         fadeOutTicks = buf.readInt();
+        holdTicks = buf.readInt();
     }
 
     @Override
@@ -52,6 +55,7 @@ public class ConsoleGoPacket implements IMessage {
         buf.writeLong(blockPos.toLong());
         buf.writeInt(fadeInTicks);
         buf.writeInt(fadeOutTicks);
+        buf.writeInt(holdTicks);
     }
 
     public static class Handler implements IMessageHandler<ConsoleGoPacket, IMessage> {
@@ -65,6 +69,7 @@ public class ConsoleGoPacket implements IMessage {
                 }
                 desk.setFadeInTicks(MathHelper.clamp(message.fadeInTicks, 0, MAX_FADE_TICKS));
                 desk.setFadeOutTicks(MathHelper.clamp(message.fadeOutTicks, 0, MAX_FADE_TICKS));
+                desk.setHoldTicks(MathHelper.clamp(message.holdTicks, 0, MAX_FADE_TICKS));
                 desk.clickButton();
                 desk.sync();
             });
