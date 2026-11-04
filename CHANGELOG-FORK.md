@@ -254,6 +254,15 @@ work as it landed, newest first, including the upstream bugs fixed on the way.
 - **artnet4j is shaded and relocated** (`dev.theatricalmod.theatrical.shadow.ch.bildspur.artnet`)
   rather than merged into the jar as-is, so it cannot clash with another mod bundling the same
   library.
+- **Releases are stamped and published more carefully.** The release workflow now writes the
+  tag it is publishing into the build before building, and refuses to publish if the jar's
+  version is anything else, so a release can no longer ship stamped as an earlier pre-release
+  of the same commit. The jar is uploaded to a draft, read back by name, and only then
+  published, so a release is never visible with its jar missing. Every pull request also boots
+  a dedicated server, which catches client-only code reached from common code before it ships.
+- The GregTechCEu buildscript is updated to the version the sibling Mica mods use; it tags
+  CurseForge uploads as client- and server-side, which this fork does not use, so the jar is
+  unchanged. RetroFuturaGradle stays at 1.4.7.
 
 ### Modified files without comment support
 

@@ -140,9 +140,10 @@ a green compile says nothing about whether the mod loads. After any change to re
 capabilities, rendering or resources, run the client and read `run/logs/latest.log` for missing
 models/textures and registry errors -- the `mod-verify` skill is the ritual for this repo.
 
-`.github/scripts/server-smoke-test.sh` (added when the port has enough to load) boots a
-dedicated server and asserts `Done (`; until then `./gradlew runServer` with `run/eula.txt`
-set to `eula=true` does the same by hand.
+`bash .github/scripts/server-smoke-test.sh` boots a dedicated server and passes on `Done (`,
+failing on a known crash signature or a timeout; the PR workflow runs it on every pull request.
+It writes `server-smoke.log` to the repo root (gitignored). `./gradlew runServer` with
+`run/eula.txt` set to `eula=true` does the same by hand.
 
 ## IntelliJ
 
@@ -266,8 +267,11 @@ each of those does upstream, and the plan for the order they are ported in.
   and `project.version` is `1.12.2-<version>`. That is deliberate: it keeps 1.12.2 jars visibly
   distinct from the 1.16 line's `LDEncore-<version>-forge-mc1.16.jar` on the shared Releases page.
 - **Versioning:** `modVersion` is empty, so the buildscript derives it from git via the
-  palantir git-version plugin (`git describe --tags --first-parent`). CI tags HEAD immediately
-  before building, so release builds get exactly the tag. Local builds off an untagged commit get
+  palantir git-version plugin (`git describe --tags --first-parent`). That answers "some tag on
+  this commit", which is not enough for a release, so the release workflow **pins** it: it writes
+  the tag it is publishing into `modVersion` in `buildscript.properties` before building (CI-only,
+  never committed) and fails unless the built version is exactly `1.12.2-<tag>`. Keep the line
+  in the form `modVersion = ` with an empty value, or the pin's `sed` matches nothing. Local builds off an untagged commit get
   the short sha plus `.dirty` when the tree has changes (e.g. `1.12.2-69fdc47.dirty`); the
   `1.16.3` line's tags are on that branch's first-parent line only, so they are never picked up
   here. There is no `mod_version` fallback (that is a `1.16.3` thing).
@@ -342,14 +346,19 @@ each of those does upstream, and the plan for the order they are ported in.
 `.github/workflows/build-mod-release-pre-release-main.yml`. Renaming one breaks the release
 build. The workflow reads the last line of each (`| tail -n 1 | xargs`).
 
-Three workflows, matching the sibling Mica mods (see the header comment in each for the
-fork-specific deltas):
+Three workflows, taken from the canonical templates in `dev-configurations`
+(`minecraft-mod-workflows/template/`). Only the lines marked `# ADAPT:` and the "Fork deltas"
+listed at the top of each file differ; keep it that way, so the repo stays diffable against the
+template:
 
-- `test-mod-build-pr.yml` -- builds every pull request on JDK 21.
-- `build-mod-release-pre-release-main.yml` -- on push to `1.12` or `1.16.3`, tags the commit and
-  publishes a pre-release with checksums. `workflow_dispatch` with `release=true` cuts a full
-  release (pick the branch in the dispatch dialog). The tag is created *before* the build, because
-  the version resolution reads it. Both branches share one tag namespace and one Releases page.
+- `test-mod-build-pr.yml` -- on every pull request, compiles on JDK 21, then boots a dedicated
+  server with `.github/scripts/server-smoke-test.sh`.
+- `build-mod-release-pre-release-main.yml` -- on push to `1.12`, tags the commit and publishes
+  a pre-release with checksums. `workflow_dispatch` with `release=true` cuts a full release
+  (pick the branch in the dispatch dialog). It pins the version to the tag, fails if the built
+  version is not `1.12.2-<tag>`, creates the release as an empty draft, uploads the jar with
+  `.github/scripts/upload-release-assets.sh` (one file at a time, then read back by name), and
+  only then publishes. Both branches share one tag namespace and one Releases page.
 - `cleanup-mod-pre-releases.yml` -- prunes pre-releases past 90 days, keeping the newest 3 and
   anything with 5+ downloads. Its `workflow_run` trigger matches the release workflow by name, so
   those two strings must stay in sync. GitHub only fires `workflow_run` and `workflow_dispatch`
