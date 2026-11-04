@@ -7,11 +7,15 @@
  *
  * CHANGED FROM UPSTREAM: 1.12 block state plumbing and bounding boxes; hanging a light on
  * the bar shrinks the held stack with ItemStack.shrink instead of setting the count by
- * hand.
+ * hand. Fork addition: the bar is actually wired, carrying Forge Energy to the
+ * fixtures hung from it (a TileEntityWiredSupport on the PowerGrid).
  */
 package dev.theatricalmod.theatrical.block.rigging;
 
 import dev.theatricalmod.theatrical.api.ISupport;
+import dev.theatricalmod.theatrical.tiles.power.PowerGrid;
+import dev.theatricalmod.theatrical.tiles.power.TileEntityWiredSupport;
+import net.minecraft.tileentity.TileEntity;
 import dev.theatricalmod.theatrical.block.BlockHangable;
 import net.minecraft.block.Block;
 import net.minecraft.block.BlockHorizontal;
@@ -108,5 +112,35 @@ public class BlockIWB extends BlockHorizontal implements ISupport {
             }
         }
         return super.onBlockActivated(world, pos, state, player, hand, facing, hitX, hitY, hitZ);
+    }
+
+    // Fork addition: the bar carries Forge Energy to the fixtures hung from it (PowerGrid).
+
+    @Override
+    public boolean hasTileEntity(IBlockState state) {
+        return true;
+    }
+
+    @Override
+    public TileEntity createTileEntity(World world, IBlockState state) {
+        return new TileEntityWiredSupport();
+    }
+
+    @Override
+    public void onBlockAdded(World world, BlockPos pos, IBlockState state) {
+        super.onBlockAdded(world, pos, state);
+        PowerGrid.invalidate(world);
+    }
+
+    @Override
+    public void breakBlock(World world, BlockPos pos, IBlockState state) {
+        PowerGrid.invalidate(world);
+        super.breakBlock(world, pos, state);
+    }
+
+    @Override
+    public void neighborChanged(IBlockState state, World world, BlockPos pos, Block block, BlockPos fromPos) {
+        super.neighborChanged(state, world, pos, block, fromPos);
+        PowerGrid.invalidate(world);
     }
 }

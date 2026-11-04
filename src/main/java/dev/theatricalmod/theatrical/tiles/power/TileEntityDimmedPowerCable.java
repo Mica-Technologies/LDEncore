@@ -7,7 +7,8 @@
  *
  * CHANGED FROM UPSTREAM: 1.12 NBT, sync and capability plumbing; the stored power is
  * actually written to NBT (upstream read "power" but never wrote it, so a cable always
- * reloaded empty).
+ * reloaded empty). A power cable saved before that cable carried Forge Energy
+ * still has this tile; on its first tick it replaces itself with the cable's own tile.
  */
 package dev.theatricalmod.theatrical.tiles.power;
 
@@ -17,6 +18,7 @@ import dev.theatricalmod.theatrical.api.capabilities.dmx.provider.DMXProvider;
 import dev.theatricalmod.theatrical.api.capabilities.dmx.receiver.DMXReceiver;
 import dev.theatricalmod.theatrical.api.capabilities.power.ITheatricalPowerStorage;
 import dev.theatricalmod.theatrical.api.capabilities.power.TheatricalPower;
+import dev.theatricalmod.theatrical.block.cables.BlockPowerCable;
 import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.network.NetworkManager;
 import net.minecraft.network.play.server.SPacketUpdateTileEntity;
@@ -210,6 +212,12 @@ public class TileEntityDimmedPowerCable extends TileEntity implements ITheatrica
     @Override
     public void update() {
         if (world.isRemote) {
+            return;
+        }
+        if (world.getBlockState(pos).getBlock() instanceof BlockPowerCable) {
+            // A power cable placed before it carried FE saved this dimmed tile; hand over to the
+            // conduit tile the block now creates.
+            world.setTileEntity(pos, new TileEntityPowerCable());
             return;
         }
         ticksSinceLastSend++;

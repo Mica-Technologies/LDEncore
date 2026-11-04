@@ -203,10 +203,13 @@ tiles/                  TileEntityTheatricalBase (readNBT/getNBT drive both save
                         time budget, merged writes; read pending state with stateAt) and the
                         light follows a moving beam only once it settles. power/ (dimmed cable
                         pushes to neighbours; dimmer rack: DMX in, FE in, six socapex channels
-                        out; distro: five sockets); control/ (the desk: 12 faders, grand
-                        master, cues with fades/holds/time triggers, loop, auto-start, saved
-                        playing state, DeskEffect waveforms on any channel; sends only on
-                        change plus a 1 s keep-alive); interfaces/
+                        out; distro: five sockets; PowerGrid carries FE over power cable +
+                        truss + IWB (TileEntityPowerConduit, no buffer) to heads, then racks;
+                        cached per world, dropped on any conduit/neighbour/chunk change);
+                        control/ (the desk: 12 faders, grand master, cues with
+                        fades/holds/time triggers, loop, auto-start, saved playing state,
+                        DeskEffect waveforms on any channel; sends only on change plus a 1 s
+                        keep-alive); interfaces/
 items/                  TheatricalItems (ItemBlocks + positioner, wrench, ingredients; cog is
                         oredict gearIron); ItemPositioner links to a generic light by NBT
 entity/                 FallingLightEntity (EntityFallingBlock that lands broken)

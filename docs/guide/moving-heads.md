@@ -24,6 +24,29 @@ A moving head needs **Forge Energy** from another mod: it holds 2,000 FE and use
 tick** (1,000 FE a second) while it is lit, and does nothing at all without it. It accepts energy on
 any face.
 
+You do not need a source beside every head:
+
+- **Truss and IWB are wired.** Feed any block of a truss run or bar, and every head touching that
+  run gets power. A run is every truss and IWB block that touches another, so one feed powers a
+  whole bar, and a separate bar needs its own feed or a cable to it.
+- **Power Cable carries Forge Energy.** Run it from a generator or storage block to a truss, a
+  bar or a head, for example to reach heads standing on the floor. It connects to anything that
+  takes or gives FE, and pulls from storage blocks that do not push their energy out.
+
+Nothing is stored or lost along the way: whatever the source can deliver goes to the heads that
+need it, then to any dimmer racks on the same run. A source pushed straight into a truss or bar
+has to push its energy out by itself (most generators and batteries do); one that only gives
+energy when asked needs a Power Cable between it and the truss.
+
+```mermaid
+flowchart LR
+    Gen[FE source] -- Power cable --> Truss[Truss run]
+    Truss --> H1[Head]
+    Truss --> H2[Head]
+    Truss --> H3[Head]
+    Gen -- Power cable --> Floor[Floor head]
+```
+
 For building and testing, set `fixtures.consumePower` to `false` in the
 [configuration](../reference/configuration.md) and heads run without power.
 

@@ -21,7 +21,9 @@ A fresnel never reads DMX itself. Running DMX cable straight into one does nothi
 ## My moving head will not light
 
 - **Power.** Each head needs 50 FE per tick from a Forge Energy source, or set
-  `fixtures.consumePower` to `false`.
+  `fixtures.consumePower` to `false`. A source feeds the truss run or bar it touches, or a
+  Power Cable run, and every head touching that: a separate bar needs its own feed. A storage
+  block that does not push its energy out needs a Power Cable between it and the truss.
 - **Intensity and colour.** Intensity is channel +0; red, green and blue are +1 to +3. Intensity
   with no colour gives a lit head with a black beam.
 - **Address.** Check the head's address matches the channels you are sending, and remember

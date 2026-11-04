@@ -22,6 +22,7 @@ import dev.theatricalmod.theatrical.tiles.lights.TileEntityIntelligentFixture;
 import dev.theatricalmod.theatrical.tiles.power.TileEntityDimmedPowerCable;
 import dev.theatricalmod.theatrical.tiles.power.TileEntityDimmerRack;
 import dev.theatricalmod.theatrical.tiles.power.TileEntityPowerCable;
+import dev.theatricalmod.theatrical.tiles.power.TileEntityWiredSupport;
 import dev.theatricalmod.theatrical.tiles.power.TileEntitySocapexDistribution;
 import net.minecraft.tileentity.TileEntity;
 import net.minecraft.util.ResourceLocation;
@@ -40,6 +41,7 @@ public final class TheatricalTiles {
     public static void register() {
         register(TileEntityIntelligentFixture.class, "moving_light");
         register(TileEntityDimmedPowerCable.class, "dimmed_power_cable");
+        register(TileEntityWiredSupport.class, "wired_support");
         register(TileEntityPowerCable.class, "power_cable");
         register(TileEntityArtNetInterface.class, "artnet_interface");
         register(TileEntityTestDMX.class, "test_dmx");

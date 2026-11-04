@@ -31,7 +31,18 @@ branch carries the canonical copy of its own section.
 
 ## Unreleased
 
-Nothing yet.
+### Added
+
+- **Forge Energy over power cable and truss.** A moving head no longer needs a generator or
+  battery touching it:
+  - **Truss and IWB carry FE** to every moving head and dimmer rack touching them. A run of
+    truss and bar blocks is one network, so one feed powers a whole bar.
+  - **The Power Cable carries FE.** Upstream wired it as a second dimmed power cable, so it
+    carried nothing a head could use. It now connects to truss, bars, heads and anything that
+    takes or gives FE, and pulls from storage blocks that do not push their energy out.
+  - Nothing is stored or lost on the way: energy goes straight to the heads that need it, then
+    to dimmer racks, and never into other mods' blocks. A power cable placed in an older world
+    switches over by itself.
 
 ## 2026.11.04+1
 

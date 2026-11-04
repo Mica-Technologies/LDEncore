@@ -60,7 +60,7 @@ flowchart LR
     FE[Forge Energy source] --> Rack
     Rack -- Socapex cable --> Distro[Socapex distro]
     Distro -- Dimmed power cable --> Fresnel[Fresnel]
-    FE2[Forge Energy source] --> Head
+    FE2[Forge Energy source] -- Power cable or truss --> Head
 ```
 
 - A **moving head** is an intelligent fixture: it reads DMX itself, so the DMX cable goes straight

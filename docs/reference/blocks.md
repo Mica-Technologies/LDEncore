@@ -32,7 +32,7 @@ Everything is in the **LDEncore** creative tab. Use JEI to look up recipes.
 | **DMX Cable** | DMX, from a desk or interface to fixtures, racks and redstone interfaces. Passes through fixtures, so heads can be chained. |
 | **Socapex Cable** | Six dimmed circuits at once, from a dimmer rack to a distro. |
 | **Dimmed Power Cable** | One dimmed circuit, from a distro socket to one fresnel. |
-| **Power Cable** | Registered for compatibility with upstream; not needed for any rig. |
+| **Power Cable** | Carries Forge Energy from a generator or storage block to truss, bars and moving heads, with no loss. See [Moving heads](../guide/moving-heads.md#power). |
 
 Cables join up automatically with neighbouring cables of the same kind and with any block that
 accepts them.
@@ -41,8 +41,8 @@ accepts them.
 
 | Block | What it is |
 |---|---|
-| **MT100 Truss** | Box truss to hang lights from. Placed along an axis, like a log. |
-| **Internally Wired Bar (IWB)** | A lighting bar. Right-click it holding a light to hang the light underneath. |
+| **MT100 Truss** | Box truss to hang lights from. Placed along an axis, like a log. Carries Forge Energy to the moving heads hung from it. |
+| **Internally Wired Bar (IWB)** | A lighting bar. Right-click it holding a light to hang the light underneath. Carries Forge Energy to the moving heads hung from it. |
 
 ## Items
 

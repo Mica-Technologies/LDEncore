@@ -7,11 +7,16 @@
  *
  * CHANGED FROM UPSTREAM: 1.12 has no waterlogging, so that property and its fluid ticks
  * are gone; the axis is mapped to metadata. The truss is a full-cube frame rendered on the
- * cutout layer.
+ * cutout layer. Fork addition: truss carries Forge Energy to the fixtures hung from it
+ * (a TileEntityWiredSupport on the PowerGrid).
  */
 package dev.theatricalmod.theatrical.block.rigging;
 
 import dev.theatricalmod.theatrical.api.ISupport;
+import dev.theatricalmod.theatrical.tiles.power.PowerGrid;
+import dev.theatricalmod.theatrical.tiles.power.TileEntityWiredSupport;
+import net.minecraft.tileentity.TileEntity;
+import net.minecraft.block.Block;
 import net.minecraft.block.BlockRotatedPillar;
 import net.minecraft.block.material.Material;
 import net.minecraft.block.state.IBlockState;
@@ -66,5 +71,35 @@ public class BlockTruss extends BlockRotatedPillar implements ISupport {
     @Override
     public float[] getLightTransforms(World world, BlockPos pos, EnumFacing facing) {
         return new float[]{0, 0F, 0};
+    }
+
+    // Fork addition: the bar carries Forge Energy to the fixtures hung from it (PowerGrid).
+
+    @Override
+    public boolean hasTileEntity(IBlockState state) {
+        return true;
+    }
+
+    @Override
+    public TileEntity createTileEntity(World world, IBlockState state) {
+        return new TileEntityWiredSupport();
+    }
+
+    @Override
+    public void onBlockAdded(World world, BlockPos pos, IBlockState state) {
+        super.onBlockAdded(world, pos, state);
+        PowerGrid.invalidate(world);
+    }
+
+    @Override
+    public void breakBlock(World world, BlockPos pos, IBlockState state) {
+        PowerGrid.invalidate(world);
+        super.breakBlock(world, pos, state);
+    }
+
+    @Override
+    public void neighborChanged(IBlockState state, World world, BlockPos pos, Block block, BlockPos fromPos) {
+        super.neighborChanged(state, world, pos, block, fromPos);
+        PowerGrid.invalidate(world);
     }
 }

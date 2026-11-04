@@ -134,7 +134,9 @@ desk is now always Go (upstream's recorded a cue in program mode). Busy rigs are
 fixtures render from display lists, the desk sends DMX only when it changes, and the real light
 where beams land is moved within a per-tick time budget (`fixtures.lightUpdateBudgetMillis`), so
 a rig of moving heads can no longer stall the server. Every tile now survives a change of its
-block's state, which on 1.12 had wiped a desk's cues on every redstone pulse.
+block's state, which on 1.12 had wiped a desk's cues on every redstone pulse. Truss, IWB and the
+power cable carry Forge Energy to the moving heads on them, so one feed powers a whole bar;
+upstream's power cable carried nothing a head could use.
 
 **The 1.16.4 baseline (`1.16.3` branch) -- no gameplay changes:**
 
