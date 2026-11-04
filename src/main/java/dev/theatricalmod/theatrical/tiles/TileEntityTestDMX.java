@@ -9,7 +9,7 @@
  * invalidate); the client sync goes through TheatricalNetworkHandler; the block now accepts
  * DMX cable connections (IAcceptsCable) so a cable run visibly attaches to it. Upstream's
  * did not, which left the debugging block looking unwired even while it was driving the
- * universe.
+ * universe. When it is removed, the fixtures it fed are blacked out.
  */
 package dev.theatricalmod.theatrical.tiles;
 
@@ -80,6 +80,10 @@ public class TileEntityTestDMX extends TileEntity implements ITickable, IAccepts
 
     @Override
     public void invalidate() {
+        // The receivers it fed would otherwise hold their last look for ever.
+        if (world != null) {
+            idmxProvider.blackoutDevices(world);
+        }
         TheatricalMod.refreshDmxNetwork(world);
         super.invalidate();
     }

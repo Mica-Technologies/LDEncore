@@ -4,7 +4,8 @@
  * Part of the 1.12.2 port. Written by Mica Technologies after upstream's
  * api/capabilities/dmx/provider/IDMXProvider.java (Theatrical Team, Apache License 2.0).
  *
- * CHANGED FROM UPSTREAM: none beyond the port.
+ * CHANGED FROM UPSTREAM: blackoutDevices, so a provider that is removed can send its receivers
+ * to zero instead of leaving them on their last values.
  */
 package dev.theatricalmod.theatrical.api.capabilities.dmx.provider;
 
@@ -25,4 +26,11 @@ public interface IDMXProvider {
     void updateDevices(World world, BlockPos controllerPos);
 
     void refreshDevices();
+
+    /**
+     * Sends every channel at zero to each receiver this provider last reached, for when the
+     * provider itself goes away; a receiver keeps its last values until told otherwise.
+     */
+    default void blackoutDevices(World world) {
+    }
 }

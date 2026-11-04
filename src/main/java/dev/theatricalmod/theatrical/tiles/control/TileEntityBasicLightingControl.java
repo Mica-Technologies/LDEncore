@@ -7,7 +7,8 @@
  *
  * CHANGED FROM UPSTREAM: 1.12 NBT, capability and lifecycle plumbing; the client sync goes
  * through TheatricalNetworkHandler; the GUI title and container come with the GUI phase.
- * The cue/fade logic is upstream's, unchanged.
+ * The cue/fade logic is upstream's, unchanged. When the desk is removed, the fixtures it
+ * fed are blacked out rather than left on its last look.
  */
 package dev.theatricalmod.theatrical.tiles.control;
 
@@ -337,6 +338,10 @@ public class TileEntityBasicLightingControl extends TileEntityTheatricalBase imp
 
     @Override
     public void invalidate() {
+        // The receivers it fed would otherwise hold their last look for ever.
+        if (world != null) {
+            idmxProvider.blackoutDevices(world);
+        }
         TheatricalMod.refreshDmxNetwork(world);
         super.invalidate();
     }

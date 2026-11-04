@@ -113,10 +113,11 @@ fixed (a dimmer rack that ignored every DMX address other than 0, a dimmer rack 
 patched until it was powered, a dimmer rack that never noticed a distro wired up after it was
 placed, a positioner that aimed lights the wrong way on two facings, cables that forgot their
 state on reload, a lighting desk whose physical faders never moved, a fixture that would not dim
-unless it also moved, an Art-Net socket that kept a port after its address changed, a light
+unless it also moved, an Art-Net socket that kept a port after its address changed or its interface was removed, a light
 knocked off its bar that was drawn a block away from where it fell, and one that vanished when
-it landed on a path or a slab). The port's own networking is also hardened: a running desk can
-no longer drop a player's connection when someone joins or leaves.
+it landed on a path or a slab). A fixture cut off from its DMX source now goes dark instead of
+freezing on its last look, so a broken run is visible. The port's own networking is also
+hardened: a running desk can no longer drop a player's connection when someone joins or leaves.
 
 **The 1.16.4 baseline (`1.16.3` branch) -- no gameplay changes:**
 

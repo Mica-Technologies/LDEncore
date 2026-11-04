@@ -9,6 +9,8 @@
  * Art-Net polling that upstream did inline (it referenced Minecraft's session from common
  * code) is delegated to the client proxy, which fills it in with the Art-Net phase; the
  * client sync goes through TheatricalNetworkHandler; the GUI comes with the GUI phase.
+ * When the interface is removed, the fixtures it fed are blacked out. On the client, removing or unloading
+ * it lets the proxy close an Art-Net socket nothing listens on any more.
  */
 package dev.theatricalmod.theatrical.tiles.interfaces;
 
@@ -134,8 +136,23 @@ public class TileEntityArtNetInterface extends TileEntityTheatricalBase implemen
 
     @Override
     public void invalidate() {
+        // The receivers it fed would otherwise hold their last look for ever.
+        if (world != null) {
+            idmxProvider.blackoutDevices(world);
+            if (world.isRemote) {
+                TheatricalMod.proxy.artNetInterfaceGone(this);
+            }
+        }
         TheatricalMod.refreshDmxNetwork(world);
         super.invalidate();
+    }
+
+    @Override
+    public void onChunkUnload() {
+        if (world != null && world.isRemote) {
+            TheatricalMod.proxy.artNetInterfaceGone(this);
+        }
+        super.onChunkUnload();
     }
 
     @Override

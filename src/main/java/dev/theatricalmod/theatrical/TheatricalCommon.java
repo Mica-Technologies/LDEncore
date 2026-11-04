@@ -50,6 +50,13 @@ public class TheatricalCommon {
     }
 
     /**
+     * Called on the logical client when an Art-Net interface tile is removed or its chunk
+     * unloads, so the client can close a socket nothing listens on any more.
+     */
+    public void artNetInterfaceGone(TileEntityArtNetInterface tile) {
+    }
+
+    /**
      * Called on the client when the server sends a DMX provider's universe. The server has
      * nothing to do: it owns the authoritative copy already.
      */

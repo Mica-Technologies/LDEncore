@@ -70,7 +70,14 @@ work as it landed, newest first, including the upstream bugs fixed on the way.
     "A fatal error has occurred". In singleplayer that shut the world down on the way in or
     out; on a server, any player joining or leaving could kick whoever was near a running
     desk. Each player's packet is now built separately and handed to that player's own
-    connection, which involves no shared setting at all.
+    connection, which involves no shared setting at all. A player still being let in -- part
+    way through Forge's own handshake, when the connection cannot carry a mod packet yet -- is
+    left out until the handshake finishes.
+  - **Removing an Art-Net interface, or leaving the world, frees the Art-Net port.** The
+    client only gave up its socket when an interface changed address, so taking away the last
+    interface kept UDP port 6454 bound until the game was closed, locking every other Art-Net
+    program on the machine out of it. The socket now closes when nothing in view listens on it
+    and on disconnect.
   - **A light that falls onto a path, a slab or a carpet lands instead of vanishing.** Resting
     on anything shorter than a full block, the falling fixture reported that block as where it
     was, found it occupied and deleted itself, item and all. It now lands in the space above,
@@ -79,6 +86,11 @@ work as it landed, newest first, including the upstream bugs fixed on the way.
   - **The probe overlay shows a socapex distro's channels.** It asked the distro for its
     socapex input without naming a side, and a distro only answers on the face its cable comes
     in on, so the line never appeared. Every face is now asked.
+- **A fixture that loses its DMX goes dark.** Cut a DMX cable, or break the desk, Art-Net
+  interface or test block feeding a run, and every fixture, dimmer rack and redstone interface
+  that is no longer reached is sent every channel at zero, within about a second. Upstream left
+  them frozen on whatever they last received, so a broken run looked exactly like a working
+  one. Reconnecting brings them straight back.
 - **Performance pass and bug sweep.** Three things that ran every tick regardless of whether
   anything had changed no longer do, and the bugs that hid behind them are fixed.
   - **A lit generic light no longer re-traces its beam four times a second forever.** Upstream

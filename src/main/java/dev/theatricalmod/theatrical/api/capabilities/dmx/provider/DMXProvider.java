@@ -11,6 +11,9 @@
  *   - capability lookups use 1.12's hasCapability/getCapability pair (no LazyOptional);
  *   - serializeNBT returns an empty tag rather than null (the provider carries no saved
  *     state; the universe is owned by whoever created it).
+ *   - a receiver that a re-walk no longer reaches (its cable was cut) is sent every channel
+ *     at zero, and so is every receiver when the provider itself is removed. Upstream left
+ *     both holding their last values for ever, so a broken run looked like a working one.
  */
 package dev.theatricalmod.theatrical.api.capabilities.dmx.provider;
 
@@ -53,6 +56,8 @@ public class DMXProvider implements IDMXProvider, INBTSerializable<NBTTagCompoun
     private DMXUniverse dmxUniverse;
     private HashSet<BlockPos> devices = null;
     private long lastEmptyScan = Long.MIN_VALUE;
+    /** The receivers the last walk reached, kept across a refresh to see who dropped off. */
+    private HashSet<BlockPos> previousDevices = null;
 
     public DMXProvider() {
     }
@@ -125,25 +130,60 @@ public class DMXProvider implements IDMXProvider, INBTSerializable<NBTTagCompoun
             if (devices.isEmpty()) {
                 lastEmptyScan = now;
             }
+            // Whatever the walk used to reach and no longer does has lost its signal.
+            if (previousDevices != null) {
+                for (BlockPos lost : previousDevices) {
+                    if (!devices.contains(lost)) {
+                        blackout(world, lost);
+                    }
+                }
+                previousDevices = null;
+            }
         }
         for (BlockPos receiver : devices) {
-            IBlockState blockState = world.getBlockState(receiver);
-            if (blockState.getBlock() instanceof ICable) {
-                continue;
-            }
-            TileEntity tile = world.getTileEntity(receiver);
-            if (tile != null && tile.hasCapability(DMXReceiver.CAP, null)) {
-                IDMXReceiver idmxReceiver = tile.getCapability(DMXReceiver.CAP, null);
-                if (idmxReceiver != null) {
-                    idmxReceiver.receiveDMXValues(dmxUniverse.getDMXChannels(), world, receiver);
-                }
-            }
+            pushTo(world, receiver, dmxUniverse.getDMXChannels());
         }
     }
 
     @Override
     public void refreshDevices() {
+        if (devices != null) {
+            previousDevices = devices;
+        }
         devices = null;
         lastEmptyScan = Long.MIN_VALUE;
+    }
+
+    @Override
+    public void blackoutDevices(World world) {
+        HashSet<BlockPos> reached = devices != null ? devices : previousDevices;
+        if (reached != null) {
+            for (BlockPos receiver : reached) {
+                blackout(world, receiver);
+            }
+        }
+        devices = null;
+        previousDevices = null;
+    }
+
+    private static void blackout(World world, BlockPos receiver) {
+        pushTo(world, receiver, new byte[DMXUniverse.CHANNELS]);
+    }
+
+    private static void pushTo(World world, BlockPos receiver, byte[] data) {
+        if (!world.isBlockLoaded(receiver)) {
+            return;
+        }
+        IBlockState blockState = world.getBlockState(receiver);
+        if (blockState.getBlock() instanceof ICable) {
+            return;
+        }
+        TileEntity tile = world.getTileEntity(receiver);
+        if (tile != null && tile.hasCapability(DMXReceiver.CAP, null)) {
+            IDMXReceiver idmxReceiver = tile.getCapability(DMXReceiver.CAP, null);
+            if (idmxReceiver != null) {
+                idmxReceiver.receiveDMXValues(data, world, receiver);
+            }
+        }
     }
 }

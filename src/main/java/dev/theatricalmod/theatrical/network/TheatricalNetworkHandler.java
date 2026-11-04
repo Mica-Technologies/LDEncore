@@ -16,7 +16,8 @@
  *     not sent with SimpleNetworkWrapper.sendTo. sendTo parks its target player in an attribute
  *     shared by the whole channel, and FML clears that attribute from the network thread
  *     whenever any connection opens or closes; a send landing in between dropped the
- *     receiving player's connection with "PLAYER target expects a Player arg".
+ *     receiving player's connection with "PLAYER target expects a Player arg". A player still in FML's
+ *     handshake is skipped, since the connection cannot carry a mod packet yet.
  */
 package dev.theatricalmod.theatrical.network;
 
@@ -27,10 +28,12 @@ import dev.theatricalmod.theatrical.network.control.ToggleModePacket;
 import dev.theatricalmod.theatrical.network.control.UpdateConsoleFaderPacket;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.entity.player.EntityPlayerMP;
+import net.minecraft.network.NetworkManager;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.world.WorldServer;
 import net.minecraft.world.World;
 import net.minecraftforge.fml.common.network.NetworkRegistry;
+import net.minecraftforge.fml.common.network.handshake.NetworkDispatcher;
 import net.minecraftforge.fml.common.network.simpleimpl.SimpleNetworkWrapper;
 import net.minecraftforge.fml.relauncher.Side;
 
@@ -75,11 +78,29 @@ public final class TheatricalNetworkHandler {
         for (EntityPlayer player : world.playerEntities) {
             if (player instanceof EntityPlayerMP && isTracking((EntityPlayerMP) player, world, pos)) {
                 EntityPlayerMP playerMP = (EntityPlayerMP) player;
-                if (playerMP.connection != null) {
+                if (isReadyForModPackets(playerMP)) {
                     playerMP.connection.sendPacket(MAIN.getPacketFrom(packet));
                 }
             }
         }
+    }
+
+    /**
+     * Whether FML has finished its handshake with this player. A joining player can already be
+     * in the world while the handshake runs, and a mod packet written to the connection then
+     * cannot be encoded ("Can't serialize unregistered packet") and drops it. FML records the
+     * connection type only once the handshake completes.
+     */
+    private static boolean isReadyForModPackets(EntityPlayerMP player) {
+        if (player.connection == null) {
+            return false;
+        }
+        NetworkManager manager = player.connection.getNetworkManager();
+        if (manager == null || !manager.isChannelOpen()) {
+            return false;
+        }
+        NetworkDispatcher dispatcher = NetworkDispatcher.get(manager);
+        return dispatcher != null && dispatcher.getConnectionType() != null;
     }
 
     /** Whether the player has the chunk containing this block loaded on their client. */

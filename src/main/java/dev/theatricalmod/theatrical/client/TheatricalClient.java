@@ -11,7 +11,8 @@
  * renderers, and declares which blocks render on the cutout layer (1.16 sets that through
  * RenderTypeLookup; 1.12 asks the block). Texture stitching and the baking of the fixture part
  * models live in client/model/FixtureModels, because 1.12 has no addSpecialModel. The Art-Net
- * polling comes with its phase of the port.
+ * polling comes with its phase of the port. An Art-Net socket is closed when the last
+ * interface using it is removed or unloaded, and every socket when the player disconnects.
  */
 package dev.theatricalmod.theatrical.client;
 
@@ -57,6 +58,7 @@ import net.minecraftforge.fml.client.registry.RenderingRegistry;
 import net.minecraftforge.fml.common.Mod;
 import net.minecraftforge.fml.common.event.FMLPreInitializationEvent;
 import net.minecraftforge.fml.common.eventhandler.SubscribeEvent;
+import net.minecraftforge.fml.common.network.FMLNetworkEvent;
 import net.minecraftforge.fml.relauncher.Side;
 
 import javax.annotation.Nullable;
@@ -237,6 +239,44 @@ public class TheatricalClient extends TheatricalCommon {
             default:
                 return null;
         }
+    }
+
+    /**
+     * Forgets an interface that has gone and closes any Art-Net socket nothing else listens
+     * on. Fork-authored: sockets used to be released only when an interface changed address,
+     * so removing the last interface kept UDP port 6454 bound until the game was closed, which
+     * locks every other Art-Net program on the machine out of it.
+     */
+    @Override
+    public void artNetInterfaceGone(TileEntityArtNetInterface tile) {
+        BlockPos pos = tile.getPos();
+        artNetTicks.remove(pos);
+        lastArtNetSent.remove(pos);
+        lastArtNetSendTime.remove(pos);
+        LAST_ARTNET_DATA.remove(pos);
+        if (artNetAddress.remove(pos) != null) {
+            TheatricalMod.getArtNetManager().releaseUnused(new java.util.HashSet<>(artNetAddress.values()));
+        }
+    }
+
+    /** Closes every Art-Net socket when the player leaves a world or server. */
+    private void forgetAllArtNet() {
+        artNetTicks.clear();
+        lastArtNetSent.clear();
+        lastArtNetSendTime.clear();
+        LAST_ARTNET_DATA.clear();
+        artNetAddress.clear();
+        TheatricalMod.getArtNetManager().shutdownAll();
+    }
+
+    @SubscribeEvent
+    public static void onDisconnect(FMLNetworkEvent.ClientDisconnectionFromServerEvent event) {
+        // Fired on the network thread; the bookkeeping belongs to the client thread.
+        Minecraft.getMinecraft().addScheduledTask(() -> {
+            if (TheatricalMod.proxy instanceof TheatricalClient) {
+                ((TheatricalClient) TheatricalMod.proxy).forgetAllArtNet();
+            }
+        });
     }
 
     @SubscribeEvent
