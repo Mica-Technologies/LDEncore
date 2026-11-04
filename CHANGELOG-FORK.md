@@ -31,6 +31,10 @@ branch carries the canonical copy of its own section.
 
 ## Unreleased
 
+Nothing yet.
+
+## 2026.11.04
+
 Translated from upstream **Theatrical 0.7.2** (the final state of the archived `1.16.3` branch).
 
 **This is Theatrical on Forge 1.12.2.** Everything the 1.16.4 mod does, this does: fresnels and
