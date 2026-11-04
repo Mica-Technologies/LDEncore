@@ -31,6 +31,10 @@ branch carries the canonical copy of its own section.
 
 ## Unreleased
 
+Nothing yet.
+
+## 2026.11.04+1
+
 ### Added
 
 - **The LDEncore Wiki**, published at <https://mica-technologies.github.io/LDEncore/> from the
