@@ -346,8 +346,9 @@ each of those does upstream, and the plan for the order they are ported in.
 `.github/workflows/build-mod-release-pre-release-main.yml`. Renaming one breaks the release
 build. The workflow reads the last line of each (`| tail -n 1 | xargs`).
 
-Three workflows, taken from the canonical templates in `dev-configurations`
-(`minecraft-mod-workflows/template/`). Only the lines marked `# ADAPT:` and the "Fork deltas"
+Four workflows. The PR, release and cleanup ones are the canonical templates from
+`dev-configurations` (`minecraft-mod-workflows/template/`); the wiki one is the sibling mods'
+copy. Only the lines marked `# ADAPT:` and the "Fork deltas"
 listed at the top of each file differ; keep it that way, so the repo stays diffable against the
 template:
 
@@ -359,6 +360,12 @@ template:
   version is not `1.12.2-<tag>`, creates the release as an empty draft, uploads the jar with
   `.github/scripts/upload-release-assets.sh` (one file at a time, then read back by name), and
   only then publishes. Both branches share one tag namespace and one Releases page.
+- `deploy-wiki-pages-main.yml` -- builds `docs/` with MkDocs Material (`mkdocs build --strict`)
+  and publishes it to GitHub Pages as the LDEncore Wiki, on a push to `1.12` that touches
+  `docs/**`, `mkdocs.yml` or the workflow itself. Pages must be set to "GitHub Actions" as its
+  source (Settings -> Pages). `docs/agent-plans/` is excluded in `mkdocs.yml` as well as
+  gitignored. Preview locally with `python -m pip install -r docs/requirements.txt` then
+  `mkdocs serve`. When a change alters what a player sees, update the wiki page with it.
 - `cleanup-mod-pre-releases.yml` -- prunes pre-releases past 90 days, keeping the newest 3 and
   anything with 5+ downloads. Its `workflow_run` trigger matches the release workflow by name, so
   those two strings must stay in sync. GitHub only fires `workflow_run` and `workflow_dispatch`

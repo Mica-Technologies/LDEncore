@@ -1,0 +1,97 @@
+# Fork-authored file (Mica Technologies fork, LDEncore): the MkDocs site published as the
+# LDEncore wiki by .github/workflows/deploy-wiki-pages-main.yml. Upstream had no docs site.
+site_name: LDEncore Wiki
+site_description: >-
+  LDEncore — Mica Technologies' unofficial Forge 1.12.2 port of Theatrical: live-event lighting,
+  DMX, Art-Net and rigging for Minecraft. Setup guides, block reference and configuration.
+site_url: https://mica-technologies.github.io/LDEncore/
+repo_url: https://github.com/Mica-Technologies/LDEncore
+repo_name: Mica-Technologies/LDEncore
+edit_uri: edit/1.12/docs/
+copyright: >-
+  An unofficial fork. Theatrical is by Rushmead and the Theatrical Team (Apache License 2.0);
+  this fork is not affiliated with or endorsed by them.
+
+# The phased port plan and agent working notes are gitignored working documents, not published
+# material. They are absent from a CI checkout anyway; this keeps a LOCAL `mkdocs serve` from
+# picking them up and quietly publishing them on the next deploy.
+exclude_docs: |
+  agent-plans/
+  AGENT-PLANS/
+
+theme:
+  name: material
+  language: en
+  icon:
+    repo: fontawesome/brands/github
+  features:
+    - navigation.tabs
+    - navigation.sections
+    - navigation.top
+    - navigation.indexes
+    - navigation.footer
+    - search.suggest
+    - search.highlight
+    - content.code.copy
+    - content.action.edit
+    - toc.follow
+  palette:
+    # House-lights purple in light mode; a dark stage with an amber work light in dark mode.
+    - media: "(prefers-color-scheme: light)"
+      scheme: default
+      primary: deep purple
+      accent: amber
+      toggle:
+        icon: material/weather-night
+        name: Switch to dark mode
+    - media: "(prefers-color-scheme: dark)"
+      scheme: slate
+      primary: black
+      accent: amber
+      toggle:
+        icon: material/weather-sunny
+        name: Switch to light mode
+
+markdown_extensions:
+  - abbr
+  - admonition
+  - attr_list
+  - def_list
+  - footnotes
+  - md_in_html
+  - tables
+  - toc:
+      permalink: true
+  - pymdownx.details
+  # Renders :material-…: shortcodes as inline SVG icons; without it they show as literal text.
+  - pymdownx.emoji:
+      emoji_index: !!python/name:material.extensions.emoji.twemoji
+      emoji_generator: !!python/name:material.extensions.emoji.to_svg
+  - pymdownx.highlight:
+      anchor_linenums: true
+  - pymdownx.inlinehilite
+  - pymdownx.keys
+  - pymdownx.superfences:
+      custom_fences:
+        - name: mermaid
+          class: mermaid
+          format: !!python/name:pymdownx.superfences.fence_code_format
+
+nav:
+  - Home: index.md
+  - Guides:
+      - Installation: guide/installation.md
+      - Rigging and hanging lights: guide/rigging.md
+      - Your first lit fresnel: guide/first-rig.md
+      - Moving heads: guide/moving-heads.md
+      - The lighting desk: guide/lighting-desk.md
+      - Art-Net from real software: guide/art-net.md
+      - DMX to redstone: guide/redstone.md
+  - Reference:
+      - Blocks and items: reference/blocks.md
+      - DMX addresses and channels: reference/dmx.md
+      - Configuration: reference/configuration.md
+      - Troubleshooting and FAQ: reference/faq.md
+  - About:
+      - This is a fork: about/fork.md
+      - Credits and licence: about/credits.md

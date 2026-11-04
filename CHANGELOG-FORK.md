@@ -31,7 +31,21 @@ branch carries the canonical copy of its own section.
 
 ## Unreleased
 
-Nothing yet.
+### Added
+
+- **The LDEncore Wiki**, published at <https://mica-technologies.github.io/LDEncore/> from the
+  `docs/` folder: setup guides for rigging, dimmed power, moving heads, the lighting desk,
+  Art-Net and DMX to redstone, a block and DMX channel reference, every configuration option, and
+  troubleshooting. It needs neither Patchouli nor The One Probe, so it covers packs that ship
+  without the in-game guide.
+
+### Changed
+
+- The mod list's website link (`mcmod.info`) points at the wiki instead of the repository.
+
+### Modified files without comment support
+
+- `mcmod.info` -- `url` now points at the wiki.
 
 ## 2026.11.04
 

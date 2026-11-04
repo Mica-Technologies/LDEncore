@@ -21,6 +21,12 @@ prefix all of our mod forks carry; "Encore" is a nod to the theatre.
 >   repository for modern Minecraft versions, and that is where anyone wanting Theatrical on
 >   1.20+ should look.
 
+## Documentation
+
+The **[LDEncore Wiki](https://mica-technologies.github.io/LDEncore/)** has setup guides (rigging,
+dimmed power, moving heads, the lighting desk, Art-Net, DMX to redstone), a block and channel
+reference, the configuration options and troubleshooting. Its source is the `docs/` folder.
+
 ## Why this fork exists
 
 Theatrical brings live-events equipment into Minecraft: stage lighting, dimmers, DMX and Art-Net
