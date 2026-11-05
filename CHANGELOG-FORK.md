@@ -31,6 +31,10 @@ branch carries the canonical copy of its own section.
 
 ## Unreleased
 
+Nothing yet.
+
+## 2026.11.05
+
 ### Added
 
 - **Forge Energy over power cable and truss.** A moving head no longer needs a generator or
