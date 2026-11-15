@@ -50,6 +50,7 @@ public class ScreenBasicLightingConsole extends GuiContainer {
     private static final int BUTTON_LOOP = 104;
     private static final int BUTTON_AUTO = 105;
     private static final int BUTTON_STOP = 106;
+    private static final int BUTTON_BLACKOUT = 107;
 
     /** Fader widgets carry ids 0..FADERS, with the grand master last. */
     private static final int GRAND_MASTER_ID = TileEntityBasicLightingControl.FADERS;
@@ -62,6 +63,7 @@ public class ScreenBasicLightingConsole extends GuiContainer {
     private GuiTextField holdTime;
     private GuiButton loopButton;
     private GuiButton autoButton;
+    private GuiButton blackoutButton;
 
     /** Fader value waiting to be sent, and the one last sent, so a drag costs one packet a tick. */
     private int pendingChannel = Integer.MIN_VALUE;
@@ -101,11 +103,14 @@ public class ScreenBasicLightingConsole extends GuiContainer {
         this.buttonList.add(new GuiButton(BUTTON_FORWARD, guiLeft + 145, guiTop + 20, 15, 20, "->"));
         this.buttonList.add(new GuiButton(BUTTON_GO, guiLeft + 130, guiTop + 100, 20, 20, "Go"));
         this.buttonList.add(new GuiButton(BUTTON_MODE, guiLeft + 155, guiTop + 100, 30, 20, "Mode"));
-        this.buttonList.add(new GuiButton(BUTTON_STOP, guiLeft + 197, guiTop + 56, 44, 20, "Stop"));
+        // Stop and blackout share a row, so neither covers the cue list drawn above them.
+        this.buttonList.add(new GuiButton(BUTTON_STOP, guiLeft + 197, guiTop + 56, 24, 20, "Stop"));
         this.loopButton = new GuiButton(BUTTON_LOOP, guiLeft + 197, guiTop + 78, 44, 20, "Loop");
         this.autoButton = new GuiButton(BUTTON_AUTO, guiLeft + 197, guiTop + 100, 44, 20, "Auto");
         this.buttonList.add(loopButton);
         this.buttonList.add(autoButton);
+        this.blackoutButton = new GuiButton(BUTTON_BLACKOUT, guiLeft + 221, guiTop + 56, 20, 20, "BO");
+        this.buttonList.add(blackoutButton);
 
         this.fadeInTime = makeTimeField(0, guiLeft + 170, guiTop + 60, desk == null ? 0 : desk.getFadeInTicks());
         this.fadeOutTime = makeTimeField(1, guiLeft + 170, guiTop + 75, desk == null ? 0 : desk.getFadeOutTicks());
@@ -167,6 +172,9 @@ public class ScreenBasicLightingConsole extends GuiContainer {
                 return;
             case BUTTON_STOP:
                 TheatricalNetworkHandler.MAIN.sendToServer(new DeskOptionPacket(container.blockEntity.getPos(), DeskOptionPacket.STOP));
+                break;
+            case BUTTON_BLACKOUT:
+                TheatricalNetworkHandler.MAIN.sendToServer(new DeskOptionPacket(container.blockEntity.getPos(), DeskOptionPacket.BLACKOUT));
                 return;
             default:
                 break;
@@ -234,6 +242,8 @@ public class ScreenBasicLightingConsole extends GuiContainer {
             // On in green, off in the default colour.
             loopButton.packedFGColour = desk.isLoop() ? 0x55FF55 : 0;
             autoButton.packedFGColour = desk.isAutoStart() ? 0x55FF55 : 0;
+            // Latched blackout in red: the desk is putting out nothing.
+            blackoutButton.packedFGColour = desk.isBlackout() ? 0xFF5555 : 0;
         }
         if (desk != null) {
             byte[] values = desk.getFaders();

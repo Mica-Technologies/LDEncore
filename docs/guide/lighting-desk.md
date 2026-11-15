@@ -10,7 +10,9 @@ on its own with nobody at it. Run DMX cable from it to your fixtures or dimmer r
 
 The twelve faders on the left send **DMX channels 0 to 11** of the desk's universe. The tall
 fader on the right is the **grand master**, which scales all twelve. With the grand master at the
-bottom, the faders send nothing. [Effects](#effects) are not scaled by it.
+bottom, the faders send nothing. [Effects](#effects) are not scaled by it, because the desk cannot
+tell an intensity channel from a pan or tilt one; to take everything down, effects included, use
+**Stop** (which releases the cue and its effects) or the **BO** (blackout) button.
 
 Drag a fader up to raise its channel. The physical faders on the desk block in the world move with
 them, so everyone can see the state of the desk at a glance.
@@ -44,7 +46,8 @@ by itself once it has faded in and held. A cue with no hold waits for Go.
 |---|---|
 | **Go** | Plays the next cue, and starts the stack running |
 | `<-` `->` | Choose which cue plays next, without playing it |
-| **Stop** | Stops the stack moving on. The current look stays up |
+| **Stop** | Stops the stack and releases the cue on stage: its effects stop, and the faders keep the last look. Pull the grand master down after Stop and the desk is dark |
+| **BO** | Blackout. While on (red), the desk sends nothing at all, effects included, but the stack stays where it is. Press again to bring the look back |
 | **Loop** | When on (green), the last cue is followed by the cue the run started from, for ever. When off, the stack stops after the last cue |
 | **Auto** | When on (green), the desk starts playing from the first cue by itself whenever it loads |
 | **Mode** | Back to Program Mode, which also stops the stack |

@@ -16,6 +16,9 @@
  *     by itself, the stack can loop, the desk can start playing on its own when it loads, a
  *     playing show survives a restart, a cue can be triggered by the time of day, and effects
  *     (waveforms written onto any of the 512 channels) run on the desk and per cue;
+ *   - Stop releases the cue on stage (its effects stop; the faders keep the last look), so
+ *     stop plus grand master 0 is dark, and a latched blackout zeroes the whole output while
+ *     leaving the stack where it is -- both fork additions;
  *   - a redstone pulse is always Go, entering run mode first if needed; upstream's pulse in
  *     program mode recorded a cue;
  *   - fades are interpolated, not stepped by a byte-sized per-tick delta: upstream's delta
@@ -175,6 +178,8 @@ public class TileEntityBasicLightingControl extends TileEntityTheatricalBase imp
     private int fadeInLeft;
 
     private byte grandMaster = -1;
+    /** Latched blackout: the whole output is zero while set, whatever the stack is doing. */
+    private boolean blackout = false;
 
     // Autonomous playback.
     private boolean loop = false;
@@ -242,6 +247,7 @@ public class TileEntityBasicLightingControl extends TileEntityTheatricalBase imp
         loop = nbt.getBoolean("loop");
         autoStart = nbt.getBoolean("autoStart");
         playing = nbt.getBoolean("playing");
+        blackout = nbt.getBoolean("blackout");
         holdLeft = nbt.hasKey("holdLeft") ? nbt.getInteger("holdLeft") : -1;
         loopStartKey = nbt.hasKey("loopStart") ? nbt.getInteger("loopStart") : -1;
         activeKey = nbt.hasKey("activeCue") ? nbt.getInteger("activeCue") : -1;
@@ -267,6 +273,7 @@ public class TileEntityBasicLightingControl extends TileEntityTheatricalBase imp
         nbt.setBoolean("loop", loop);
         nbt.setBoolean("autoStart", autoStart);
         nbt.setBoolean("playing", playing);
+        nbt.setBoolean("blackout", blackout);
         nbt.setInteger("holdLeft", holdLeft);
         nbt.setInteger("loopStart", loopStartKey);
         nbt.setInteger("activeCue", activeKey);
@@ -346,6 +353,10 @@ public class TileEntityBasicLightingControl extends TileEntityTheatricalBase imp
             for (DeskEffect effect : activeCue.getEffects()) {
                 effect.apply(dmx, now);
             }
+        }
+        if (blackout) {
+            // After everything else, so it also silences effects, which ignore the grand master.
+            Arrays.fill(dmx, (byte) 0);
         }
 
         // Only push and send when the output changed, plus a keep-alive once a second. The
@@ -528,11 +539,27 @@ public class TileEntityBasicLightingControl extends TileEntityTheatricalBase imp
         sync();
     }
 
-    /** Stops the stack advancing; the current look stays up. */
+    /**
+     * Stops the stack and releases the cue on stage, as a real console releases a playback: the
+     * cue's effects stop, and the faders keep the last look, so the grand master then takes the
+     * whole desk down. Desk-wide effects keep running; only the blackout silences those.
+     */
     public void stop() {
         playing = false;
         holdLeft = -1;
+        activeCue = null;
+        activeKey = -1;
+        markDirty();
         sync();
+    }
+
+    public boolean isBlackout() {
+        return blackout;
+    }
+
+    public void setBlackout(boolean blackout) {
+        this.blackout = blackout;
+        markDirty();
     }
 
     public void moveForward() {

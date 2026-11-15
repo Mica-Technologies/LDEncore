@@ -16,7 +16,8 @@ vanilla commands do. **Channels are DMX addresses counted from 0**, as everywher
 | `/encore play <x> <y> <z> [cue]` | Starts the stack running from a cue (default: the first) |
 | `/encore go <x> <y> <z>` | Plays the next cue |
 | `/encore back <x> <y> <z>` | Plays the previous cue |
-| `/encore stop <x> <y> <z>` | Stops the stack moving on; the current look stays up |
+| `/encore stop <x> <y> <z>` | Stops the stack and releases the cue on stage: its effects stop, the faders keep the last look. Follow with `master 0` for a dark desk |
+| `/encore blackout <x> <y> <z> [on\|off]` | Latched blackout: while on, the desk sends nothing, effects included, and the stack stays where it is. With no argument it toggles |
 | `/encore loop <x> <y> <z> <on\|off>` | Whether the stack goes back to the cue the run started from after the last cue |
 | `/encore autostart <x> <y> <z> <on\|off>` | Whether the desk starts playing by itself when it loads |
 

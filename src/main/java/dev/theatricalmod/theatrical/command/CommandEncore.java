@@ -35,7 +35,7 @@ import java.util.TreeMap;
  */
 public class CommandEncore extends CommandBase {
 
-    private static final List<String> SUBCOMMANDS = Arrays.asList("status", "play", "go", "back", "stop", "loop",
+    private static final List<String> SUBCOMMANDS = Arrays.asList("status", "play", "go", "back", "stop", "blackout", "loop",
             "autostart", "master", "fader", "record", "cue", "effect");
 
     @Override
@@ -50,7 +50,7 @@ public class CommandEncore extends CommandBase {
 
     @Override
     public String getUsage(ICommandSender sender) {
-        return "/encore <status|play|go|back|stop|loop|autostart|master|fader|record|cue|effect> <x> <y> <z> ...";
+        return "/encore <status|play|go|back|stop|blackout|loop|autostart|master|fader|record|cue|effect> <x> <y> <z> ...";
     }
 
     @Override
@@ -84,7 +84,12 @@ public class CommandEncore extends CommandBase {
                 return;
             case "stop":
                 desk.stop();
-                tell(sender, "Stopped; the current look stays up");
+                tell(sender, "Stopped; the cue is released and the faders keep the last look");
+                return;
+            case "blackout":
+                desk.setBlackout(rest.length == 0 ? !desk.isBlackout() : parseOnOff(rest));
+                desk.sync();
+                tell(sender, "Blackout " + (desk.isBlackout() ? "on: the desk puts out nothing" : "off"));
                 return;
             case "loop":
                 desk.setLoop(parseOnOff(rest));
@@ -258,10 +263,11 @@ public class CommandEncore extends CommandBase {
 
     private static List<String> status(TileEntityBasicLightingControl desk) {
         List<String> lines = new ArrayList<>();
-        lines.add(String.format(Locale.ROOT, "%s, cue %s, next %d; loop %s, auto-start %s, master %d",
+        lines.add(String.format(Locale.ROOT, "%s, cue %s, next %d; loop %s, auto-start %s, master %d%s",
                 desk.isPlaying() ? "Playing" : desk.isRunMode() ? "Run mode" : "Program mode",
                 desk.getActiveCueKey() < 0 ? "none" : Integer.toString(desk.getActiveCueKey()), desk.getCurrentStep(),
-                desk.isLoop() ? "on" : "off", desk.isAutoStart() ? "on" : "off", Byte.toUnsignedInt(desk.getGrandMaster())));
+                desk.isLoop() ? "on" : "off", desk.isAutoStart() ? "on" : "off", Byte.toUnsignedInt(desk.getGrandMaster()),
+                desk.isBlackout() ? ", BLACKOUT" : ""));
         TreeMap<Integer, StoredCue> cues = new TreeMap<>(desk.getStoredSteps());
         lines.add(cues.isEmpty() ? "No cues" : cues.size() + " cues:");
         for (Integer key : cues.keySet()) {
@@ -346,6 +352,7 @@ public class CommandEncore extends CommandBase {
             switch (sub) {
                 case "loop":
                 case "autostart":
+                case "blackout":
                     return getListOfStringsMatchingLastWord(args, "on", "off");
                 case "effect":
                     return getListOfStringsMatchingLastWord(args, "add", "clear", "list");

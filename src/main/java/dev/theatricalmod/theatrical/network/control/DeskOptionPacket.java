@@ -19,6 +19,7 @@ public class DeskOptionPacket implements IMessage {
     public static final int LOOP = 0;
     public static final int AUTO_START = 1;
     public static final int STOP = 2;
+    public static final int BLACKOUT = 3;
 
     private BlockPos blockPos;
     private int option;
@@ -61,6 +62,9 @@ public class DeskOptionPacket implements IMessage {
                         break;
                     case STOP:
                         desk.stop();
+                        break;
+                    case BLACKOUT:
+                        desk.setBlackout(!desk.isBlackout());
                         break;
                     default:
                         return;

@@ -31,7 +31,18 @@ branch carries the canonical copy of its own section.
 
 ## Unreleased
 
-Nothing yet.
+### Changed
+
+- **Stop releases the cue.** The desk's Stop button and `/encore stop` used to leave the cue on
+  stage, so its effects kept running and the grand master could not take them down: a rig whose
+  heads were driven by cue effects could not be blacked out. Stop now releases the cue (its
+  effects stop; the faders keep the last look), so Stop then grand master 0 is dark.
+
+### Added
+
+- **Blackout.** A latched **BO** button on the desk screen and `/encore blackout` make the desk
+  send nothing at all, effects included, without losing its place in the stack. It is saved with
+  the desk.
 
 ## 2026.11.05
 
