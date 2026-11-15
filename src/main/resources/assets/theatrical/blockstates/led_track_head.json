@@ -1,0 +1,11 @@
+{
+  "variants": {
+    "axis=z": {
+      "model": "theatrical:led/led_track_head"
+    },
+    "axis=x": {
+      "model": "theatrical:led/led_track_head",
+      "y": 90
+    }
+  }
+}

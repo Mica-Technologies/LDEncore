@@ -18,7 +18,8 @@
  *     whenever any connection opens or closes; a send landing in between dropped the
  *     receiving player's connection with "PLAYER target expects a Player arg". A player still in FML's
  *     handshake is skipped, since the connection cannot carry a mod packet yet;
- *   - fork-added messages take ids from 12 up (desk options, LED fixture settings).
+ *   - fork-added messages take ids from 12 up (desk options, LED fixture settings and aim,
+ *     the moving head's room mode).
  */
 package dev.theatricalmod.theatrical.network;
 
@@ -62,6 +63,8 @@ public final class TheatricalNetworkHandler {
         // Fork additions start at 12, above upstream's ids.
         MAIN.registerMessage(DeskOptionPacket.Handler.class, DeskOptionPacket.class, 12, Side.SERVER);
         MAIN.registerMessage(UpdateLedFixturePacket.Handler.class, UpdateLedFixturePacket.class, 13, Side.SERVER);
+        MAIN.registerMessage(SetRoomModePacket.Handler.class, SetRoomModePacket.class, 14, Side.SERVER);
+        MAIN.registerMessage(AimLedFixturePacket.Handler.class, AimLedFixturePacket.class, 15, Side.SERVER);
     }
 
     /**

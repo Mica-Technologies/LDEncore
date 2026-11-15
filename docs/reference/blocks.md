@@ -23,6 +23,9 @@ show stops. See [LED fixtures and room light](../guide/led-fixtures.md).
 | **RGB LED Flat Panel** | An edge-lit flat ceiling panel. |
 | **RGB LED Downlight** | A small recessed ceiling can light. |
 | **RGB LED High-Bay** | A high-bay with a reflector, for big rooms. |
+| **RGB LED Half-Shell / Vanity / Lantern Sconce** | Wall lights. |
+| **RGB LED Track Light** | A small head on ceiling track, aimed from its screen; its room light lands where it points. |
+| **Lighting Track** | Plain track to run between track lights. Decorative. |
 | **Suspension Cable** | Hangs any of the above lower: stack it down from a ceiling or truss and place the fixture under the last one. Decorative; carries nothing. |
 
 Every LED fixture uses five DMX channels (Red, Green, Blue, Dimmer, House), or more for a run in

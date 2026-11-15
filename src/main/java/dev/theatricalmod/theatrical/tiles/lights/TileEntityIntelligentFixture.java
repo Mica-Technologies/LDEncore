@@ -7,7 +7,9 @@
  *
  * CHANGED FROM UPSTREAM: 1.12 capability plumbing; the DMX channels are read straight off
  * the receiver this tile owns instead of through a sided capability lookup on itself; the
- * GUI title and container come with the GUI phase.
+ * GUI title and container come with the GUI phase. Fork addition: a Show/Room/Auto mode
+ * (screen and redstone, no extra DMX channel); in Room the head points away from its mount
+ * at full open white.
  */
 package dev.theatricalmod.theatrical.tiles.lights;
 
@@ -18,6 +20,7 @@ import dev.theatricalmod.theatrical.api.fixtures.Fixture;
 import dev.theatricalmod.theatrical.api.fixtures.IRGB;
 import dev.theatricalmod.theatrical.block.light.BlockIntelligentFixture;
 import dev.theatricalmod.theatrical.block.light.BlockMovingLight;
+import dev.theatricalmod.theatrical.tiles.led.TileEntityLedFixture;
 import net.minecraft.block.Block;
 import net.minecraft.block.state.IBlockState;
 import net.minecraft.nbt.NBTTagCompound;
@@ -35,6 +38,57 @@ public class TileEntityIntelligentFixture extends TileEntityFixtureDMXAcceptor i
 
     private final TheatricalEnergyStorage energyStorage = new TheatricalEnergyStorage(2000, 2000);
 
+    /**
+     * Fork addition: Room Light. Show (the default, so existing rigs are unchanged) follows DMX;
+     * Room points the head straight away from its mount (down when hung) at full open white;
+     * Auto is Room while the head has a redstone signal or has heard no DMX for a few seconds.
+     * There is no House channel: adding one would move every channel after it and break the
+     * patch of every rig already built.
+     */
+    private TileEntityLedFixture.Mode roomMode = TileEntityLedFixture.Mode.SHOW;
+    private boolean roomLit = false;
+    private int roomTicks = 0;
+
+    public TileEntityLedFixture.Mode getRoomMode() {
+        return roomMode;
+    }
+
+    public void setRoomMode(TileEntityLedFixture.Mode mode) {
+        this.roomMode = mode;
+        decideRoom();
+        sync();
+    }
+
+    public boolean isRoomLit() {
+        return roomLit;
+    }
+
+    private boolean room() {
+        return roomLit && isPowered();
+    }
+
+    private void decideRoom() {
+        boolean want;
+        switch (roomMode) {
+            case ROOM:
+                want = true;
+                break;
+            case AUTO:
+                int seconds = TheatricalConfigHandler.ROOM_LIGHT.noSignalSeconds;
+                boolean noSignal = seconds > 0 && world.getTotalWorldTime() - lastSignal > seconds * 20L;
+                want = world.isBlockPowered(pos) || noSignal;
+                break;
+            case SHOW:
+            default:
+                want = false;
+                break;
+        }
+        if (want != roomLit) {
+            roomLit = want;
+            sync();
+        }
+    }
+
     @Override
     public void setFixture(Fixture fixture) {
         super.setFixture(fixture);
@@ -47,6 +101,8 @@ public class TileEntityIntelligentFixture extends TileEntityFixtureDMXAcceptor i
     public NBTTagCompound getNBT(@Nullable NBTTagCompound compound) {
         NBTTagCompound tag = super.getNBT(compound);
         tag.setTag("energy", energyStorage.serializeNBT());
+        tag.setByte("roomMode", (byte) roomMode.ordinal());
+        tag.setBoolean("roomLit", roomLit);
         return tag;
     }
 
@@ -56,6 +112,10 @@ public class TileEntityIntelligentFixture extends TileEntityFixtureDMXAcceptor i
         if (compound.hasKey("energy")) {
             this.energyStorage.deserializeNBT(compound.getCompoundTag("energy"));
         }
+        int mode = compound.getByte("roomMode");
+        roomMode = mode >= 0 && mode < TileEntityLedFixture.Mode.values().length
+                ? TileEntityLedFixture.Mode.values()[mode] : TileEntityLedFixture.Mode.SHOW;
+        roomLit = compound.getBoolean("roomLit");
     }
 
     @Override
@@ -112,19 +172,31 @@ public class TileEntityIntelligentFixture extends TileEntityFixtureDMXAcceptor i
     }
 
     public int getRed() {
+        if (room()) {
+            return 255;
+        }
         return hasChannels() && isPowered() ? channel(ChannelType.RED) : 0;
     }
 
     public int getGreen() {
+        if (room()) {
+            return 244;
+        }
         return hasChannels() && isPowered() ? channel(ChannelType.GREEN) : 0;
     }
 
     public int getBlue() {
+        if (room()) {
+            return 229;
+        }
         return hasChannels() && isPowered() ? channel(ChannelType.BLUE) : 0;
     }
 
     @Override
     public int getPan() {
+        if (room()) {
+            return 0;
+        }
         if (hasChannels() && isPowered()) {
             return (int) ((channel(ChannelType.PAN) * 360) / 255F);
         }
@@ -133,6 +205,10 @@ public class TileEntityIntelligentFixture extends TileEntityFixtureDMXAcceptor i
 
     @Override
     public int getTilt() {
+        if (room()) {
+            // Tilt 0 plus the head's built-in 90 points the beam straight away from the mount.
+            return 0;
+        }
         if (hasChannels() && isPowered()) {
             return (int) ((channel(ChannelType.TILT) * 180) / 255F) - 90;
         }
@@ -141,6 +217,9 @@ public class TileEntityIntelligentFixture extends TileEntityFixtureDMXAcceptor i
 
     @Override
     public int getFocus() {
+        if (room()) {
+            return 25;
+        }
         if (hasChannels()) {
             return (int) ((channel(ChannelType.FOCUS) * 50) / 255F);
         }
@@ -149,6 +228,9 @@ public class TileEntityIntelligentFixture extends TileEntityFixtureDMXAcceptor i
 
     @Override
     public float getIntensity() {
+        if (room()) {
+            return 255;
+        }
         if (hasChannels() && isPowered()) {
             return channel(ChannelType.INTENSITY);
         }
@@ -171,6 +253,15 @@ public class TileEntityIntelligentFixture extends TileEntityFixtureDMXAcceptor i
     public void update() {
         if (getFixture() == null) {
             return;
+        }
+        if (!world.isRemote) {
+            if (lastSignal == Long.MIN_VALUE) {
+                // Just loaded: give the console its grace period before calling it gone.
+                lastSignal = world.getTotalWorldTime();
+            }
+            if (++roomTicks % 10 == 0) {
+                decideRoom();
+            }
         }
         if (isPowered()) {
             if (TheatricalConfigHandler.FIXTURES.consumePower) {

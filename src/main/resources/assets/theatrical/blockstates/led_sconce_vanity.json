@@ -1,0 +1,19 @@
+{
+  "variants": {
+    "facing=south": {
+      "model": "theatrical:led/led_sconce_vanity"
+    },
+    "facing=west": {
+      "model": "theatrical:led/led_sconce_vanity",
+      "y": 90
+    },
+    "facing=north": {
+      "model": "theatrical:led/led_sconce_vanity",
+      "y": 180
+    },
+    "facing=east": {
+      "model": "theatrical:led/led_sconce_vanity",
+      "y": 270
+    }
+  }
+}

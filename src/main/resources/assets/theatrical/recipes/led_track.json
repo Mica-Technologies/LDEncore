@@ -1,0 +1,20 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "pattern": [
+    "DID"
+  ],
+  "key": {
+    "D": {
+      "type": "forge:ore_dict",
+      "ore": "dyeBlack"
+    },
+    "I": {
+      "type": "forge:ore_dict",
+      "ore": "ingotIron"
+    }
+  },
+  "result": {
+    "item": "theatrical:led_track",
+    "count": 8
+  }
+}

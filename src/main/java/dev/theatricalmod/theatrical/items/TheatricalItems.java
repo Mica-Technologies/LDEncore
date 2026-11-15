@@ -56,6 +56,11 @@ public final class TheatricalItems {
     public static final Item LED_DOWNLIGHT = blockItem(TheatricalBlocks.LED_DOWNLIGHT);
     public static final Item LED_HIGHBAY = blockItem(TheatricalBlocks.LED_HIGHBAY);
     public static final Item SUSPENSION_CABLE = blockItem(TheatricalBlocks.SUSPENSION_CABLE);
+    public static final Item LED_SCONCE_SHELL = blockItem(TheatricalBlocks.LED_SCONCE_SHELL);
+    public static final Item LED_SCONCE_VANITY = blockItem(TheatricalBlocks.LED_SCONCE_VANITY);
+    public static final Item LED_SCONCE_LANTERN = blockItem(TheatricalBlocks.LED_SCONCE_LANTERN);
+    public static final Item LED_TRACK = blockItem(TheatricalBlocks.LED_TRACK);
+    public static final Item LED_TRACK_HEAD = blockItem(TheatricalBlocks.LED_TRACK_HEAD);
 
     /*
      * Useful items

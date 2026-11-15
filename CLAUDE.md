@@ -212,8 +212,11 @@ tiles/                  TileEntityTheatricalBase (readNBT/getNBT drive both save
                         keep-alive); interfaces/
 block/led/, tiles/led/  Fork-authored LED house fixtures (BlockLedFixture base; BlockLedStrip,
                         BlockLedCeilingLinear = batten/pendant/troffer, BlockLedCeiling =
-                        panel/downlight/high-bay, whose boxes in TheatricalBlocks must match
-                        models/block/led/*.json; BlockSuspensionCable is decorative; one tile,
+                        panel/downlight/high-bay, BlockLedWall = sconces, BlockLedTrackHead =
+                        aimable head whose can the renderer draws from the tile's aim and whose
+                        room light follows the aim; all boxes in TheatricalBlocks must match
+                        models/block/led/*.json; BlockSuspensionCable and BlockLedTrack are
+                        decorative, no tile; one tile,
                         TileEntityLedFixture): RGB on R/G/B/Dimmer/House channels,
                         Show/Room/Auto modes, runs of identical neighbours sharing one address
                         (each segment derives its run index; settings propagate on Save/place),

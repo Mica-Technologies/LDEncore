@@ -46,8 +46,14 @@ branch carries the canonical copy of its own section.
 - **LED fixtures that double as room lights**: the **RGB LED Strip** (a thin strip for any floor,
   ceiling or wall), the **Batten** and **Linear Pendant** (slim strip lights in the style of
   Lithonia strips and the Cree Stylus, joining end to end like the strip), the **Troffer**,
-  **Flat Panel**, **Downlight** and **High-Bay**, and a **Suspension Cable** that stacks down
-  from a ceiling or truss to hang any of them lower.
+  **Flat Panel**, **Downlight** and **High-Bay**, three wall **Sconces** (half-shell, vanity,
+  lantern), **Track Lights** (small heads on ceiling track, aimed from their screen, whose room
+  light lands where they point) with plain **Lighting Track** to run between them, and a
+  **Suspension Cable** that stacks down from a ceiling or truss to hang any of them lower.
+- **Room light on the moving head.** Its screen gains the same Show / Room / Auto mode. It has no
+  House channel, since one would move every channel after it and break existing patches, so Auto
+  goes to room light on redstone or when no DMX arrives. In Room the head points straight away
+  from its mount at full open white. Show stays the default, so existing rigs are unchanged.
   - **Show, Room or Auto.** In Show it is an RGB fixture on five DMX channels (red, green, blue,
     dimmer, house). In Room it is a plain warm-white light. Auto switches to room light when the
     House channel is up, on a redstone signal, or when no DMX has arrived for a few seconds, so a
@@ -67,10 +73,11 @@ All new and fork-authored (none has an upstream counterpart), listed here becaus
 cannot carry the notice the Java sources do:
 
 - `assets/theatrical/blockstates/` -- `led_strip`, `led_batten`, `led_linear_pendant`,
-  `led_troffer`, `led_panel`, `led_downlight`, `led_highbay`, `suspension_cable`.
+  `led_troffer`, `led_panel`, `led_downlight`, `led_highbay`, `suspension_cable`,
+  `led_sconce_shell`, `led_sconce_vanity`, `led_sconce_lantern`, `led_track`, `led_track_head`.
 - `assets/theatrical/models/block/led/*.json` and `assets/theatrical/models/item/` -- the same
-  fixtures' block and item models, and the suspension cable's.
-- `assets/theatrical/recipes/` -- the same eight blocks' recipes.
+  blocks' block and item models.
+- `assets/theatrical/recipes/` -- the same thirteen blocks' recipes.
 - `assets/theatrical/textures/blocks/led/*.png` -- LED channel, housings, lenses and cable.
 
 ## 2026.11.05

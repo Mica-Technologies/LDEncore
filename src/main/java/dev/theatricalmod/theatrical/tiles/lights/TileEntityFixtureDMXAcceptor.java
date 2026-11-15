@@ -6,7 +6,8 @@
  * upstream file targets Forge 1.16 and this is its 1.12.2 counterpart, not a copy.
  *
  * CHANGED FROM UPSTREAM: 1.12 capability and lifecycle plumbing (onLoad/invalidate for the
- * network refresh hooks).
+ * network refresh hooks). Fork addition: it records when DMX last arrived, for the moving
+ * head's Auto room-light mode.
  */
 package dev.theatricalmod.theatrical.tiles.lights;
 
@@ -27,7 +28,18 @@ import javax.annotation.Nullable;
  */
 public abstract class TileEntityFixtureDMXAcceptor extends TileEntityFixture implements IAcceptsCable {
 
-    private final DMXReceiver idmxReceiver = new DMXReceiver(0, 0);
+    /** World time DMX last arrived. Not saved; a fixture that has just loaded counts from its first tick. */
+    protected long lastSignal = Long.MIN_VALUE;
+
+    private final DMXReceiver idmxReceiver = new DMXReceiver(0, 0) {
+        @Override
+        public void receiveDMXValues(byte[] data, net.minecraft.world.World world, net.minecraft.util.math.BlockPos pos) {
+            super.receiveDMXValues(data, world, pos);
+            if (TileEntityFixtureDMXAcceptor.this.world != null) {
+                lastSignal = TileEntityFixtureDMXAcceptor.this.world.getTotalWorldTime();
+            }
+        }
+    };
 
     @Override
     public NBTTagCompound getNBT(@Nullable NBTTagCompound compound) {

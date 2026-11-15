@@ -8,6 +8,7 @@ package dev.theatricalmod.theatrical.client.gui.screen;
 import dev.theatricalmod.theatrical.TheatricalMod;
 import dev.theatricalmod.theatrical.api.dmx.DMXUniverse;
 import dev.theatricalmod.theatrical.client.gui.container.ContainerLedFixture;
+import dev.theatricalmod.theatrical.network.AimLedFixturePacket;
 import dev.theatricalmod.theatrical.network.TheatricalNetworkHandler;
 import dev.theatricalmod.theatrical.network.UpdateLedFixturePacket;
 import dev.theatricalmod.theatrical.tiles.led.TileEntityLedFixture;
@@ -31,6 +32,12 @@ public class ScreenLedFixture extends GuiContainer {
     private static final int BUTTON_MODE = 0;
     private static final int BUTTON_PIXEL = 1;
     private static final int BUTTON_SAVE = 2;
+    private static final int BUTTON_PAN_LEFT = 3;
+    private static final int BUTTON_PAN_RIGHT = 4;
+    private static final int BUTTON_TILT_DOWN = 5;
+    private static final int BUTTON_TILT_UP = 6;
+    /** Degrees an aim button moves a track head. */
+    private static final int AIM_STEP = 15;
 
     private final ContainerLedFixture container;
     private GuiTextField address;
@@ -66,6 +73,14 @@ public class ScreenLedFixture extends GuiContainer {
         buttonList.add(modeButton);
         buttonList.add(pixelButton);
         buttonList.add(new GuiButton(BUTTON_SAVE, guiLeft + 38, guiTop + 100, 100, 20, "Save"));
+        if (tile != null && tile.isAimed()) {
+            // A track head aims instead of forming runs, so its aim takes the pixel button's row.
+            // Aim applies at once; it does not wait for Save.
+            buttonList.add(new GuiButton(BUTTON_PAN_LEFT, guiLeft + 20, guiTop + 56, 32, 20, "Pan<"));
+            buttonList.add(new GuiButton(BUTTON_PAN_RIGHT, guiLeft + 54, guiTop + 56, 32, 20, "Pan>"));
+            buttonList.add(new GuiButton(BUTTON_TILT_DOWN, guiLeft + 90, guiTop + 56, 32, 20, "Tilt-"));
+            buttonList.add(new GuiButton(BUTTON_TILT_UP, guiLeft + 124, guiTop + 56, 32, 20, "Tilt+"));
+        }
         updateLabels();
     }
 
@@ -86,9 +101,30 @@ public class ScreenLedFixture extends GuiContainer {
         }
     }
 
+    private void aim(int panDelta, int tiltDelta) {
+        TileEntityLedFixture tile = container.blockEntity;
+        if (tile != null) {
+            TheatricalNetworkHandler.MAIN.sendToServer(new AimLedFixturePacket(tile.getPos(),
+                    tile.getAimPan() + panDelta, tile.getAimTilt() + tiltDelta));
+        }
+    }
+
     @Override
     protected void actionPerformed(GuiButton button) throws IOException {
         switch (button.id) {
+            case BUTTON_PAN_LEFT:
+                aim(-AIM_STEP, 0);
+                return;
+            case BUTTON_PAN_RIGHT:
+                aim(AIM_STEP, 0);
+                return;
+            case BUTTON_TILT_DOWN:
+                // Tilt is measured from straight down, so "down" means less of it.
+                aim(0, -AIM_STEP);
+                return;
+            case BUTTON_TILT_UP:
+                aim(0, AIM_STEP);
+                return;
             case BUTTON_MODE:
                 mode = mode.next();
                 updateLabels();
@@ -158,13 +194,23 @@ public class ScreenLedFixture extends GuiContainer {
         // The order (R G B Dimmer House, then R G B per further pixel) is on the wiki; spelling it
         // out here does not fit the panel.
         String channels = "Uses channels " + first + "-" + last;
-        if (tile.canRun()) {
+        if (tile.isAimed()) {
+            String aim = "Aim: " + compass(tile.getAimPan()) + ", " + tile.getAimTilt() + " deg from down";
+            fontRenderer.drawString(aim, 20, 79, 0x404040);
+        } else if (tile.canRun()) {
             String run = "Run of " + tile.getRunLength() + ", this is segment " + (tile.getRunIndex() + 1);
             fontRenderer.drawString(run, 20, 79, 0x404040);
         }
         fontRenderer.drawString(channels, 20, 89, 0x404040);
-        String now = tile.isRoomLit() ? "Room light" : "Show";
+        // Kept short: it shares a line with the address label.
+        String now = tile.isRoomLit() ? "Room" : "Show";
         fontRenderer.drawString("Now: " + now, xSize - 20 - fontRenderer.getStringWidth("Now: " + now), 21, 0x404040);
+    }
+
+    /** A bearing as degrees with the nearest compass point, e.g. "45 NE". */
+    private static String compass(int pan) {
+        String[] points = {"N", "NE", "E", "SE", "S", "SW", "W", "NW"};
+        return pan + " " + points[Math.floorMod(Math.round(pan / 45F), 8)];
     }
 
     @Override

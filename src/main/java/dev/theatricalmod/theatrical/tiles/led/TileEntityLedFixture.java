@@ -27,6 +27,7 @@ import net.minecraft.util.EnumFacing;
 import net.minecraft.util.ITickable;
 import net.minecraft.util.ResourceLocation;
 import net.minecraft.util.math.BlockPos;
+import net.minecraft.util.math.Vec3d;
 import net.minecraft.world.World;
 import net.minecraftforge.common.capabilities.Capability;
 
@@ -416,6 +417,49 @@ public class TileEntityLedFixture extends TileEntityTheatricalBase implements IT
         }
     }
 
+    // ---------------------------------------------------------------- aim (track heads)
+
+    /** Bearing the head points, degrees clockwise from north. */
+    private int aimPan = 0;
+    /** Degrees from straight down the head points. */
+    private int aimTilt = 30;
+    public static final int MAX_TILT = 90;
+
+    public boolean isAimed() {
+        BlockLedFixture block = block();
+        return block != null && block.isAimable();
+    }
+
+    public int getAimPan() {
+        return aimPan;
+    }
+
+    public int getAimTilt() {
+        return aimTilt;
+    }
+
+    /** Points the head, moving its room light with it. Server side. */
+    public void setAim(int pan, int tilt) {
+        boolean lit = roomLit;
+        if (lit) {
+            // Clear the light where the old aim landed before the path moves.
+            removeFloorLight();
+        }
+        aimPan = Math.floorMod(pan, 360);
+        aimTilt = Math.max(0, Math.min(MAX_TILT, tilt));
+        sync();
+        if (lit) {
+            keepFloorLight();
+        }
+    }
+
+    /** The unit vector the head points along. */
+    public Vec3d getAimVector() {
+        double p = Math.toRadians(aimPan);
+        double t = Math.toRadians(aimTilt);
+        return new Vec3d(Math.sin(t) * Math.sin(p), -Math.cos(t), -Math.sin(t) * Math.cos(p));
+    }
+
     // ---------------------------------------------------------------- floor light
 
     /** The block id of City Super Mod's light-up air, which also lights a floor. Matched by name. */
@@ -442,12 +486,38 @@ public class TileEntityLedFixture extends TileEntityTheatricalBase implements IT
         boolean incomplete;
     }
 
+    /**
+     * The cells the light falls through, nearest first: straight down for most fixtures, along
+     * the aim for one that can be aimed (a track head).
+     */
+    private List<BlockPos> lightPath() {
+        int depth = TheatricalConfigHandler.ROOM_LIGHT.floorLightDepth;
+        List<BlockPos> path = new ArrayList<>();
+        if (!isAimed()) {
+            for (int d = 1; d <= depth; d++) {
+                path.add(pos.down(d));
+            }
+            return path;
+        }
+        Vec3d dir = getAimVector();
+        Vec3d start = new Vec3d(pos.getX() + 0.5D, pos.getY() + 0.5D, pos.getZ() + 0.5D);
+        for (double t = 0.5D; t <= depth; t += 0.25D) {
+            BlockPos cell = new BlockPos(start.add(dir.scale(t)));
+            if (!cell.equals(pos) && (path.isEmpty() || !path.get(path.size() - 1).equals(cell))) {
+                path.add(cell);
+            }
+        }
+        return path;
+    }
+
     private Column scanColumn() {
         Column column = new Column();
-        int depth = TheatricalConfigHandler.ROOM_LIGHT.floorLightDepth;
-        for (int d = 1; d <= depth; d++) {
-            BlockPos cell = pos.down(d);
-            if (cell.getY() < 0) {
+        boolean aimed = isAimed();
+        List<BlockPos> roomLights = new ArrayList<>();
+        List<BlockPos> path = lightPath();
+        for (int i = 0; i < path.size(); i++) {
+            BlockPos cell = path.get(i);
+            if (cell.getY() < 0 || cell.getY() > 255) {
                 break;
             }
             if (!world.isBlockLoaded(cell)) {
@@ -456,8 +526,8 @@ public class TileEntityLedFixture extends TileEntityTheatricalBase implements IT
             }
             IBlockState state = IlluminatorQueue.stateAt(world, cell);
             if (state.getBlock() instanceof BlockRoomIlluminator) {
-                column.owned.add(cell);
-                if (d >= 2) {
+                roomLights.add(cell);
+                if (i >= 1) {
                     column.target = cell;
                 }
             } else if (CSM_LIGHTUP_AIR.equals(state.getBlock().getRegistryName())) {
@@ -467,12 +537,19 @@ public class TileEntityLedFixture extends TileEntityTheatricalBase implements IT
                 // light neither stops above it nor hops back down when the beam moves on.
                 continue;
             } else if (state.getBlock().isAir(state, world, cell)) {
-                if (d >= 2) {
-                    column.target = cell.toImmutable();
+                if (i >= 1) {
+                    column.target = cell;
                 }
             } else {
                 break;
             }
+        }
+        if (!aimed) {
+            column.owned.addAll(roomLights);
+        } else if (column.target != null && roomLights.contains(column.target)) {
+            // An aimed path can cross another fixture's light on its way; only the light at its
+            // own end is its own. (A straight-down column can never meet another fixture's.)
+            column.owned.add(column.target);
         }
         return column;
     }
@@ -525,6 +602,8 @@ public class TileEntityLedFixture extends TileEntityTheatricalBase implements IT
         nbt.setByte("mode", (byte) mode.ordinal());
         nbt.setBoolean("pixel", pixel);
         nbt.setBoolean("roomLit", roomLit);
+        nbt.setShort("aimPan", (short) aimPan);
+        nbt.setShort("aimTilt", (short) aimTilt);
         return nbt;
     }
 
@@ -534,6 +613,8 @@ public class TileEntityLedFixture extends TileEntityTheatricalBase implements IT
         mode = nbt.hasKey("mode") ? Mode.byOrdinal(nbt.getByte("mode")) : Mode.AUTO;
         pixel = nbt.getBoolean("pixel");
         roomLit = nbt.getBoolean("roomLit");
+        aimPan = nbt.getShort("aimPan");
+        aimTilt = nbt.hasKey("aimTilt") ? nbt.getShort("aimTilt") : 30;
         updateReceiver();
     }
 

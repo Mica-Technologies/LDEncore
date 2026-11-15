@@ -20,6 +20,11 @@ gets its normal lighting back the moment the show stops.
 | **RGB LED Flat Panel** | An edge-lit flat panel, one block square | Ceiling | No |
 | **RGB LED Downlight** | A small recessed can light | Ceiling | No |
 | **RGB LED High-Bay** | A warehouse or gym high-bay with a reflector | Ceiling, truss or suspension cable | No |
+| **RGB LED Half-Shell Sconce** | A wall bowl that washes light up the wall | Wall | No |
+| **RGB LED Vanity Sconce** | A horizontal bar light, as over a mirror | Wall | No |
+| **RGB LED Lantern Sconce** | A small wall lantern | Wall | No |
+| **RGB LED Track Light** | A small aimable head on a piece of ceiling track | Ceiling, truss or suspension cable | No |
+| **Lighting Track** | Plain ceiling track to run between track lights | Ceiling | |
 | **Suspension Cable** | Aircraft cable to hang any of these lower | Under a ceiling, truss or another cable | |
 
 None of them need power or cabling to work as room lights; DMX cable is only needed for show
@@ -37,7 +42,18 @@ the top of their block, so they hang directly under a ceiling or a truss.
 block of drop, and place the fixture under the last cable. The cable shows two wires over a batten,
 pendant or troffer, turned to match it, and one wire over anything else.
 
-**Fixtures that stand alone** (troffers, panels, downlights, high-bays) each have their own
+**Placing sconces.** Click the wall you want one on; it faces out from it.
+
+**Track lights.** Lay **Lighting Track** along a ceiling (it lines up with track it is placed
+against) and put **Track Lights** in the run where you want heads; each head sits on its own piece
+of the same track, so the track reads as one. A head starts pointed the way you were facing,
+tilted 30 degrees. Aim it from its screen: **Pan&lt;** and **Pan&gt;** turn it 15 degrees at a
+time, **Tilt-** brings it towards straight down and **Tilt+** towards level. Aim takes effect at
+once. In room light, a track light's floor light lands where the head points, not straight down,
+so heads can wash a wall or pick out a display.
+
+**Fixtures that stand alone** (troffers, panels, downlights, high-bays, sconces, track lights)
+each have their own
 address. One placed next to another of the same kind takes that one's settings, so a ceiling grid
 of panels can be laid out already sharing an address. DMX allows any number of fixtures on the
 same address, and they all follow it together.
@@ -66,6 +82,20 @@ Auto is what makes a venue run itself:
 
 The no-signal delay, and whether there is one at all, is set by `roomLight.noSignalSeconds` in the
 [configuration](../reference/configuration.md#roomlight).
+
+### Moving heads
+
+The **Moving Light** has room light too, with the same three modes on its screen's **Mode**
+button. It has no House channel: one would move every channel after it and break the patch of
+every rig already built. So:
+
+- **Show** (the default, so existing rigs are unchanged): the head follows DMX as it always has.
+- **Room**: the head points straight away from its mount (down when it hangs, up when it stands)
+  at full open white, and its beam lights the floor where it lands.
+- **Auto**: Room while the head has a redstone signal, or when no DMX has reached it for 3
+  seconds; Show otherwise.
+
+A head in room light still needs its Forge Energy, as it does in a show.
 
 ## Channels
 

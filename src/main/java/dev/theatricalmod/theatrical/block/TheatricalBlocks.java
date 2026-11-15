@@ -27,6 +27,9 @@ import dev.theatricalmod.theatrical.block.led.BlockLedCeiling;
 import dev.theatricalmod.theatrical.block.led.BlockLedCeilingLinear;
 import dev.theatricalmod.theatrical.block.led.BlockLedFixture;
 import dev.theatricalmod.theatrical.block.led.BlockLedStrip;
+import dev.theatricalmod.theatrical.block.led.BlockLedTrack;
+import dev.theatricalmod.theatrical.block.led.BlockLedTrackHead;
+import dev.theatricalmod.theatrical.block.led.BlockLedWall;
 import dev.theatricalmod.theatrical.block.led.BlockSuspensionCable;
 import dev.theatricalmod.theatrical.block.light.BlockMovingLight;
 import dev.theatricalmod.theatrical.block.light.BlockRoomIlluminator;
@@ -82,13 +85,23 @@ public final class TheatricalBlocks {
     public static final BlockLedCeiling LED_HIGHBAY = prepare(new BlockLedCeiling(BlockLedFixture.LENS_SMOOTH,
             px(3, 10.5, 3, 13, 16, 13), px(3.5, 10.5, 3.5, 12.5, 11, 12.5)), "led_highbay");
     public static final BlockSuspensionCable SUSPENSION_CABLE = prepare(new BlockSuspensionCable(), "suspension_cable");
+    // Sconces are modelled on the north wall, facing south.
+    public static final BlockLedWall LED_SCONCE_SHELL = prepare(new BlockLedWall(BlockLedFixture.LENS_SMOOTH,
+            px(4, 5, 0, 12, 11, 4.5), px(4.5, 10, 1, 11.5, 10.5, 4)), "led_sconce_shell");
+    public static final BlockLedWall LED_SCONCE_VANITY = prepare(new BlockLedWall(BlockLedFixture.LENS_SMOOTH,
+            px(1.5, 6.5, 0, 14.5, 9.5, 3.5), px(2.5, 6.5, 1.5, 13.5, 9.5, 3.5)), "led_sconce_vanity");
+    public static final BlockLedWall LED_SCONCE_LANTERN = prepare(new BlockLedWall(BlockLedFixture.LENS_DOTS,
+            px(5, 3, 0, 11, 13, 9), px(5.5, 4, 3.5, 10.5, 10, 8.5)), "led_sconce_lantern");
+    public static final BlockLedTrack LED_TRACK = prepare(new BlockLedTrack(), "led_track");
+    public static final BlockLedTrackHead LED_TRACK_HEAD = prepare(new BlockLedTrackHead(), "led_track_head");
 
     /** Every block, in registration order. The illuminator has no item and no creative tab. */
     public static final Block[] ALL_BLOCKS = {
             TRUSS, MOVING_LIGHT, GENERIC_LIGHT, DMX_CABLE, SOCAPEX_CABLE, DIMMED_POWER_CABLE, POWER_CABLE,
             ILLUMINATOR, ARTNET_INTERFACE, IWB, TEST_DMX, DIMMER_RACK, SOCAPEX_DISTRIBUTION,
             BASIC_LIGHTING_DESK, DMX_REDSTONE_INTERFACE, ROOM_ILLUMINATOR, LED_STRIP, LED_BATTEN,
-            LED_LINEAR_PENDANT, LED_TROFFER, LED_PANEL, LED_DOWNLIGHT, LED_HIGHBAY, SUSPENSION_CABLE
+            LED_LINEAR_PENDANT, LED_TROFFER, LED_PANEL, LED_DOWNLIGHT, LED_HIGHBAY, SUSPENSION_CABLE,
+            LED_SCONCE_SHELL, LED_SCONCE_VANITY, LED_SCONCE_LANTERN, LED_TRACK, LED_TRACK_HEAD
     };
 
     private TheatricalBlocks() {

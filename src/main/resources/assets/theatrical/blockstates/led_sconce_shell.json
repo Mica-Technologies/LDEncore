@@ -1,0 +1,19 @@
+{
+  "variants": {
+    "facing=south": {
+      "model": "theatrical:led/led_sconce_shell"
+    },
+    "facing=west": {
+      "model": "theatrical:led/led_sconce_shell",
+      "y": 90
+    },
+    "facing=north": {
+      "model": "theatrical:led/led_sconce_shell",
+      "y": 180
+    },
+    "facing=east": {
+      "model": "theatrical:led/led_sconce_shell",
+      "y": 270
+    }
+  }
+}

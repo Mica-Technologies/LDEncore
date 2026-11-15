@@ -1,0 +1,33 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "pattern": [
+    "NDN",
+    "ILI",
+    " P "
+  ],
+  "key": {
+    "D": {
+      "type": "forge:ore_dict",
+      "ore": "dyeBlack"
+    },
+    "I": {
+      "type": "forge:ore_dict",
+      "ore": "ingotIron"
+    },
+    "L": {
+      "item": "theatrical:led"
+    },
+    "N": {
+      "type": "forge:ore_dict",
+      "ore": "nuggetIron"
+    },
+    "P": {
+      "type": "forge:ore_dict",
+      "ore": "paneGlass"
+    }
+  },
+  "result": {
+    "item": "theatrical:led_track_head",
+    "count": 2
+  }
+}

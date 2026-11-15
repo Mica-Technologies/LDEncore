@@ -70,6 +70,11 @@ public abstract class BlockLedFixture extends Block {
         return LENS_DOTS;
     }
 
+    /** Whether the fixture has a head the player aims (its light then falls along the aim). */
+    public boolean isAimable() {
+        return false;
+    }
+
     /** The axis this fixture joins its neighbours along, or null if it stands alone. */
     @Nullable
     public EnumFacing.Axis getRunAxis(IBlockState state) {

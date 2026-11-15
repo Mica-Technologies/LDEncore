@@ -84,39 +84,94 @@ public class TileEntityLedFixtureRenderer extends FastTESR<TileEntityLedFixture>
         int b = colour & 0xFF;
         int sky = (light >> 16) & 0xFFFF;
         int block = light & 0xFFFF;
+        if (fixture.isAimable()) {
+            renderTrackHead(te, x, y, z, buffer, sprite, r, g, b, sky, block);
+            return;
+        }
         for (AxisAlignedBB box : fixture.getLensBoxes(state)) {
-            box(buffer, box.offset(x, y, z), sprite, r, g, b, sky, block);
+            AxisAlignedBB bb = box.offset(x, y, z);
+            cuboid(buffer, corners(bb), sprite, r, g, b, sky, block);
         }
     }
 
-    /** Emits the six faces of a box, each wound anticlockwise as seen from outside. */
-    private static void box(BufferBuilder buffer, AxisAlignedBB bb, TextureAtlasSprite sprite, int r, int g, int b, int sky, int block) {
-        double x0 = bb.minX, y0 = bb.minY, z0 = bb.minZ;
-        double x1 = bb.maxX, y1 = bb.maxY, z1 = bb.maxZ;
-        // Down
-        quad(buffer, sprite, r, g, b, sky, block, x0, y0, z1, x0, y0, z0, x1, y0, z0, x1, y0, z1);
-        // Up
-        quad(buffer, sprite, r, g, b, sky, block, x0, y1, z0, x0, y1, z1, x1, y1, z1, x1, y1, z0);
-        // North
-        quad(buffer, sprite, r, g, b, sky, block, x1, y1, z0, x1, y0, z0, x0, y0, z0, x0, y1, z0);
-        // South
-        quad(buffer, sprite, r, g, b, sky, block, x0, y1, z1, x0, y0, z1, x1, y0, z1, x1, y1, z1);
-        // West
-        quad(buffer, sprite, r, g, b, sky, block, x0, y1, z0, x0, y0, z0, x0, y0, z1, x0, y1, z1);
-        // East
-        quad(buffer, sprite, r, g, b, sky, block, x1, y1, z1, x1, y0, z1, x1, y0, z0, x1, y1, z0);
+    private static final ResourceLocation HEAD_TEXTURE = new ResourceLocation(TheatricalMod.MOD_ID, "blocks/led/housing_dark");
+    private static final double PX = 1D / 16D;
+
+    /**
+     * A track head: a short yoke under the track adapter, and a can with the lens at its mouth,
+     * turned to the tile's aim. The can is drawn pointing straight down, tilted about X towards
+     * north, then turned about Y by the pan (clockwise from north), which is the same direction
+     * the tile's room light is cast along.
+     */
+    private static void renderTrackHead(TileEntityLedFixture te, double x, double y, double z, BufferBuilder buffer,
+                                        TextureAtlasSprite lens, int r, int g, int b, int sky, int block) {
+        TextureAtlasSprite body = Minecraft.getMinecraft().getTextureMapBlocks().getAtlasSprite(HEAD_TEXTURE.toString());
+        int worldLight = te.getWorld().getCombinedLight(te.getPos(), 0);
+        int wSky = (worldLight >> 16) & 0xFFFF;
+        int wBlock = worldLight & 0xFFFF;
+        double pan = Math.toRadians(te.getAimPan());
+        double tilt = Math.toRadians(te.getAimTilt());
+        // The yoke hangs from the adapter at y = 14 px and does not tilt.
+        double cx = x + 0.5D;
+        double cz = z + 0.5D;
+        double yokeTop = y + 14 * PX;
+        cuboid(buffer, corners(new AxisAlignedBB(cx - 0.5 * PX, yokeTop - 1.5 * PX, cz - 0.5 * PX,
+                cx + 0.5 * PX, yokeTop, cz + 0.5 * PX)), body, 200, 200, 200, wSky, wBlock);
+        double pivotY = yokeTop - 1.5 * PX;
+        cuboid(buffer, aimed(-1.5, -5, -1.5, 1.5, 0.5, 1.5, cx, pivotY, cz, tilt, pan), body, 200, 200, 200, wSky, wBlock);
+        cuboid(buffer, aimed(-1.25, -5.25, -1.25, 1.25, -5, 1.25, cx, pivotY, cz, tilt, pan), lens, r, g, b, sky, block);
+    }
+
+    /** The eight corners of a box given in pixels about a pivot, tilted then panned, in render space. */
+    private static double[][] aimed(double x0, double y0, double z0, double x1, double y1, double z1,
+                                    double px, double py, double pz, double tilt, double pan) {
+        double[][] out = new double[8][];
+        for (int i = 0; i < 8; i++) {
+            double vx = ((i & 1) != 0 ? x1 : x0) * PX;
+            double vy = ((i & 2) != 0 ? y1 : y0) * PX;
+            double vz = ((i & 4) != 0 ? z1 : z0) * PX;
+            // Tilt about X: straight down leans towards north.
+            double ty = vy * Math.cos(tilt) - vz * Math.sin(tilt);
+            double tz = vy * Math.sin(tilt) + vz * Math.cos(tilt);
+            // Pan about Y, clockwise from north.
+            double rx = vx * Math.cos(pan) - tz * Math.sin(pan);
+            double rz = vx * Math.sin(pan) + tz * Math.cos(pan);
+            out[i] = new double[]{px + rx, py + ty, pz + rz};
+        }
+        return out;
+    }
+
+    /** The eight corners of a box; index bit 1 = max X, bit 2 = max Y, bit 4 = max Z. */
+    private static double[][] corners(AxisAlignedBB bb) {
+        double[][] out = new double[8][];
+        for (int i = 0; i < 8; i++) {
+            out[i] = new double[]{(i & 1) != 0 ? bb.maxX : bb.minX, (i & 2) != 0 ? bb.maxY : bb.minY, (i & 4) != 0 ? bb.maxZ : bb.minZ};
+        }
+        return out;
+    }
+
+    /**
+     * Emits the six faces of a box from its corners, each wound anticlockwise as seen from
+     * outside. A rotation keeps the winding, so a turned box draws the same way.
+     */
+    private static void cuboid(BufferBuilder buffer, double[][] c, TextureAtlasSprite sprite, int r, int g, int b, int sky, int block) {
+        quad(buffer, sprite, r, g, b, sky, block, c[4], c[0], c[1], c[5]); // down
+        quad(buffer, sprite, r, g, b, sky, block, c[2], c[6], c[7], c[3]); // up
+        quad(buffer, sprite, r, g, b, sky, block, c[3], c[1], c[0], c[2]); // north
+        quad(buffer, sprite, r, g, b, sky, block, c[6], c[4], c[5], c[7]); // south
+        quad(buffer, sprite, r, g, b, sky, block, c[2], c[0], c[4], c[6]); // west
+        quad(buffer, sprite, r, g, b, sky, block, c[7], c[5], c[1], c[3]); // east
     }
 
     private static void quad(BufferBuilder buffer, TextureAtlasSprite sprite, int r, int g, int b, int sky, int block,
-                             double ax, double ay, double az, double bx, double by, double bz,
-                             double cx, double cy, double cz, double dx, double dy, double dz) {
+                             double[] a, double[] bb, double[] c, double[] d) {
         float u0 = sprite.getMinU();
         float u1 = sprite.getMaxU();
         float v0 = sprite.getMinV();
         float v1 = sprite.getMaxV();
-        buffer.pos(ax, ay, az).color(r, g, b, 255).tex(u0, v0).lightmap(sky, block).endVertex();
-        buffer.pos(bx, by, bz).color(r, g, b, 255).tex(u0, v1).lightmap(sky, block).endVertex();
-        buffer.pos(cx, cy, cz).color(r, g, b, 255).tex(u1, v1).lightmap(sky, block).endVertex();
-        buffer.pos(dx, dy, dz).color(r, g, b, 255).tex(u1, v0).lightmap(sky, block).endVertex();
+        buffer.pos(a[0], a[1], a[2]).color(r, g, b, 255).tex(u0, v0).lightmap(sky, block).endVertex();
+        buffer.pos(bb[0], bb[1], bb[2]).color(r, g, b, 255).tex(u0, v1).lightmap(sky, block).endVertex();
+        buffer.pos(c[0], c[1], c[2]).color(r, g, b, 255).tex(u1, v1).lightmap(sky, block).endVertex();
+        buffer.pos(d[0], d[1], d[2]).color(r, g, b, 255).tex(u1, v0).lightmap(sky, block).endVertex();
     }
 }

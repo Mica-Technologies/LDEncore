@@ -56,6 +56,11 @@ Right-click the head and type its **DMX start address**. A head uses **seven cha
 at its address. Give each head its own block of seven (0, 7, 14, ...) to control them separately,
 or the same address to have them mirror each other.
 
+The screen's **Mode** button turns a head into a plain room light when no show is on: **Show**
+(the default) follows DMX, **Room** points it straight down at full white, and **Auto** does that
+on a redstone signal or when the console goes quiet. See
+[LED fixtures and room light](led-fixtures.md#moving-heads).
+
 ## The seven channels
 
 | Offset | Channel | 0 | 255 |
