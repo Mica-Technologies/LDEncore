@@ -31,6 +31,10 @@ branch carries the canonical copy of its own section.
 
 ## Unreleased
 
+Nothing yet.
+
+## 2026.11.15
+
 ### Changed
 
 - **Stop releases the cue.** The desk's Stop button and `/encore stop` used to leave the cue on
