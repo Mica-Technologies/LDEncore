@@ -1,0 +1,22 @@
+{
+  "parent": "block/block",
+  "ambientocclusion": false,
+  "textures": {
+    "particle": "theatrical:blocks/led/channel",
+    "channel": "theatrical:blocks/led/channel"
+  },
+  "elements": [
+    {
+      "from": [5, 0, 0],
+      "to": [11, 0.5, 16],
+      "faces": {
+        "down":  {"uv": [5, 0, 11, 16], "texture": "#channel", "cullface": "down"},
+        "up":    {"uv": [5, 0, 11, 16], "texture": "#channel"},
+        "north": {"uv": [5, 15.5, 11, 16], "texture": "#channel"},
+        "south": {"uv": [5, 15.5, 11, 16], "texture": "#channel"},
+        "west":  {"uv": [0, 15.5, 16, 16], "texture": "#channel"},
+        "east":  {"uv": [0, 15.5, 16, 16], "texture": "#channel"}
+      }
+    }
+  ]
+}

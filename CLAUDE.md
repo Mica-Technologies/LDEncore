@@ -210,6 +210,17 @@ tiles/                  TileEntityTheatricalBase (readNBT/getNBT drive both save
                         fades/holds/time triggers, loop, auto-start, saved playing state,
                         DeskEffect waveforms on any channel; sends only on change plus a 1 s
                         keep-alive); interfaces/
+block/led/, tiles/led/  Fork-authored LED house fixtures (BlockLedFixture base, BlockLedStrip;
+                        one tile, TileEntityLedFixture): RGB on R/G/B/Dimmer/House channels,
+                        Show/Room/Auto modes, runs of identical neighbours sharing one address
+                        (each segment derives its run index; settings propagate on Save/place),
+                        optional pixel mode. Body = baked model rotated by the blockstate; lens =
+                        FastTESR (client/tile/TileEntityLedFixtureRenderer), both rotated through
+                        LedGeometry from the block's getRotation, which must match the
+                        blockstate JSON. Room mode = block light 15 from the tile + a floor light
+                        (block/light/BlockRoomIlluminator, deliberately NOT a BlockIlluminator so
+                        beams never touch it), written via IlluminatorQueue and owned by the tile
+                        in NBT. Never place into anything but air (CSM's csm:lightupair coexists).
 items/                  TheatricalItems (ItemBlocks + positioner, wrench, ingredients; cog is
                         oredict gearIron); ItemPositioner links to a generic light by NBT
 entity/                 FallingLightEntity (EntityFallingBlock that lands broken)

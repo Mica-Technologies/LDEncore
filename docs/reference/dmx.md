@@ -16,6 +16,8 @@
 | **Moving head** | 7 | +0 intensity, +1 red, +2 green, +3 blue, +4 focus, +5 pan, +6 tilt |
 | **Dimmer rack** | 6 | +0 to +5: dimmers 1 to 6 |
 | **DMX-Redstone Interface** | 1 | +0: redstone strength |
+| **LED fixture** (or a run of them) | 5 | +0 red, +1 green, +2 blue, +3 dimmer, +4 house (128+ = room light, in Auto mode) |
+| **LED run in pixel mode** | 5 + 3 per extra segment | as above, then red, green, blue for each further segment. See [Pixel mode](../guide/led-fixtures.md#pixel-mode) |
 
 A fresnel is not a DMX receiver: it is dimmed through a rack. See
 [Your first lit fresnel](../guide/first-rig.md).
@@ -36,7 +38,9 @@ One desk can address two racks, or one head plus a rack:
 A receiver that its source no longer reaches, because a cable was broken or the desk, interface or
 test block was removed, is **blacked out**: every channel drops to 0 within about a second. That
 turns a head off and swings it to its home position, turns a rack's dimmers off, and drops a
-redstone interface to 0. Reconnect the run and it picks straight back up.
+redstone interface to 0. Reconnect the run and it picks straight back up. An
+[LED fixture](../guide/led-fixtures.md#modes) in Auto mode goes further: once it has heard nothing
+for 3 seconds it comes on as a room light.
 
 If the *source* keeps running but its input stops (your Art-Net software closes, say), the
 fixtures keep their last look, as real Art-Net nodes do.

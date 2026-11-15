@@ -8,7 +8,8 @@
  * CHANGED FROM UPSTREAM: 1.12 registers tile entity classes by name
  * (GameRegistry.registerTileEntity) rather than TileEntityTypes tied to blocks. The ids
  * are upstream's. This is also where the fixture types learn which tile they create
- * (FixtureType.setTileFactory), which upstream hard-wired in the enum.
+ * (FixtureType.setTileFactory), which upstream hard-wired in the enum. Fork addition: the
+ * LED fixture tile, "led_fixture".
  */
 package dev.theatricalmod.theatrical.tiles;
 
@@ -17,6 +18,7 @@ import dev.theatricalmod.theatrical.api.fixtures.FixtureType;
 import dev.theatricalmod.theatrical.tiles.control.TileEntityBasicLightingControl;
 import dev.theatricalmod.theatrical.tiles.interfaces.TileEntityArtNetInterface;
 import dev.theatricalmod.theatrical.tiles.interfaces.TileEntityDMXRedstoneInterface;
+import dev.theatricalmod.theatrical.tiles.led.TileEntityLedFixture;
 import dev.theatricalmod.theatrical.tiles.lights.TileEntityGenericFixture;
 import dev.theatricalmod.theatrical.tiles.lights.TileEntityIntelligentFixture;
 import dev.theatricalmod.theatrical.tiles.power.TileEntityDimmedPowerCable;
@@ -51,6 +53,8 @@ public final class TheatricalTiles {
         register(TileEntityCable.class, "cable");
         register(TileEntityBasicLightingControl.class, "basic_lighting_desk");
         register(TileEntityDMXRedstoneInterface.class, "redstone_interface");
+        // Fork addition: every LED house fixture shares one tile.
+        register(TileEntityLedFixture.class, "led_fixture");
 
         FixtureType.INTELLIGENT.setTileFactory(TileEntityIntelligentFixture::new);
         FixtureType.TUNGSTEN.setTileFactory(TileEntityGenericFixture::new);

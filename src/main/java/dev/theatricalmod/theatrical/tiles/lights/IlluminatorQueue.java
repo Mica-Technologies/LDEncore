@@ -7,6 +7,7 @@ package dev.theatricalmod.theatrical.tiles.lights;
 
 import dev.theatricalmod.theatrical.TheatricalConfigHandler;
 import dev.theatricalmod.theatrical.block.light.BlockIlluminator;
+import dev.theatricalmod.theatrical.block.light.BlockRoomIlluminator;
 import net.minecraft.block.state.IBlockState;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.world.World;
@@ -37,6 +38,10 @@ import java.util.WeakHashMap;
  * is never delayed.
  *
  * Server worlds only; on a client world (which never runs this logic) writes go straight through.
+ *
+ * Room Light fixtures use it too: their floor light blocks ({@code BlockRoomIlluminator}) are
+ * written and removed through it, and their own light level change is recalculated through
+ * {@link #relight}.
  */
 public final class IlluminatorQueue {
 
@@ -50,7 +55,7 @@ public final class IlluminatorQueue {
         Map<BlockPos, IBlockState> pending = PENDING.get(world);
         if (pending != null) {
             IBlockState queued = pending.get(pos);
-            if (queued != null) {
+            if (queued != null && queued != RELIGHT) {
                 return queued;
             }
         }
@@ -97,17 +102,46 @@ public final class IlluminatorQueue {
     }
 
     private static void apply(World world, BlockPos pos, IBlockState wanted) {
-        // Never load a chunk for a light, and never replace anything but air or an illuminator:
-        // a player may have built into the spot since the write was asked for.
+        // Never load a chunk for a light, and never replace anything but air or one of this
+        // mod's light blocks: a player may have built into the spot since the write was asked for.
         if (!world.isBlockLoaded(pos)) {
             return;
         }
+        if (wanted == RELIGHT) {
+            world.checkLight(pos);
+            return;
+        }
         IBlockState current = world.getBlockState(pos);
-        boolean currentFree = current.getBlock() instanceof BlockIlluminator || current.getBlock().isAir(current, world, pos);
+        boolean currentFree = current.getBlock() instanceof BlockIlluminator
+                || current.getBlock() instanceof BlockRoomIlluminator
+                || current.getBlock().isAir(current, world, pos);
         if (!currentFree || current == wanted) {
             return;
         }
         world.setBlockState(pos, wanted, 3);
+    }
+
+    /**
+     * Stands for "recalculate the light here" in the pending map. A fixture whose own light level
+     * follows its mode asks for this rather than calling checkLight itself, so a run of fifty
+     * strips switching to room light together is spread over the same budget as everything else.
+     */
+    private static final IBlockState RELIGHT = net.minecraft.init.Blocks.BARRIER.getDefaultState();
+
+    /** Asks for the light at a block to be recalculated within the budget. */
+    public static void relight(World world, BlockPos pos) {
+        if (world.isRemote) {
+            world.checkLight(pos);
+            return;
+        }
+        Map<BlockPos, IBlockState> pending = PENDING.computeIfAbsent(world, w -> new LinkedHashMap<>());
+        pending.putIfAbsent(pos.toImmutable(), RELIGHT);
+    }
+
+    /** Whether the position will hold air, or a room light block, once the queue has caught up. */
+    public static boolean isFreeForRoomLight(World world, BlockPos pos) {
+        IBlockState state = stateAt(world, pos);
+        return state.getBlock() instanceof BlockRoomIlluminator || state.getBlock().isAir(state, world, pos);
     }
 
     /** How many writes are waiting, for diagnostics. */

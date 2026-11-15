@@ -13,6 +13,7 @@
  * models live in client/model/FixtureModels, because 1.12 has no addSpecialModel. The Art-Net
  * polling comes with its phase of the port. An Art-Net socket is closed when the last
  * interface using it is removed or unloaded, and every socket when the player disconnects.
+ * Fork additions: the LED fixture renderer and screen.
  */
 package dev.theatricalmod.theatrical.client;
 
@@ -25,18 +26,22 @@ import dev.theatricalmod.theatrical.client.gui.TheatricalGuiHandler;
 import dev.theatricalmod.theatrical.client.gui.container.ContainerArtNetInterface;
 import dev.theatricalmod.theatrical.client.gui.container.ContainerBasicLightingConsole;
 import dev.theatricalmod.theatrical.client.gui.container.ContainerDMXRedstoneInterface;
+import dev.theatricalmod.theatrical.client.gui.container.ContainerLedFixture;
 import dev.theatricalmod.theatrical.client.gui.container.ContainerDimmerRack;
 import dev.theatricalmod.theatrical.client.gui.container.ContainerGenericFixture;
 import dev.theatricalmod.theatrical.client.gui.container.ContainerIntelligentFixture;
 import dev.theatricalmod.theatrical.client.gui.screen.ScreenArtNetInterface;
 import dev.theatricalmod.theatrical.client.gui.screen.ScreenBasicLightingConsole;
 import dev.theatricalmod.theatrical.client.gui.screen.ScreenDMXRedstoneInterface;
+import dev.theatricalmod.theatrical.client.gui.screen.ScreenLedFixture;
 import dev.theatricalmod.theatrical.client.gui.screen.ScreenDimmerRack;
 import dev.theatricalmod.theatrical.client.gui.screen.ScreenGenericFixture;
 import dev.theatricalmod.theatrical.client.gui.screen.ScreenIntelligentFixture;
+import dev.theatricalmod.theatrical.client.tile.TileEntityLedFixtureRenderer;
 import dev.theatricalmod.theatrical.client.tile.TileEntityRendererBasicLightingDesk;
 import dev.theatricalmod.theatrical.entity.FallingLightEntity;
 import dev.theatricalmod.theatrical.tiles.control.TileEntityBasicLightingControl;
+import dev.theatricalmod.theatrical.tiles.led.TileEntityLedFixture;
 import dev.theatricalmod.theatrical.tiles.lights.TileEntityGenericFixture;
 import dev.theatricalmod.theatrical.tiles.interfaces.TileEntityArtNetInterface;
 import dev.theatricalmod.theatrical.tiles.lights.TileEntityIntelligentFixture;
@@ -75,6 +80,7 @@ public class TheatricalClient extends TheatricalCommon {
         ClientRegistry.bindTileEntitySpecialRenderer(TileEntityGenericFixture.class, new TileEntityFixtureRenderer());
         ClientRegistry.bindTileEntitySpecialRenderer(TileEntityIntelligentFixture.class, new TileEntityFixtureRenderer());
         ClientRegistry.bindTileEntitySpecialRenderer(TileEntityBasicLightingControl.class, new TileEntityRendererBasicLightingDesk());
+        ClientRegistry.bindTileEntitySpecialRenderer(TileEntityLedFixture.class, new TileEntityLedFixtureRenderer());
         RenderingRegistry.registerEntityRenderingHandler(FallingLightEntity.class, FallingLightRenderer::new);
     }
 
@@ -236,6 +242,8 @@ public class TheatricalClient extends TheatricalCommon {
                 return new ScreenBasicLightingConsole(new ContainerBasicLightingConsole(world, pos));
             case TheatricalGuiHandler.GUI_DMX_REDSTONE_INTERFACE:
                 return new ScreenDMXRedstoneInterface(new ContainerDMXRedstoneInterface(world, pos));
+            case TheatricalGuiHandler.GUI_LED_FIXTURE:
+                return new ScreenLedFixture(new ContainerLedFixture(world, pos));
             default:
                 return null;
         }
@@ -287,5 +295,6 @@ public class TheatricalClient extends TheatricalCommon {
         // The illuminator is invisible and has no blockstate file; tell the model loader not
         // to look for one, or it logs a missing model for each of its sixteen light levels.
         ModelLoader.setCustomStateMapper(TheatricalBlocks.ILLUMINATOR, block -> Collections.emptyMap());
+        ModelLoader.setCustomStateMapper(TheatricalBlocks.ROOM_ILLUMINATOR, block -> Collections.emptyMap());
     }
 }

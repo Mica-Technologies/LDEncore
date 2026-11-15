@@ -1,7 +1,8 @@
 # LDEncore -- Mica Technologies' fork of Theatrical, ported to Forge 1.12.2.
 # CHANGED FROM UPSTREAM: converted from upstream's en_us.json to 1.12's .lang format;
 # the creative tab is labelled LDEncore (the fork's name), as is the in-game guide; the
-# illuminator gains a name it never had; config screen labels are fork additions.
+# illuminator gains a name it never had; config screen labels are fork additions, as are the
+# LED fixture and room light names.
 
 tile.theatrical.artnet_interface.name=ArtNet Interface
 tile.theatrical.basic_lighting_desk.name=Basic Lighting Desk
@@ -14,6 +15,8 @@ tile.theatrical.iwb.name=Internally Wired Bar (IWB)
 tile.theatrical.moving_light.name=Moving Light
 tile.theatrical.power_cable.name=Power Cable
 tile.theatrical.redstone_interface.name=DMX-Redstone Interface
+tile.theatrical.led_strip.name=RGB LED Strip
+tile.theatrical.room_illuminator.name=Room Light Glow
 tile.theatrical.socapex_cable.name=Socapex Cable
 tile.theatrical.socapex_distribution.name=Socapex Distro
 tile.theatrical.test_dmx.name=Test DMX Block

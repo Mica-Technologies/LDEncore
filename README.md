@@ -130,7 +130,10 @@ by themselves, the stack loops, a desk can start itself when it loads and resume
 after a restart, cues can be triggered by redstone or the time of day, an effects engine writes
 sweeps, rainbows, chases and strobes onto any of the desk's 512 channels, and an operator command,
 `/encore`, plays and programs desks from chat, command blocks or tools. Stop releases the cue on
-stage, and a latched blackout takes the whole output down, effects included. A redstone pulse into the
+stage, and a latched blackout takes the whole output down, effects included. The fork adds LED
+house fixtures, starting with an RGB LED strip: DMX colour for a show, and a Room Light mode (by
+hand, by redstone, from a House channel, or by itself when no console is connected) in which it
+lights the room like an ordinary lamp, floor included. A redstone pulse into the
 desk is now always Go (upstream's recorded a cue in program mode). Busy rigs are much cheaper:
 fixtures render from display lists, the desk sends DMX only when it changes, and the real light
 where beams land is moved within a per-tick time budget (`fixtures.lightUpdateBudgetMillis`), so

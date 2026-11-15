@@ -8,6 +8,7 @@
  * CHANGED FROM UPSTREAM: eager static instances registered from RegistryEvent.Register
  * instead of a DeferredRegister; ItemBlock in place of BlockItem; the cog is registered
  * as "gearIron" in the ore dictionary, which is what upstream's forge:gears/iron tag did.
+ * Fork additions: the LED fixtures' items.
  */
 package dev.theatricalmod.theatrical.items;
 
@@ -47,6 +48,7 @@ public final class TheatricalItems {
     public static final Item SOCAPEX_DISTRIBUTION = blockItem(TheatricalBlocks.SOCAPEX_DISTRIBUTION);
     public static final Item BASIC_LIGHTING_DESK = blockItem(TheatricalBlocks.BASIC_LIGHTING_DESK);
     public static final Item DMX_REDSTONE_INTERFACE = blockItem(TheatricalBlocks.DMX_REDSTONE_INTERFACE);
+    public static final Item LED_STRIP = blockItem(TheatricalBlocks.LED_STRIP);
 
     /*
      * Useful items

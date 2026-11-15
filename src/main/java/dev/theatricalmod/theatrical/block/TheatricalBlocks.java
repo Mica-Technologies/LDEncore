@@ -8,7 +8,8 @@
  * CHANGED FROM UPSTREAM: eager static instances registered from RegistryEvent.Register
  * instead of a DeferredRegister; the shared block "properties" become the prepare() helper
  * (anvil material, hardness 3, pickaxe). The tile entities register here too, because
- * 1.12 needs them registered by name before any world loads.
+ * 1.12 needs them registered by name before any world loads. Fork additions: the LED
+ * fixtures and the room light's floor block.
  */
 package dev.theatricalmod.theatrical.block;
 
@@ -22,7 +23,9 @@ import dev.theatricalmod.theatrical.block.interfaces.BlockArtNetInterface;
 import dev.theatricalmod.theatrical.block.interfaces.BlockDMXRedstoneInterface;
 import dev.theatricalmod.theatrical.block.light.BlockGenericFixture;
 import dev.theatricalmod.theatrical.block.light.BlockIlluminator;
+import dev.theatricalmod.theatrical.block.led.BlockLedStrip;
 import dev.theatricalmod.theatrical.block.light.BlockMovingLight;
+import dev.theatricalmod.theatrical.block.light.BlockRoomIlluminator;
 import dev.theatricalmod.theatrical.block.power.BlockDimmerRack;
 import dev.theatricalmod.theatrical.block.power.BlockSocapexDistribution;
 import dev.theatricalmod.theatrical.block.rigging.BlockIWB;
@@ -56,12 +59,15 @@ public final class TheatricalBlocks {
     public static final BlockSocapexDistribution SOCAPEX_DISTRIBUTION = prepare(new BlockSocapexDistribution(), "socapex_distribution");
     public static final BlockBasicLightingControl BASIC_LIGHTING_DESK = prepare(new BlockBasicLightingControl(), "basic_lighting_desk");
     public static final BlockDMXRedstoneInterface DMX_REDSTONE_INTERFACE = prepare(new BlockDMXRedstoneInterface(), "redstone_interface");
+    // Fork additions: LED house fixtures and the floor light they keep in Room Light mode.
+    public static final BlockRoomIlluminator ROOM_ILLUMINATOR = prepare(new BlockRoomIlluminator(), "room_illuminator");
+    public static final BlockLedStrip LED_STRIP = prepare(new BlockLedStrip(), "led_strip");
 
     /** Every block, in registration order. The illuminator has no item and no creative tab. */
     public static final Block[] ALL_BLOCKS = {
             TRUSS, MOVING_LIGHT, GENERIC_LIGHT, DMX_CABLE, SOCAPEX_CABLE, DIMMED_POWER_CABLE, POWER_CABLE,
             ILLUMINATOR, ARTNET_INTERFACE, IWB, TEST_DMX, DIMMER_RACK, SOCAPEX_DISTRIBUTION,
-            BASIC_LIGHTING_DESK, DMX_REDSTONE_INTERFACE
+            BASIC_LIGHTING_DESK, DMX_REDSTONE_INTERFACE, ROOM_ILLUMINATOR, LED_STRIP
     };
 
     private TheatricalBlocks() {
@@ -74,7 +80,7 @@ public final class TheatricalBlocks {
         block.setHardness(HARDNESS);
         block.setResistance(RESISTANCE);
         block.setHarvestLevel("pickaxe", 0);
-        if (!(block instanceof BlockIlluminator)) {
+        if (!(block instanceof BlockIlluminator) && !(block instanceof BlockRoomIlluminator)) {
             block.setCreativeTab(TheatricalMod.THEATRICAL_TAB);
         }
         return block;

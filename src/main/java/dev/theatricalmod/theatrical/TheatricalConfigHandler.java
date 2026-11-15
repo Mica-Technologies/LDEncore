@@ -8,7 +8,7 @@
  * CHANGED FROM UPSTREAM: Forge 1.12's annotation config (@Config) replaces ForgeConfigSpec.
  * Upstream split the options into a common and a client file; 1.12 has one file,
  * config/theatrical.cfg, with the same two categories and the same defaults. Fork additions:
- * artnet.defaultListenAddress and fixtures.lightUpdateBudgetMillis.
+ * artnet.defaultListenAddress, fixtures.lightUpdateBudgetMillis and the roomLight category.
  */
 package dev.theatricalmod.theatrical;
 
@@ -33,6 +33,31 @@ public final class TheatricalConfigHandler {
     @Config.Name("artnet")
     @Config.Comment("Art-Net input")
     public static final ArtNet ARTNET = new ArtNet();
+
+    @Config.Name("roomLight")
+    @Config.Comment("LED house fixtures (strips, battens, panels, downlights, high-bays) in Room Light mode")
+    public static final RoomLight ROOM_LIGHT = new RoomLight();
+
+    public static final class RoomLight {
+        @Config.Comment({
+                "Whether a fixture in Room Light mode also keeps an invisible full-brightness block just",
+                "above the floor beneath it, so the room is bright where people stand and not only at the",
+                "ceiling. Coexists with City Super Mod's bright lights: neither replaces the other's block."
+        })
+        public boolean floorLight = true;
+
+        @Config.Comment("How far below a fixture the floor light block is looked for, in blocks")
+        @Config.RangeInt(min = 2, max = 32)
+        public int floorLightDepth = 16;
+
+        @Config.Comment({
+                "In Auto mode, a fixture that has had no DMX at all for this many seconds goes to Room",
+                "Light, as house dimmers do when their console goes away. 0 turns this off: a fixture",
+                "in Auto with no console then stays dark."
+        })
+        @Config.RangeInt(min = 0, max = 600)
+        public int noSignalSeconds = 3;
+    }
 
     private TheatricalConfigHandler() {
     }

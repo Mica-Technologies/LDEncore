@@ -43,6 +43,19 @@ branch carries the canonical copy of its own section.
 - **Blackout.** A latched **BO** button on the desk screen and `/encore blackout` make the desk
   send nothing at all, effects included, without losing its place in the stack. It is saved with
   the desk.
+- **LED fixtures that double as room lights**, starting with the **RGB LED Strip**: a thin strip
+  for any floor, ceiling or wall.
+  - **Show, Room or Auto.** In Show it is an RGB fixture on five DMX channels (red, green, blue,
+    dimmer, house). In Room it is a plain warm-white light. Auto switches to room light when the
+    House channel is up, on a redstone signal, or when no DMX has arrived for a few seconds, so a
+    venue whose show runs on a schedule gets its everyday lighting back when the show stops.
+  - **Runs.** Strips end to end join into a run with one address, one mode and one cable. Pixel
+    mode gives each segment its own colour for chases.
+  - **Room light reaches the floor.** A fixture in room light keeps an invisible full-brightness
+    block just above the floor beneath it (one per two segments of a run), the same idea as City
+    Super Mod's bright lights, built separately: LDEncore does not need CSM, and the two never
+    replace each other's light blocks. In show mode there is none, so a chase costs nothing in
+    light updates. New `roomLight` config options cover it.
 
 ## 2026.11.05
 

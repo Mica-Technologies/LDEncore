@@ -1,0 +1,38 @@
+{
+  "parent": "block/block",
+  "textures": {
+    "particle": "theatrical:blocks/led/channel",
+    "channel": "theatrical:blocks/led/channel",
+    "lens": "theatrical:blocks/led/lens"
+  },
+  "elements": [
+    {
+      "from": [5, 0, 0],
+      "to": [11, 0.5, 16],
+      "faces": {
+        "down":  {"uv": [5, 0, 11, 16], "texture": "#channel"},
+        "up":    {"uv": [5, 0, 11, 16], "texture": "#channel"},
+        "north": {"uv": [5, 15.5, 11, 16], "texture": "#channel"},
+        "south": {"uv": [5, 15.5, 11, 16], "texture": "#channel"},
+        "west":  {"uv": [0, 15.5, 16, 16], "texture": "#channel"},
+        "east":  {"uv": [0, 15.5, 16, 16], "texture": "#channel"}
+      }
+    },
+    {
+      "from": [6.5, 0.5, 0],
+      "to": [9.5, 1, 16],
+      "faces": {
+        "up":    {"uv": [6.5, 0, 9.5, 16], "texture": "#lens"},
+        "north": {"uv": [6.5, 15, 9.5, 16], "texture": "#lens"},
+        "south": {"uv": [6.5, 15, 9.5, 16], "texture": "#lens"},
+        "west":  {"uv": [0, 15, 16, 16], "texture": "#lens"},
+        "east":  {"uv": [0, 15, 16, 16], "texture": "#lens"}
+      }
+    }
+  ],
+  "display": {
+    "gui": {"rotation": [30, 45, 0], "translation": [0, 3, 0], "scale": [0.8, 0.8, 0.8]},
+    "ground": {"rotation": [0, 0, 0], "translation": [0, 3, 0], "scale": [0.5, 0.5, 0.5]},
+    "fixed": {"rotation": [90, 0, 0], "translation": [0, 0, 0], "scale": [0.8, 0.8, 0.8]}
+  }
+}

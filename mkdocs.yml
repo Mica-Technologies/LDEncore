@@ -87,6 +87,7 @@ nav:
       - The lighting desk: guide/lighting-desk.md
       - Art-Net from real software: guide/art-net.md
       - DMX to redstone: guide/redstone.md
+      - LED fixtures and room light: guide/led-fixtures.md
   - Reference:
       - Blocks and items: reference/blocks.md
       - DMX addresses and channels: reference/dmx.md

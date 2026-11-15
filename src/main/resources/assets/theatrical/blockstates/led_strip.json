@@ -1,0 +1,16 @@
+{
+  "variants": {
+    "along=false,facing=up":    {"model": "theatrical:led/led_strip"},
+    "along=true,facing=up":     {"model": "theatrical:led/led_strip_x"},
+    "along=false,facing=down":  {"model": "theatrical:led/led_strip", "x": 180},
+    "along=true,facing=down":   {"model": "theatrical:led/led_strip_x", "x": 180},
+    "along=false,facing=north": {"model": "theatrical:led/led_strip_x", "x": 90},
+    "along=true,facing=north":  {"model": "theatrical:led/led_strip", "x": 90},
+    "along=false,facing=east":  {"model": "theatrical:led/led_strip_x", "x": 90, "y": 90},
+    "along=true,facing=east":   {"model": "theatrical:led/led_strip", "x": 90, "y": 90},
+    "along=false,facing=south": {"model": "theatrical:led/led_strip_x", "x": 90, "y": 180},
+    "along=true,facing=south":  {"model": "theatrical:led/led_strip", "x": 90, "y": 180},
+    "along=false,facing=west":  {"model": "theatrical:led/led_strip_x", "x": 90, "y": 270},
+    "along=true,facing=west":   {"model": "theatrical:led/led_strip", "x": 90, "y": 270}
+  }
+}

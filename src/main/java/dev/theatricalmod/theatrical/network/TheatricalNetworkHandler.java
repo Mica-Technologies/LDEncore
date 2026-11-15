@@ -17,7 +17,8 @@
  *     shared by the whole channel, and FML clears that attribute from the network thread
  *     whenever any connection opens or closes; a send landing in between dropped the
  *     receiving player's connection with "PLAYER target expects a Player arg". A player still in FML's
- *     handshake is skipped, since the connection cannot carry a mod packet yet.
+ *     handshake is skipped, since the connection cannot carry a mod packet yet;
+ *   - fork-added messages take ids from 12 up (desk options, LED fixture settings).
  */
 package dev.theatricalmod.theatrical.network;
 
@@ -60,6 +61,7 @@ public final class TheatricalNetworkHandler {
         MAIN.registerMessage(SendArtNetToServerPacket.Handler.class, SendArtNetToServerPacket.class, 11, Side.SERVER);
         // Fork additions start at 12, above upstream's ids.
         MAIN.registerMessage(DeskOptionPacket.Handler.class, DeskOptionPacket.class, 12, Side.SERVER);
+        MAIN.registerMessage(UpdateLedFixturePacket.Handler.class, UpdateLedFixturePacket.class, 13, Side.SERVER);
     }
 
     /**

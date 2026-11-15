@@ -9,6 +9,15 @@ Everything is in the **LDEncore** creative tab. Use JEI to look up recipes.
 | **Generic Light** (fresnel) | A conventional tungsten light. Hangs under truss or a bar. Its brightness is the dimmed power it is fed through a dimmed power cable; it does not read DMX. Aim it with its screen or the positioner. Beam up to 25 blocks. |
 | **Moving Light** (moving head) | An intelligent fixture with pan, tilt, colour and focus, controlled over seven DMX channels. Hangs or stands. Needs Forge Energy. Beam up to 50 blocks. See [Moving heads](../guide/moving-heads.md). |
 
+## LED fixtures
+
+DMX-controlled RGB fixtures that can also act as ordinary room lights, by themselves when the
+show stops. See [LED fixtures and room light](../guide/led-fixtures.md).
+
+| Block | What it is |
+|---|---|
+| **RGB LED Strip** | A thin strip for any floor, ceiling or wall. Strips end to end join into a run with one address; pixel mode gives each segment its own colour. Five DMX channels (Red, Green, Blue, Dimmer, House), or more in pixel mode. Needs no power. |
+
 ## Control
 
 | Block | What it is |

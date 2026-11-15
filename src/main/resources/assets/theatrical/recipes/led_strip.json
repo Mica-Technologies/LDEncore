@@ -1,0 +1,25 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "pattern": [
+    "PPP",
+    "LLL",
+    "III"
+  ],
+  "key": {
+    "P": {
+      "type": "forge:ore_dict",
+      "ore": "paneGlass"
+    },
+    "L": {
+      "item": "theatrical:led"
+    },
+    "I": {
+      "type": "forge:ore_dict",
+      "ore": "nuggetIron"
+    }
+  },
+  "result": {
+    "item": "theatrical:led_strip",
+    "count": 12
+  }
+}

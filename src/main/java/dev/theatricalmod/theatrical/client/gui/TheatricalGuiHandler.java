@@ -16,6 +16,7 @@ import dev.theatricalmod.theatrical.TheatricalMod;
 import dev.theatricalmod.theatrical.client.gui.container.ContainerArtNetInterface;
 import dev.theatricalmod.theatrical.client.gui.container.ContainerBasicLightingConsole;
 import dev.theatricalmod.theatrical.client.gui.container.ContainerDMXRedstoneInterface;
+import dev.theatricalmod.theatrical.client.gui.container.ContainerLedFixture;
 import dev.theatricalmod.theatrical.client.gui.container.ContainerDimmerRack;
 import dev.theatricalmod.theatrical.client.gui.container.ContainerGenericFixture;
 import dev.theatricalmod.theatrical.client.gui.container.ContainerIntelligentFixture;
@@ -34,6 +35,7 @@ public class TheatricalGuiHandler implements IGuiHandler {
     public static final int GUI_ARTNET_INTERFACE = 3;
     public static final int GUI_BASIC_LIGHTING_CONSOLE = 4;
     public static final int GUI_DMX_REDSTONE_INTERFACE = 5;
+    public static final int GUI_LED_FIXTURE = 6;
 
     @Nullable
     @Override
@@ -55,6 +57,8 @@ public class TheatricalGuiHandler implements IGuiHandler {
                 return new ContainerBasicLightingConsole(world, pos);
             case GUI_DMX_REDSTONE_INTERFACE:
                 return new ContainerDMXRedstoneInterface(world, pos);
+            case GUI_LED_FIXTURE:
+                return new ContainerLedFixture(world, pos);
             default:
                 return null;
         }
