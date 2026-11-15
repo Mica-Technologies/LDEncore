@@ -1,0 +1,11 @@
+{
+  "variants": {
+    "axis=z": {
+      "model": "theatrical:led/led_troffer"
+    },
+    "axis=x": {
+      "model": "theatrical:led/led_troffer",
+      "y": 90
+    }
+  }
+}

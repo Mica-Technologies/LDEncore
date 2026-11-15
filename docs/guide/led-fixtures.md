@@ -11,13 +11,36 @@ gets its normal lighting back the moment the show stops.
 
 ## The fixtures
 
-| Fixture | Mounts | Joins into runs |
-|---|---|---|
-| **RGB LED Strip** | Any face: floor, ceiling or wall, level or upright | Yes, end to end |
+| Fixture | What it is | Mounts | Joins into runs |
+|---|---|---|---|
+| **RGB LED Strip** | A thin tape-light strip | Any face: floor, ceiling or wall, level or upright | Yes, end to end |
+| **RGB LED Batten** | A slim white strip light, like a Lithonia strip | Ceiling, truss or suspension cable | Yes, end to end |
+| **RGB LED Linear Pendant** | A dark slimline linear light, like a Cree Stylus | Ceiling, truss or suspension cable | Yes, end to end |
+| **RGB LED Troffer** | A lay-in ceiling troffer with a long lens | Ceiling | No |
+| **RGB LED Flat Panel** | An edge-lit flat panel, one block square | Ceiling | No |
+| **RGB LED Downlight** | A small recessed can light | Ceiling | No |
+| **RGB LED High-Bay** | A warehouse or gym high-bay with a reflector | Ceiling, truss or suspension cable | No |
+| **Suspension Cable** | Aircraft cable to hang any of these lower | Under a ceiling, truss or another cable | |
+
+None of them need power or cabling to work as room lights; DMX cable is only needed for show
+mode.
 
 **Placing a strip.** Click the face you want it on. On a floor or ceiling it runs the way you are
 facing; on a wall it runs level, or upright if you are looking well up or down the wall. A strip
 placed against the end of another strip on the same surface lines up with it and joins its run.
+
+**Placing ceiling fixtures.** Battens, pendants and troffers run the way you are facing. A batten
+or pendant placed against the end of another lines up with it and joins its run. Fixtures sit at
+the top of their block, so they hang directly under a ceiling or a truss.
+
+**Hanging lower.** Stack **Suspension Cable** downward from the ceiling or truss, one block per
+block of drop, and place the fixture under the last cable. The cable shows two wires over a batten,
+pendant or troffer, turned to match it, and one wire over anything else.
+
+**Fixtures that stand alone** (troffers, panels, downlights, high-bays) each have their own
+address. One placed next to another of the same kind takes that one's settings, so a ceiling grid
+of panels can be laid out already sharing an address. DMX allows any number of fixtures on the
+same address, and they all follow it together.
 
 ## Modes
 
@@ -60,7 +83,8 @@ So five channels per fixture, or per run.
 
 ## Runs
 
-Strips that touch end to end, on the same surface and running the same way, form a **run**:
+Strips that touch end to end, on the same surface and running the same way, form a **run**, and
+so do battens and linear pendants placed end to end (each kind with its own kind):
 
 - **One address, one mode.** Change the settings of any segment and Save: the whole run takes
   them. A segment placed against a run takes the run's settings, so extending one needs no

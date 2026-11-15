@@ -1,0 +1,14 @@
+{
+  "variants": {
+    "shape=center": {
+      "model": "theatrical:led/suspension_cable_center"
+    },
+    "shape=z": {
+      "model": "theatrical:led/suspension_cable_pair"
+    },
+    "shape=x": {
+      "model": "theatrical:led/suspension_cable_pair",
+      "y": 90
+    }
+  }
+}

@@ -1,0 +1,11 @@
+{
+  "variants": {
+    "axis=z": {
+      "model": "theatrical:led/led_linear_pendant"
+    },
+    "axis=x": {
+      "model": "theatrical:led/led_linear_pendant",
+      "y": 90
+    }
+  }
+}

@@ -16,7 +16,17 @@ show stops. See [LED fixtures and room light](../guide/led-fixtures.md).
 
 | Block | What it is |
 |---|---|
-| **RGB LED Strip** | A thin strip for any floor, ceiling or wall. Strips end to end join into a run with one address; pixel mode gives each segment its own colour. Five DMX channels (Red, Green, Blue, Dimmer, House), or more in pixel mode. Needs no power. |
+| **RGB LED Strip** | A thin strip for any floor, ceiling or wall. Strips end to end join into a run with one address; pixel mode gives each segment its own colour. |
+| **RGB LED Batten** | A slim white strip light for ceilings and truss. Joins into runs, like the strip. |
+| **RGB LED Linear Pendant** | A dark slimline linear light for ceilings and truss. Joins into runs. |
+| **RGB LED Troffer** | A lay-in ceiling troffer. |
+| **RGB LED Flat Panel** | An edge-lit flat ceiling panel. |
+| **RGB LED Downlight** | A small recessed ceiling can light. |
+| **RGB LED High-Bay** | A high-bay with a reflector, for big rooms. |
+| **Suspension Cable** | Hangs any of the above lower: stack it down from a ceiling or truss and place the fixture under the last one. Decorative; carries nothing. |
+
+Every LED fixture uses five DMX channels (Red, Green, Blue, Dimmer, House), or more for a run in
+pixel mode, and needs no power.
 
 ## Control
 

@@ -1,0 +1,7 @@
+{
+  "variants": {
+    "normal": {
+      "model": "theatrical:led/led_highbay"
+    }
+  }
+}

@@ -1,0 +1,11 @@
+{
+  "variants": {
+    "axis=z": {
+      "model": "theatrical:led/led_batten"
+    },
+    "axis=x": {
+      "model": "theatrical:led/led_batten",
+      "y": 90
+    }
+  }
+}

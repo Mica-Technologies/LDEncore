@@ -49,6 +49,13 @@ public final class TheatricalItems {
     public static final Item BASIC_LIGHTING_DESK = blockItem(TheatricalBlocks.BASIC_LIGHTING_DESK);
     public static final Item DMX_REDSTONE_INTERFACE = blockItem(TheatricalBlocks.DMX_REDSTONE_INTERFACE);
     public static final Item LED_STRIP = blockItem(TheatricalBlocks.LED_STRIP);
+    public static final Item LED_BATTEN = blockItem(TheatricalBlocks.LED_BATTEN);
+    public static final Item LED_LINEAR_PENDANT = blockItem(TheatricalBlocks.LED_LINEAR_PENDANT);
+    public static final Item LED_TROFFER = blockItem(TheatricalBlocks.LED_TROFFER);
+    public static final Item LED_PANEL = blockItem(TheatricalBlocks.LED_PANEL);
+    public static final Item LED_DOWNLIGHT = blockItem(TheatricalBlocks.LED_DOWNLIGHT);
+    public static final Item LED_HIGHBAY = blockItem(TheatricalBlocks.LED_HIGHBAY);
+    public static final Item SUSPENSION_CABLE = blockItem(TheatricalBlocks.SUSPENSION_CABLE);
 
     /*
      * Useful items

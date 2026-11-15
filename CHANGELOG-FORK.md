@@ -43,14 +43,18 @@ branch carries the canonical copy of its own section.
 - **Blackout.** A latched **BO** button on the desk screen and `/encore blackout` make the desk
   send nothing at all, effects included, without losing its place in the stack. It is saved with
   the desk.
-- **LED fixtures that double as room lights**, starting with the **RGB LED Strip**: a thin strip
-  for any floor, ceiling or wall.
+- **LED fixtures that double as room lights**: the **RGB LED Strip** (a thin strip for any floor,
+  ceiling or wall), the **Batten** and **Linear Pendant** (slim strip lights in the style of
+  Lithonia strips and the Cree Stylus, joining end to end like the strip), the **Troffer**,
+  **Flat Panel**, **Downlight** and **High-Bay**, and a **Suspension Cable** that stacks down
+  from a ceiling or truss to hang any of them lower.
   - **Show, Room or Auto.** In Show it is an RGB fixture on five DMX channels (red, green, blue,
     dimmer, house). In Room it is a plain warm-white light. Auto switches to room light when the
     House channel is up, on a redstone signal, or when no DMX has arrived for a few seconds, so a
     venue whose show runs on a schedule gets its everyday lighting back when the show stops.
-  - **Runs.** Strips end to end join into a run with one address, one mode and one cable. Pixel
-    mode gives each segment its own colour for chases.
+  - **Runs.** Strips, battens and pendants end to end join into a run with one address, one mode
+    and one cable. Pixel mode gives each segment its own colour for chases. A stand-alone fixture
+    placed beside another of its kind takes its settings, so a grid of panels shares an address.
   - **Room light reaches the floor.** A fixture in room light keeps an invisible full-brightness
     block just above the floor beneath it (one per two segments of a run), the same idea as City
     Super Mod's bright lights, built separately: LDEncore does not need CSM, and the two never

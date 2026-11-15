@@ -8,6 +8,7 @@ package dev.theatricalmod.theatrical.client.tile;
 import dev.theatricalmod.theatrical.TheatricalMod;
 import dev.theatricalmod.theatrical.block.led.BlockLedFixture;
 import dev.theatricalmod.theatrical.tiles.led.TileEntityLedFixture;
+import net.minecraft.block.Block;
 import net.minecraft.block.state.IBlockState;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.renderer.BufferBuilder;
@@ -21,6 +22,10 @@ import net.minecraftforge.fml.common.Mod;
 import net.minecraftforge.fml.common.eventhandler.SubscribeEvent;
 import net.minecraftforge.fml.relauncher.Side;
 import net.minecraftforge.fml.relauncher.SideOnly;
+import net.minecraftforge.fml.common.registry.ForgeRegistries;
+
+import java.util.HashMap;
+import java.util.Map;
 
 /**
  * Draws an LED fixture's lens in its current colour, at full brightness while it is lit.
@@ -33,17 +38,25 @@ import net.minecraftforge.fml.relauncher.SideOnly;
 @Mod.EventBusSubscriber(modid = TheatricalMod.MOD_ID, value = Side.CLIENT)
 public class TileEntityLedFixtureRenderer extends FastTESR<TileEntityLedFixture> {
 
-    public static final ResourceLocation LENS_TEXTURE = new ResourceLocation(TheatricalMod.MOD_ID, "blocks/led/lens");
-
     /** A lens that is off: a pale grey diffuser, lit by the world like any block. */
     private static final int OFF_COLOUR = 0x9A9A9A;
     private static final int FULL_BRIGHT = 0xF000F0;
 
-    private static TextureAtlasSprite lensSprite;
+    /** Each lens texture's sprite, filled when the atlas is stitched. */
+    private static final Map<ResourceLocation, TextureAtlasSprite> SPRITES = new HashMap<>();
 
     @SubscribeEvent
     public static void onTextureStitch(TextureStitchEvent.Pre event) {
-        lensSprite = event.getMap().registerSprite(LENS_TEXTURE);
+        SPRITES.clear();
+        // Lens textures are reached by no block model, so they are stitched here.
+        for (Block block : ForgeRegistries.BLOCKS) {
+            if (block instanceof BlockLedFixture) {
+                ResourceLocation texture = ((BlockLedFixture) block).getLensTexture();
+                if (!SPRITES.containsKey(texture)) {
+                    SPRITES.put(texture, event.getMap().registerSprite(texture));
+                }
+            }
+        }
     }
 
     @Override
@@ -53,8 +66,11 @@ public class TileEntityLedFixtureRenderer extends FastTESR<TileEntityLedFixture>
         if (!(state.getBlock() instanceof BlockLedFixture)) {
             return;
         }
-        TextureAtlasSprite sprite = lensSprite != null ? lensSprite
-                : Minecraft.getMinecraft().getTextureMapBlocks().getMissingSprite();
+        BlockLedFixture fixture = (BlockLedFixture) state.getBlock();
+        TextureAtlasSprite sprite = SPRITES.get(fixture.getLensTexture());
+        if (sprite == null) {
+            sprite = Minecraft.getMinecraft().getTextureMapBlocks().getMissingSprite();
+        }
         int colour = te.getOutputColour();
         int light;
         if (colour == 0) {
@@ -68,7 +84,7 @@ public class TileEntityLedFixtureRenderer extends FastTESR<TileEntityLedFixture>
         int b = colour & 0xFF;
         int sky = (light >> 16) & 0xFFFF;
         int block = light & 0xFFFF;
-        for (AxisAlignedBB box : ((BlockLedFixture) state.getBlock()).getLensBoxes(state)) {
+        for (AxisAlignedBB box : fixture.getLensBoxes(state)) {
             box(buffer, box.offset(x, y, z), sprite, r, g, b, sky, block);
         }
     }

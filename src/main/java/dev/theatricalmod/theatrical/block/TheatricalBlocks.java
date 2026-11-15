@@ -23,7 +23,11 @@ import dev.theatricalmod.theatrical.block.interfaces.BlockArtNetInterface;
 import dev.theatricalmod.theatrical.block.interfaces.BlockDMXRedstoneInterface;
 import dev.theatricalmod.theatrical.block.light.BlockGenericFixture;
 import dev.theatricalmod.theatrical.block.light.BlockIlluminator;
+import dev.theatricalmod.theatrical.block.led.BlockLedCeiling;
+import dev.theatricalmod.theatrical.block.led.BlockLedCeilingLinear;
+import dev.theatricalmod.theatrical.block.led.BlockLedFixture;
 import dev.theatricalmod.theatrical.block.led.BlockLedStrip;
+import dev.theatricalmod.theatrical.block.led.BlockSuspensionCable;
 import dev.theatricalmod.theatrical.block.light.BlockMovingLight;
 import dev.theatricalmod.theatrical.block.light.BlockRoomIlluminator;
 import dev.theatricalmod.theatrical.block.power.BlockDimmerRack;
@@ -34,6 +38,7 @@ import dev.theatricalmod.theatrical.block.test.BlockTestDMX;
 import dev.theatricalmod.theatrical.fixtures.TheatricalFixtures;
 import dev.theatricalmod.theatrical.tiles.TheatricalTiles;
 import net.minecraft.block.Block;
+import static dev.theatricalmod.theatrical.block.led.LedGeometry.px;
 import net.minecraftforge.event.RegistryEvent;
 import net.minecraftforge.fml.common.Mod;
 import net.minecraftforge.fml.common.eventhandler.SubscribeEvent;
@@ -62,12 +67,28 @@ public final class TheatricalBlocks {
     // Fork additions: LED house fixtures and the floor light they keep in Room Light mode.
     public static final BlockRoomIlluminator ROOM_ILLUMINATOR = prepare(new BlockRoomIlluminator(), "room_illuminator");
     public static final BlockLedStrip LED_STRIP = prepare(new BlockLedStrip(), "led_strip");
+    // Model-pixel boxes; they must match models/block/led/*.json (the lens is drawn live, so it
+    // is only in the item models).
+    public static final BlockLedCeilingLinear LED_BATTEN = prepare(new BlockLedCeilingLinear(true, BlockLedFixture.LENS_DOTS,
+            px(6, 13.25, 0, 10, 16, 16), px(6.5, 13.25, 0, 9.5, 14, 16)), "led_batten");
+    public static final BlockLedCeilingLinear LED_LINEAR_PENDANT = prepare(new BlockLedCeilingLinear(true, BlockLedFixture.LENS_SMOOTH,
+            px(5, 11, 0, 11, 16, 16), px(5.75, 11, 0, 10.25, 11.5, 16)), "led_linear_pendant");
+    public static final BlockLedCeilingLinear LED_TROFFER = prepare(new BlockLedCeilingLinear(false, BlockLedFixture.LENS_SMOOTH,
+            px(0, 14.5, 0, 16, 16, 16), px(3, 14.5, 1, 13, 15, 15)), "led_troffer");
+    public static final BlockLedCeiling LED_PANEL = prepare(new BlockLedCeiling(BlockLedFixture.LENS_SMOOTH,
+            px(0, 15, 0, 16, 16, 16), px(0.75, 15, 0.75, 15.25, 15.5, 15.25)), "led_panel");
+    public static final BlockLedCeiling LED_DOWNLIGHT = prepare(new BlockLedCeiling(BlockLedFixture.LENS_SMOOTH,
+            px(4, 15.25, 4, 12, 16, 12), px(5, 15.25, 5, 11, 15.5, 11)), "led_downlight");
+    public static final BlockLedCeiling LED_HIGHBAY = prepare(new BlockLedCeiling(BlockLedFixture.LENS_SMOOTH,
+            px(3, 10.5, 3, 13, 16, 13), px(3.5, 10.5, 3.5, 12.5, 11, 12.5)), "led_highbay");
+    public static final BlockSuspensionCable SUSPENSION_CABLE = prepare(new BlockSuspensionCable(), "suspension_cable");
 
     /** Every block, in registration order. The illuminator has no item and no creative tab. */
     public static final Block[] ALL_BLOCKS = {
             TRUSS, MOVING_LIGHT, GENERIC_LIGHT, DMX_CABLE, SOCAPEX_CABLE, DIMMED_POWER_CABLE, POWER_CABLE,
             ILLUMINATOR, ARTNET_INTERFACE, IWB, TEST_DMX, DIMMER_RACK, SOCAPEX_DISTRIBUTION,
-            BASIC_LIGHTING_DESK, DMX_REDSTONE_INTERFACE, ROOM_ILLUMINATOR, LED_STRIP
+            BASIC_LIGHTING_DESK, DMX_REDSTONE_INTERFACE, ROOM_ILLUMINATOR, LED_STRIP, LED_BATTEN,
+            LED_LINEAR_PENDANT, LED_TROFFER, LED_PANEL, LED_DOWNLIGHT, LED_HIGHBAY, SUSPENSION_CABLE
     };
 
     private TheatricalBlocks() {

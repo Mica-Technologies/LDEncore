@@ -19,6 +19,7 @@ import net.minecraft.item.ItemStack;
 import net.minecraft.tileentity.TileEntity;
 import net.minecraft.util.EnumFacing;
 import net.minecraft.util.EnumHand;
+import net.minecraft.util.ResourceLocation;
 import net.minecraft.util.math.AxisAlignedBB;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.world.IBlockAccess;
@@ -59,6 +60,15 @@ public abstract class BlockLedFixture extends Block {
 
     /** The whole fixture in the unrotated model's coordinates, for the selection box. */
     protected abstract AxisAlignedBB getModelShape(IBlockState state);
+
+    /** The lens texture, in the block atlas; the renderer stitches it and tints it. */
+    public static final ResourceLocation LENS_DOTS = new ResourceLocation(TheatricalMod.MOD_ID, "blocks/led/lens");
+    /** A smooth diffuser, for panels and troffers. */
+    public static final ResourceLocation LENS_SMOOTH = new ResourceLocation(TheatricalMod.MOD_ID, "blocks/led/lens_smooth");
+
+    public ResourceLocation getLensTexture() {
+        return LENS_DOTS;
+    }
 
     /** The axis this fixture joins its neighbours along, or null if it stands alone. */
     @Nullable

@@ -210,8 +210,11 @@ tiles/                  TileEntityTheatricalBase (readNBT/getNBT drive both save
                         fades/holds/time triggers, loop, auto-start, saved playing state,
                         DeskEffect waveforms on any channel; sends only on change plus a 1 s
                         keep-alive); interfaces/
-block/led/, tiles/led/  Fork-authored LED house fixtures (BlockLedFixture base, BlockLedStrip;
-                        one tile, TileEntityLedFixture): RGB on R/G/B/Dimmer/House channels,
+block/led/, tiles/led/  Fork-authored LED house fixtures (BlockLedFixture base; BlockLedStrip,
+                        BlockLedCeilingLinear = batten/pendant/troffer, BlockLedCeiling =
+                        panel/downlight/high-bay, whose boxes in TheatricalBlocks must match
+                        models/block/led/*.json; BlockSuspensionCable is decorative; one tile,
+                        TileEntityLedFixture): RGB on R/G/B/Dimmer/House channels,
                         Show/Room/Auto modes, runs of identical neighbours sharing one address
                         (each segment derives its run index; settings propagate on Save/place),
                         optional pixel mode. Body = baked model rotated by the blockstate; lens =
