@@ -7,6 +7,8 @@ package dev.theatricalmod.theatrical.block.light;
 
 import net.minecraft.block.Block;
 import net.minecraft.block.material.Material;
+import net.minecraft.block.properties.PropertyBool;
+import net.minecraft.block.state.BlockStateContainer;
 import net.minecraft.block.state.BlockFaceShape;
 import net.minecraft.block.state.IBlockState;
 import net.minecraft.entity.Entity;
@@ -37,10 +39,34 @@ import java.util.List;
  */
 public class BlockRoomIlluminator extends Block {
 
+    /**
+     * Whether an aimed fixture (a track head) placed this one. Fixtures that light straight down
+     * own by column and aimed ones by the end of their path; telling the two kinds apart is what
+     * stops each from taking the other's light for its own when an aimed light lands in another
+     * fixture's column.
+     */
+    public static final PropertyBool AIMED = PropertyBool.create("aimed");
+
     public BlockRoomIlluminator() {
         super(Material.CIRCUITS);
         setLightLevel(1F);
         setLightOpacity(0);
+        setDefaultState(blockState.getBaseState().withProperty(AIMED, false));
+    }
+
+    @Override
+    protected BlockStateContainer createBlockState() {
+        return new BlockStateContainer(this, AIMED);
+    }
+
+    @Override
+    public IBlockState getStateFromMeta(int meta) {
+        return getDefaultState().withProperty(AIMED, (meta & 1) != 0);
+    }
+
+    @Override
+    public int getMetaFromState(IBlockState state) {
+        return state.getValue(AIMED) ? 1 : 0;
     }
 
     @Override

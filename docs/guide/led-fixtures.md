@@ -50,7 +50,8 @@ of the same track, so the track reads as one. A head starts pointed the way you 
 tilted 30 degrees. Aim it from its screen: **Pan&lt;** and **Pan&gt;** turn it 15 degrees at a
 time, **Tilt-** brings it towards straight down and **Tilt+** towards level. Aim takes effect at
 once. In room light, a track light's floor light lands where the head points, not straight down,
-so heads can wash a wall or pick out a display.
+so heads can wash a wall or pick out a display. The track carries no DMX: for show mode, run DMX
+cable to each head (or let heads touch so the signal passes from one to the next).
 
 **Fixtures that stand alone** (troffers, panels, downlights, high-bays, sconces, track lights)
 each have their own

@@ -227,7 +227,9 @@ block/led/, tiles/led/  Fork-authored LED house fixtures (BlockLedFixture base; 
                         (block/light/BlockRoomIlluminator, deliberately NOT a BlockIlluminator so
                         beams never touch it), written via IlluminatorQueue and owned by column,
                         not by a saved position (a /clone or paste copies saved positions): any
-                        room light between a fixture and the floor below is that fixture's.
+                        straight-down room light between a fixture and the floor below is that
+                        fixture's. Track heads' lights carry AIMED=true and are owned only at the
+                        aimed path's end; each kind looks past the other's and never removes it.
                         Never place into anything but air (CSM's csm:lightupair coexists).
 items/                  TheatricalItems (ItemBlocks + positioner, wrench, ingredients; cog is
                         oredict gearIron); ItemPositioner links to a generic light by NBT

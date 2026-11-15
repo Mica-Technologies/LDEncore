@@ -358,7 +358,10 @@ public class TileEntityLedFixture extends TileEntityTheatricalBase implements IT
             // and then cleared, and clears one a copied (pasted, cloned) dark fixture brought.
             if (roomLit) {
                 keepFloorLight();
-            } else {
+            } else if (!isAimed()) {
+                // Not for an aimed head: two heads may share an end cell, and a dark one clearing
+                // it on a timer would take the other's light. Its light goes when it goes dark,
+                // is re-aimed or is broken.
                 removeFloorLight();
             }
         }
@@ -468,11 +471,17 @@ public class TileEntityLedFixture extends TileEntityTheatricalBase implements IT
     /**
      * What lies in the column under this fixture, down to the first solid block.
      *
-     * Ownership is by column, as CSM's bright lights do it: any room light block between this
-     * fixture and the floor beneath it is this fixture's. Another LDEncore fixture above this one
-     * stops at this one, and one below places under itself, so no two ever share a column. Nothing
-     * is saved per fixture, which keeps a fixture copied by /clone, a structure block or a
-     * WorldEdit paste right: the copy owns the light block that came with it and no other.
+     * Ownership is by column, as CSM's bright lights do it: any straight-down room light block
+     * between this fixture and the floor beneath it is this fixture's. Another LDEncore fixture
+     * above this one stops at this one, and one below places under itself, so no two straight-down
+     * fixtures share a column. Nothing is saved per fixture, which keeps a fixture copied by
+     * /clone, a structure block or a WorldEdit paste right: the copy owns the light block that
+     * came with it and no other.
+     *
+     * An aimed fixture (a track head) can land its light in anybody's column, so its lights are
+     * marked {@link BlockRoomIlluminator#AIMED}, and it owns only the one at the end of its path.
+     * Each kind looks past the other kind's lights as through air, never removes them, and places
+     * nothing where the other kind already lights its target.
      */
     private static final class Column {
         /** The lowest cell that is free for a room light, not counting the one under the fixture. */
@@ -514,6 +523,7 @@ public class TileEntityLedFixture extends TileEntityTheatricalBase implements IT
         Column column = new Column();
         boolean aimed = isAimed();
         List<BlockPos> roomLights = new ArrayList<>();
+        List<BlockPos> otherKind = new ArrayList<>();
         List<BlockPos> path = lightPath();
         for (int i = 0; i < path.size(); i++) {
             BlockPos cell = path.get(i);
@@ -526,7 +536,11 @@ public class TileEntityLedFixture extends TileEntityTheatricalBase implements IT
             }
             IBlockState state = IlluminatorQueue.stateAt(world, cell);
             if (state.getBlock() instanceof BlockRoomIlluminator) {
-                roomLights.add(cell);
+                if (state.getValue(BlockRoomIlluminator.AIMED) == aimed) {
+                    roomLights.add(cell);
+                } else {
+                    otherKind.add(cell);
+                }
                 if (i >= 1) {
                     column.target = cell;
                 }
@@ -540,6 +554,11 @@ public class TileEntityLedFixture extends TileEntityTheatricalBase implements IT
                 if (i >= 1) {
                     column.target = cell;
                 }
+            } else if (aimed && !state.isOpaqueCube()) {
+                // An aimed light shines past track, fixtures, glass and the like, or a head
+                // tilted along its own track would stop at the rail. (A straight-down fixture
+                // must stop at them: that is what keeps two of them out of one column.)
+                continue;
             } else {
                 break;
             }
@@ -547,9 +566,13 @@ public class TileEntityLedFixture extends TileEntityTheatricalBase implements IT
         if (!aimed) {
             column.owned.addAll(roomLights);
         } else if (column.target != null && roomLights.contains(column.target)) {
-            // An aimed path can cross another fixture's light on its way; only the light at its
-            // own end is its own. (A straight-down column can never meet another fixture's.)
+            // An aimed path can cross other aimed fixtures' lights on its way; only the one at its
+            // own end is its own.
             column.owned.add(column.target);
+        }
+        if (column.target != null && otherKind.contains(column.target)) {
+            // The other kind lights this spot already: place nothing there, and never take it.
+            column.target = null;
         }
         return column;
     }
@@ -575,7 +598,8 @@ public class TileEntityLedFixture extends TileEntityTheatricalBase implements IT
             }
         }
         if (target != null && !column.owned.contains(target)) {
-            IlluminatorQueue.set(world, target, TheatricalBlocks.ROOM_ILLUMINATOR.getDefaultState());
+            IlluminatorQueue.set(world, target, TheatricalBlocks.ROOM_ILLUMINATOR.getDefaultState()
+                    .withProperty(BlockRoomIlluminator.AIMED, isAimed()));
         }
     }
 
