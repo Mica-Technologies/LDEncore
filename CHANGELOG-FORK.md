@@ -61,6 +61,18 @@ branch carries the canonical copy of its own section.
     replace each other's light blocks. In show mode there is none, so a chase costs nothing in
     light updates. New `roomLight` config options cover it.
 
+### Files without comment support
+
+All new and fork-authored (none has an upstream counterpart), listed here because JSON and PNG
+cannot carry the notice the Java sources do:
+
+- `assets/theatrical/blockstates/` -- `led_strip`, `led_batten`, `led_linear_pendant`,
+  `led_troffer`, `led_panel`, `led_downlight`, `led_highbay`, `suspension_cable`.
+- `assets/theatrical/models/block/led/*.json` and `assets/theatrical/models/item/` -- the same
+  fixtures' block and item models, and the suspension cable's.
+- `assets/theatrical/recipes/` -- the same eight blocks' recipes.
+- `assets/theatrical/textures/blocks/led/*.png` -- LED channel, housings, lenses and cable.
+
 ## 2026.11.05
 
 ### Added

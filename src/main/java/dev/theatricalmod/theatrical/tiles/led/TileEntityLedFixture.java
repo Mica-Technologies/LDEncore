@@ -13,6 +13,7 @@ import dev.theatricalmod.theatrical.api.capabilities.dmx.receiver.DMXReceiver;
 import dev.theatricalmod.theatrical.api.dmx.DMXUniverse;
 import dev.theatricalmod.theatrical.block.TheatricalBlocks;
 import dev.theatricalmod.theatrical.block.led.BlockLedFixture;
+import dev.theatricalmod.theatrical.block.light.BlockIlluminator;
 import dev.theatricalmod.theatrical.block.light.BlockRoomIlluminator;
 import dev.theatricalmod.theatrical.tiles.TileEntityTheatricalBase;
 import dev.theatricalmod.theatrical.tiles.lights.IlluminatorQueue;
@@ -102,9 +103,6 @@ public class TileEntityLedFixture extends TileEntityTheatricalBase implements IT
     private boolean pixel = false;
     /** Whether the fixture is acting as a room light now. Decided by the server, synced. */
     private boolean roomLit = false;
-    /** The floor light block this fixture placed, if any. */
-    @Nullable
-    private BlockPos floorLight;
     /** Whether this block itself has a redstone signal. */
     private boolean powered = false;
 
@@ -354,8 +352,14 @@ public class TileEntityLedFixture extends TileEntityTheatricalBase implements IT
         }
         refreshRunIfStale();
         decideNow();
-        if (roomLit && ticks % HEAL_TICKS == 0) {
-            keepFloorLight();
+        if (ticks % HEAL_TICKS == 0) {
+            // Keeps the floor light where the floor now is, puts back one a player built over
+            // and then cleared, and clears one a copied (pasted, cloned) dark fixture brought.
+            if (roomLit) {
+                keepFloorLight();
+            } else {
+                removeFloorLight();
+            }
         }
     }
 
@@ -418,66 +422,91 @@ public class TileEntityLedFixture extends TileEntityTheatricalBase implements IT
     private static final ResourceLocation CSM_LIGHTUP_AIR = new ResourceLocation("csm", "lightupair");
 
     /**
-     * Places this fixture's floor light, or moves it if the floor has changed. Scans straight
-     * down for the lowest air above the first solid block, skipping the block just under the
-     * fixture (the fixture's own light already covers that). If the column already holds another
-     * fixture's floor light, or CSM's, the room there is lit already and nothing is placed.
+     * What lies in the column under this fixture, down to the first solid block.
+     *
+     * Ownership is by column, as CSM's bright lights do it: any room light block between this
+     * fixture and the floor beneath it is this fixture's. Another LDEncore fixture above this one
+     * stops at this one, and one below places under itself, so no two ever share a column. Nothing
+     * is saved per fixture, which keeps a fixture copied by /clone, a structure block or a
+     * WorldEdit paste right: the copy owns the light block that came with it and no other.
      */
-    private void keepFloorLight() {
-        BlockLedFixture block = block();
-        if (!TheatricalConfigHandler.ROOM_LIGHT.floorLight || block == null
-                || !block.placesFloorLight(world.getBlockState(pos), pos)) {
-            removeFloorLight();
-            return;
-        }
-        BlockPos target = null;
+    private static final class Column {
+        /** The lowest cell that is free for a room light, not counting the one under the fixture. */
+        @Nullable
+        BlockPos target;
+        /** Every room light block in the column. */
+        final List<BlockPos> owned = new ArrayList<>();
+        /** Whether CSM's light-up air lights this column already. */
+        boolean litByCsm;
+        /** Whether the scan reached an unloaded chunk, so the answer is incomplete. */
+        boolean incomplete;
+    }
+
+    private Column scanColumn() {
+        Column column = new Column();
         int depth = TheatricalConfigHandler.ROOM_LIGHT.floorLightDepth;
         for (int d = 1; d <= depth; d++) {
             BlockPos cell = pos.down(d);
-            if (cell.getY() < 0 || !world.isBlockLoaded(cell)) {
-                return;
+            if (cell.getY() < 0) {
+                break;
             }
-            if (cell.equals(floorLight)) {
-                // Our own light counts as the air it stands in.
-                if (d >= 2) {
-                    target = cell;
-                }
-                continue;
+            if (!world.isBlockLoaded(cell)) {
+                column.incomplete = true;
+                break;
             }
             IBlockState state = IlluminatorQueue.stateAt(world, cell);
-            if (state.getBlock() instanceof BlockRoomIlluminator || CSM_LIGHTUP_AIR.equals(state.getBlock().getRegistryName())) {
-                // Somebody else lights this column already.
-                target = null;
+            if (state.getBlock() instanceof BlockRoomIlluminator) {
+                column.owned.add(cell);
+                if (d >= 2) {
+                    column.target = cell;
+                }
+            } else if (CSM_LIGHTUP_AIR.equals(state.getBlock().getRegistryName())) {
+                column.litByCsm = true;
+            } else if (state.getBlock() instanceof BlockIlluminator) {
+                // A moving head's beam has landed here. Look past it as through air, so the room
+                // light neither stops above it nor hops back down when the beam moves on.
+                continue;
+            } else if (state.getBlock().isAir(state, world, cell)) {
+                if (d >= 2) {
+                    column.target = cell.toImmutable();
+                }
+            } else {
                 break;
             }
-            if (!state.getBlock().isAir(state, world, cell)) {
-                break;
-            }
-            if (d >= 2) {
-                target = cell;
+        }
+        return column;
+    }
+
+    /**
+     * Places this fixture's floor light, or moves it if the floor has changed: one room light
+     * block in the lowest air above the first solid block below, skipping the block just under the
+     * fixture (the fixture's own light already covers that). A column CSM already lights gets
+     * nothing more.
+     */
+    private void keepFloorLight() {
+        BlockLedFixture block = block();
+        boolean wanted = TheatricalConfigHandler.ROOM_LIGHT.floorLight && block != null
+                && (getRunLength() <= 1 || block.placesFloorLight(world.getBlockState(pos), pos));
+        Column column = scanColumn();
+        if (column.incomplete) {
+            return;
+        }
+        BlockPos target = wanted && !column.litByCsm ? column.target : null;
+        for (BlockPos cell : column.owned) {
+            if (!cell.equals(target)) {
+                IlluminatorQueue.set(world, cell, Blocks.AIR.getDefaultState());
             }
         }
-        if (floorLight != null && !floorLight.equals(target)) {
-            removeFloorLight();
-        }
-        if (target != null && IlluminatorQueue.isFreeForRoomLight(world, target)) {
+        if (target != null && !column.owned.contains(target)) {
             IlluminatorQueue.set(world, target, TheatricalBlocks.ROOM_ILLUMINATOR.getDefaultState());
-            if (!target.equals(floorLight)) {
-                floorLight = target;
-                markDirty();
-            }
         }
     }
 
+    /** Removes every room light block in this fixture's column. */
     private void removeFloorLight() {
-        if (floorLight == null) {
-            return;
+        for (BlockPos cell : scanColumn().owned) {
+            IlluminatorQueue.set(world, cell, Blocks.AIR.getDefaultState());
         }
-        if (IlluminatorQueue.stateAt(world, floorLight).getBlock() instanceof BlockRoomIlluminator) {
-            IlluminatorQueue.set(world, floorLight, Blocks.AIR.getDefaultState());
-        }
-        floorLight = null;
-        markDirty();
     }
 
     /** Called by the block when it is broken or replaced. */
@@ -496,9 +525,6 @@ public class TileEntityLedFixture extends TileEntityTheatricalBase implements IT
         nbt.setByte("mode", (byte) mode.ordinal());
         nbt.setBoolean("pixel", pixel);
         nbt.setBoolean("roomLit", roomLit);
-        if (floorLight != null) {
-            nbt.setLong("floorLight", floorLight.toLong());
-        }
         return nbt;
     }
 
@@ -508,7 +534,6 @@ public class TileEntityLedFixture extends TileEntityTheatricalBase implements IT
         mode = nbt.hasKey("mode") ? Mode.byOrdinal(nbt.getByte("mode")) : Mode.AUTO;
         pixel = nbt.getBoolean("pixel");
         roomLit = nbt.getBoolean("roomLit");
-        floorLight = nbt.hasKey("floorLight") ? BlockPos.fromLong(nbt.getLong("floorLight")) : null;
         updateReceiver();
     }
 

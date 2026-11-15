@@ -222,8 +222,10 @@ block/led/, tiles/led/  Fork-authored LED house fixtures (BlockLedFixture base; 
                         LedGeometry from the block's getRotation, which must match the
                         blockstate JSON. Room mode = block light 15 from the tile + a floor light
                         (block/light/BlockRoomIlluminator, deliberately NOT a BlockIlluminator so
-                        beams never touch it), written via IlluminatorQueue and owned by the tile
-                        in NBT. Never place into anything but air (CSM's csm:lightupair coexists).
+                        beams never touch it), written via IlluminatorQueue and owned by column,
+                        not by a saved position (a /clone or paste copies saved positions): any
+                        room light between a fixture and the floor below is that fixture's.
+                        Never place into anything but air (CSM's csm:lightupair coexists).
 items/                  TheatricalItems (ItemBlocks + positioner, wrench, ingredients; cog is
                         oredict gearIron); ItemPositioner links to a generic light by NBT
 entity/                 FallingLightEntity (EntityFallingBlock that lands broken)
